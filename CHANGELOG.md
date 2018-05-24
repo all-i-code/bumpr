@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [1.0.2] - 2018-05-24
+### Fixed
+- Publish script (to include `--new-version`)
+- PR Template (removed extra newline)
+
+
 ## [1.0.1] - 2018-05-24
 ### Fixed
 - `changelog` feature to add the `<!-- bumpr -->` comment back in the `CHANGELOG.md` file so it can be replaced again next build.
