@@ -1,4 +1,15 @@
 {
+  "features": {
+    "changelog": {
+      "enabled": true
+    },
+    "comments": {
+      "enabled": true
+    },
+    "logging": {
+      "enabled": true
+    }
+  },
   "vcs": {
     "repository": {
       "name": "bumpr",
