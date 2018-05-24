@@ -1195,7 +1195,7 @@ describe('Bumpr', () => {
           .split('T')
           .slice(0, 1)
           .join('')
-        const data = `## [${info.version}] - ${dateString}\n${info.changelog}`
+        const data = `<!-- bumpr -->\n\n## [${info.version}] - ${dateString}\n${info.changelog}`
         expect(replace).toHaveBeenCalledWith({
           files: 'the-changelog-file',
           from: /<!-- bumpr -->/,
