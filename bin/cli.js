@@ -1,42 +1,51 @@
 #!/usr/bin/env node
 
-'use strict'
+/* eslint-disable no-console */
 
+const chalk = require('chalk')
 const program = require('commander')
-const pkgJson = require('../package.json')
-const Bumper = require('../lib/bumper')
-const Cli = require('../lib/cli')
-const cli = new Cli()
+const {name, version} = require('../package.json')
+const {createBumpr} = require('../src/cli')
+
+function handleError(error) {
+  const msg = error.message ? error.message : error
+  console.log(`${chalk.cyanBright(name)}: ${chalk.red.bold('Error:')} ${msg}`)
+  process.exit(1)
+}
+
+let bumpr
+try {
+  bumpr = createBumpr()
+} catch (err) {
+  handleError(err)
+}
+
+program.version(version)
 
 program
-  .version(pkgJson.version)
-  .option('-s, --skip-comments', 'disable PR comments even if enabled via .pr-bumper.json')
-  .arguments('<cmd>')
-  .action((cmd, program) => {
-    cli
-      .run(cmd, program.skipComments)
-      .catch((error) => {
-        const msg = (error.message) ? error.message : error
-        console.log(`${pkgJson.name}: ERROR: ${msg}`)
-        if (error instanceof Bumper.Cancel) {
-          process.exit(0)
-        }
-        process.exit(1)
+  .command('check')
+  .description('verify an open PR has a version bump comment')
+  .action(() => {
+    bumpr.check().catch(handleError)
+  })
+
+program
+  .command('bump')
+  .description('actually bump the version based on a merged PR')
+  .action(() => {
+    bumpr.bump().catch(handleError)
+  })
+
+program
+  .command('log <key>')
+  .description(`Output the given key from the ${name} log file`)
+  .action(key => {
+    bumpr
+      .log(key)
+      .then(value => {
+        console.log(value)
       })
+      .catch(handleError)
   })
-  .on('--help', () => {
-    console.log('  Options:')
-    console.log('')
-    console.log(
-      '    --skip-comments - disable PR comments even if enabled via .pr-bumper.json\n' +
-      '                      Useful particularly when running check-coverage manually'
-    )
-    console.log('')
-    console.log('  Commands:')
-    console.log('')
-    console.log('    check - verify an open PR has a version-bump comment')
-    console.log('    check-coverage - compare current code coverage against baseline from package.json')
-    console.log('    bump - actually bump the version based on the merged PR')
-    console.log('')
-  })
-  .parse(process.argv)
+
+program.parse(process.argv)
