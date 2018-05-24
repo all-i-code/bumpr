@@ -29,4 +29,4 @@ cat << EOF > .npmrc
 //registry.npmjs.org/:_authToken=${NPM_TOKEN}
 EOF
 
-yarn publish .
+yarn publish --new-version $(${CMD} log version)

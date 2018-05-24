@@ -1,5 +1,5 @@
 [ci-img]: https://img.shields.io/travis/jobsquad/bumpr.svg "Travis CI Build Status"
-[ci-url]: https://travis-ci.org/jobsquad/bumpr
+[ci-url]: https://travis-ci.com/jobsquad/bumpr
 
 [npm-img]: https://img.shields.io/npm/v/bumpr.svg "NPM Version"
 [npm-url]: https://www.npmjs.com/package/bumpr
