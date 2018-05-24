@@ -139,7 +139,7 @@ The following defaults will be used if omitted in `.bumper.json`:
       },
       "logging": {
         "enabled": false,
-        "file": ".bumpr-log.json"
+        "file": "bumpr-log.json"
       }
     },
     "files": ['package.json'],
