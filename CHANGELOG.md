@@ -13,14 +13,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 <!-- bumpr -->
 
 ## [1.0.1] - 2018-05-24
-
 ### Fixed
-- `changelog` feature to add the `<!-- bumpr -->` comment back in the `CHANGELOG.md` file so it can be replaced again next build. 
+- `changelog` feature to add the `<!-- bumpr -->` comment back in the `CHANGELOG.md` file so it can be replaced again next build.
 - Line endings of `changelog` contents read from GitHub
 
 
 ## [1.0.0] - 2018-05-24
-
 ### Added
 - Support for [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) format.
 - `log` command which outputs a particular key from a previously created `bumpr` log file
