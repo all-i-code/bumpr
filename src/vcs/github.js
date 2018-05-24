@@ -20,6 +20,10 @@ function getFetchOpts(config) {
   return {headers}
 }
 
+function convertLineEndings(str) {
+  return str.replace(/\r\n/g, '\n')
+}
+
 /**
  * Convert a GitHub PR to a PR representation
  * @param {GitHubPullRequest} ghPr - the API response from a GitHub API looking for a PR
@@ -28,7 +32,7 @@ function getFetchOpts(config) {
 function convertPr(ghPr) {
   return {
     number: ghPr.number,
-    description: ghPr.body,
+    description: convertLineEndings(ghPr.body),
     url: ghPr.html_url,
     headSha: ghPr.head.sha
   }

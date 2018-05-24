@@ -109,7 +109,7 @@ describe('VCS / GitHub /', () => {
       beforeEach(done => {
         const pr = {
           number: 5,
-          body: 'This is a #fix#',
+          body: '#minor#\r\n## Changelog\r\n### Added\r\n- Some really cool stuff',
           html_url: 'my-link-to-myself',
           head: {
             sha: 'sha-1'
@@ -131,7 +131,7 @@ describe('VCS / GitHub /', () => {
 
       it('should resolve with the correct PR', () => {
         expect(resolution).toEqual({
-          description: 'This is a #fix#',
+          description: '#minor#\n## Changelog\n### Added\n- Some really cool stuff',
           headSha: 'sha-1',
           number: 5,
           url: 'my-link-to-myself'

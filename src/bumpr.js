@@ -299,7 +299,7 @@ class Bumpr {
       .slice(0, 1)
       .join('')
 
-    const data = `## [${info.version}] - ${dateString}\n${info.changelog}`
+    const data = `<!-- bumpr -->\n\n## [${info.version}] - ${dateString}\n${info.changelog}`
     const filename = this.config.features.changelog.file
     const options = {
       files: filename,
