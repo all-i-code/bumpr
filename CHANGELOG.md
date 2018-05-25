@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [1.3.0] - 2018-05-25
+### Added
+- Support for circleci.com (via the `circle` option in `ci.provider`)
+
 ## [1.2.1] - 2018-05-25
 ### Fixed
 - `publish` command to properly wrap `NPM_TOKEN` env var in generated `.npmrc` file.
