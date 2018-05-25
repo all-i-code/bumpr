@@ -1,3 +1,4 @@
+jest.mock('node-fetch')
 jest.mock('replace-in-file')
 jest.mock('../node-wrappers')
 jest.mock('../logger')
@@ -5,6 +6,7 @@ jest.mock('../utils')
 
 const cp = require('child_process')
 const {set} = require('lodash')
+const fetch = require('node-fetch')
 const path = require('path')
 const Promise = require('promise')
 const replace = require('replace-in-file')
@@ -89,6 +91,8 @@ describe('Bumpr', () => {
 
   afterEach(() => {
     Logger.log.mockReset()
+    exec.mockReset()
+    writeFile.mockReset()
   })
 
   describe('.check()', () => {
@@ -337,69 +341,110 @@ describe('Bumpr', () => {
   })
 
   describe('.publish()', () => {
+    beforeEach(() => {
+      jest.spyOn(bumpr, 'maybeSendSlackMessage').mockReturnValue(Promise.resolve('done'))
+    })
+
     afterEach(() => {
-      bumpr.log.mockReset()
-      writeFile.mockReset()
-      exec.mockReset()
+      bumpr.maybeSendSlackMessage.mockRestore()
     })
 
     describe('when file not found', () => {
       beforeEach(() => {
-        jest.spyOn(bumpr, 'log').mockReturnValue(Promise.reject(new Bumpr.NoLogFileError()))
+        jest.spyOn(bumpr, 'getLog').mockReturnValue(Promise.reject(new Bumpr.NoLogFileError()))
         return bumpr.publish()
       })
 
-      it('should look up the scope from the log', () => {
-        expect(bumpr.log).toHaveBeenCalledWith('scope')
+      afterEach(() => {
+        bumpr.getLog.mockReset()
+      })
+
+      it('should look up the log', () => {
+        expect(bumpr.getLog).toHaveBeenCalled()
       })
 
       it('should log message about why skipping', () => {
         expect(Logger.log).toHaveBeenCalledWith('Skipping publish because no scope found.', true)
+      })
+
+      it('should not maybe send a slack message', () => {
+        expect(bumpr.maybeSendSlackMessage).not.toHaveBeenCalled()
       })
     })
 
     describe('when key is not found', () => {
       beforeEach(() => {
-        jest.spyOn(bumpr, 'log').mockReturnValue(Promise.reject(new Bumpr.MissingKeyError()))
+        jest.spyOn(bumpr, 'getLog').mockReturnValue(Promise.resolve({foo: 'bar'}))
         return bumpr.publish()
+      })
+
+      afterEach(() => {
+        bumpr.getLog.mockReset()
       })
 
       it('should log message about why skipping', () => {
         expect(Logger.log).toHaveBeenCalledWith('Skipping publish because no scope found.', true)
+      })
+
+      it('should not maybe send a slack message', () => {
+        expect(bumpr.maybeSendSlackMessage).not.toHaveBeenCalled()
       })
     })
 
     describe('when some other error is thrown when reading log', () => {
       let rejection
       beforeEach(() => {
-        jest.spyOn(bumpr, 'log').mockReturnValue(Promise.reject(new Error('oh snap!')))
+        jest.spyOn(bumpr, 'getLog').mockReturnValue(Promise.reject(new Error('oh snap!')))
         return bumpr.publish().catch(err => {
           rejection = err
         })
       })
 
+      afterEach(() => {
+        bumpr.getLog.mockReset()
+      })
+
       it('should reject with the raw error', () => {
         expect(rejection).toEqual(new Error('oh snap!'))
+      })
+
+      it('should not maybe send a slack message', () => {
+        expect(bumpr.maybeSendSlackMessage).not.toHaveBeenCalled()
       })
     })
 
     describe('when scope is "none"', () => {
       beforeEach(() => {
-        jest.spyOn(bumpr, 'log').mockReturnValue(Promise.resolve('none'))
+        jest.spyOn(bumpr, 'getLog').mockReturnValue(Promise.resolve({scope: 'none'}))
         return bumpr.publish()
+      })
+
+      afterEach(() => {
+        bumpr.getLog.mockReset()
       })
 
       it('should log message about why skipping', () => {
         expect(Logger.log).toHaveBeenCalledWith('Skipping publish because of "none" scope.', true)
       })
+
+      it('should not maybe send a slack message', () => {
+        expect(bumpr.maybeSendSlackMessage).not.toHaveBeenCalled()
+      })
     })
 
     describe('when scope is not "none"', () => {
+      let result
       beforeEach(() => {
-        jest.spyOn(bumpr, 'log').mockReturnValue(Promise.resolve('minor'))
+        jest.spyOn(bumpr, 'getLog').mockReturnValue(Promise.resolve({scope: 'minor'}))
         writeFile.mockReturnValue(Promise.resolve())
         exec.mockReturnValue(Promise.resolve())
-        return bumpr.publish()
+        return bumpr.publish().then(r => {
+          result = r
+        })
+      })
+
+      afterEach(() => {
+        bumpr.getLog.mockReset()
       })
 
       it('should not log anything', () => {
@@ -413,6 +458,14 @@ describe('Bumpr', () => {
 
       it('should publish', () => {
         expect(exec).toHaveBeenCalledWith('npm publish .')
+      })
+
+      it('should maybe send a slack message', () => {
+        expect(bumpr.maybeSendSlackMessage).toHaveBeenCalledWith({scope: 'minor'})
+      })
+
+      it('should resolve with the result of maybe sending the slack message', () => {
+        expect(result).toEqual('done')
       })
     })
   })
@@ -1411,6 +1464,119 @@ describe('Bumpr', () => {
 
       it('should resolve with the info', () => {
         expect(result).toBe(info)
+      })
+    })
+  })
+
+  describe('.maybeSendSlackMessage()', () => {
+    let info
+
+    beforeEach(() => {
+      info = {
+        changelog: 'the-changelog-content',
+        pr: {
+          number: 5,
+          url: 'the-pr-url'
+        },
+        scope: 'patch',
+        version: '1.2.3'
+      }
+      writeFile.mockReturnValue(Promise.resolve())
+      jest.spyOn(utils, 'readJsonFile').mockReturnValue({name: 'the-package'})
+    })
+
+    afterEach(() => {
+      utils.readJsonFile.mockRestore()
+    })
+
+    describe('when feature is disabled', () => {
+      beforeEach(() => {
+        bumpr.config.isEnabled.mockReturnValue(false)
+
+        return bumpr.maybeSendSlackMessage(info)
+      })
+
+      it('should not read in anything', () => {
+        expect(utils.readJsonFile).not.toHaveBeenCalled()
+      })
+
+      it('should log why it is skipping', () => {
+        expect(Logger.log).toHaveBeenCalledWith('Skipping sending slack message because of config option.')
+      })
+
+      it('should not send anything', () => {
+        expect(fetch).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('when no channels configured', () => {
+      beforeEach(() => {
+        set(bumpr.config, 'computed.slackUrl', 'the-slack-url')
+        set(bumpr.config, 'features.slack.channels', [])
+        bumpr.config.isEnabled.mockImplementation(name => name === 'slack')
+        fetch.mockReturnValue(Promise.resolve())
+        return bumpr.maybeSendSlackMessage(info)
+      })
+
+      it('should not log a message explaining why it is skipping', () => {
+        expect(Logger.log).not.toHaveBeenCalled()
+      })
+
+      it('should send the slack message', () => {
+        expect(fetch).toHaveBeenCalledWith('the-slack-url', {
+          headers: {'Content-Type': 'application/json'},
+          method: 'POST',
+          body: JSON.stringify({
+            text: 'Published `the-package@1.2.3` from <the-pr-url|PR #5> (patch)'
+          })
+        })
+      })
+    })
+
+    describe('when channels are configured', () => {
+      beforeEach(() => {
+        set(bumpr.config, 'computed.slackUrl', 'the-slack-url')
+        set(bumpr.config, 'features.slack.channels', ['#foo', '#bar', '#baz'])
+        bumpr.config.isEnabled.mockImplementation(name => name === 'slack')
+        fetch.mockReturnValue(Promise.resolve())
+        return bumpr.maybeSendSlackMessage(info)
+      })
+
+      it('should not log a message explaining why it is skipping', () => {
+        expect(Logger.log).not.toHaveBeenCalled()
+      })
+
+      it('should send the first slack message', () => {
+        expect(fetch).toHaveBeenCalledWith('the-slack-url', {
+          headers: {'Content-Type': 'application/json'},
+          method: 'POST',
+          body: JSON.stringify({
+            channel: '#foo',
+            text: 'Published `the-package@1.2.3` from <the-pr-url|PR #5> (patch)'
+          })
+        })
+      })
+
+      it('should send the second slack message', () => {
+        expect(fetch).toHaveBeenCalledWith('the-slack-url', {
+          headers: {'Content-Type': 'application/json'},
+          method: 'POST',
+          body: JSON.stringify({
+            channel: '#bar',
+            text: 'Published `the-package@1.2.3` from <the-pr-url|PR #5> (patch)'
+          })
+        })
+      })
+
+      it('should send the third slack message', () => {
+        expect(fetch).toHaveBeenCalledWith('the-slack-url', {
+          headers: {'Content-Type': 'application/json'},
+          method: 'POST',
+          body: JSON.stringify({
+            channel: '#baz',
+            text: 'Published `the-package@1.2.3` from <the-pr-url|PR #5> (patch)'
+          })
+        })
       })
     })
   })

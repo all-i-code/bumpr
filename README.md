@@ -160,6 +160,13 @@ The following defaults will be used if omitted in `.bumper.json`:
       "logging": {
         "enabled": false,
         "file": "bumpr-log.json"
+      },
+      "slack": {
+        "enabled": false,
+        "env": {
+          "url": "SLACK_URL"
+        },
+        "channels": []
       }
     },
     "files": ['package.json'],
@@ -348,6 +355,27 @@ Set this value to `true` to enable the creation of the log file during a `bump`.
 ##### `features.logging.file`
 The name of the file to create after a `bump`, the contents of the file will be `json` regardless of the name of
 the file given here.
+
+#### `features.slack`
+Send a message in slack detailing the change that `bumpr` just published. The message will be sent after the `publish`
+command completes.
+
+- `changelog` - The full text of the changelog that was added during this `bump`
+- `pr.number` - The pull request number that was merged for this `bump`
+- `pr.url` - The URL for the pull request that was merged for this `bump`
+- `scope` - the scope of the `bump` performed
+- `version` - the new version after the `bump`
+
+##### `features.slack.enabled`
+Set this value to `true` to enable the sending of slack messages after publish
+
+##### `features.slack.env.url`
+The name of the environment variable that holds the URL for your slack webhook.
+
+##### `features.slack.channels`
+An array of channels. The message will be sent to each one individually, using the `channel` property in the slack
+message JSON body. If no channels are given, only a single message will be sent, with no `channel` property, and so
+the default channel for the webhook will be used.
 
 ### `vcs`
 Holds all the information `bumpr` needs to interact with your version control system.

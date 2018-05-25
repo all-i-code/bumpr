@@ -155,7 +155,8 @@ describe('utils', () => {
           TRAVIS_BRANCH: 'my-branch',
           TRAVIS_BUILD_NUMBER: '123',
           GITHUB_READ_ONLY_TOKEN: '12345',
-          GITHUB_TOKEN: '54321'
+          GITHUB_TOKEN: '54321',
+          SLACK_URL: 'slack-webhook-url'
         }
       })
 
@@ -184,7 +185,7 @@ describe('utils', () => {
         })
       })
 
-      describe('when doing a merge build (w/o coverage in package.json)', () => {
+      describe('when doing a merge build', () => {
         beforeEach(() => {
           env.TRAVIS_PULL_REQUEST = 'false'
 
@@ -209,7 +210,7 @@ describe('utils', () => {
         })
       })
 
-      describe('when doing a merge build', () => {
+      describe('when doing a merge build (with slack feature enabled)', () => {
         beforeEach(() => {
           env.TRAVIS_PULL_REQUEST = 'false'
 
@@ -217,20 +218,17 @@ describe('utils', () => {
           setEnv(env)
 
           // '.pr-bumper.json'
-          mockJSONFileRead(new Error())
+          mockJSONFileRead({
+            features: {
+              slack: {enabled: true}
+            }
+          })
 
           ctx.config = utils.getConfig()
         })
 
-        verifyGitHubTravisDefaults(ctx)
-        verifyFeatureDefaults(ctx)
-
-        it('should set isPr to false', () => {
-          expect(ctx.config.computed.ci.isPr).toBe(false)
-        })
-
         it('should set prNumber to false', () => {
-          expect(ctx.config.computed.ci.prNumber).toBe('false')
+          expect(ctx.config.computed.slackUrl).toBe('slack-webhook-url')
         })
       })
 

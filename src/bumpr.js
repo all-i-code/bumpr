@@ -2,6 +2,7 @@ require('./typedefs')
 
 const chalk = require('chalk')
 const {cloneDeep, find, get} = require('lodash')
+const fetch = require('node-fetch')
 const Promise = require('promise')
 const replace = require('replace-in-file')
 const versiony = require('versiony')
@@ -22,6 +23,14 @@ function performPatch(v) {
   } else {
     v.patch()
   }
+}
+
+function postBody(url, body) {
+  return fetch(url, {
+    headers: {'Content-Type': 'application/json'},
+    method: 'POST',
+    body: JSON.stringify(body)
+  })
 }
 
 class MissingKeyError extends Error {
@@ -95,20 +104,15 @@ class Bumpr {
    * @returns {Promise} a promise resolved with the value or rejected on error
    */
   log(key) {
-    const logFile = get(this.config, 'features.logging.file')
-    let value
-    try {
-      value = get(utils.readJsonFile(logFile), key)
-    } catch (err) {
-      const rejection = err.code === 'ENOENT' ? new NoLogFileError(logFile) : err
-      return Promise.reject(rejection)
-    }
+    return this.getLog()
+      .then(({file, log}) => ({file, value: get(log, key)}))
+      .then(({file, value}) => {
+        if (value === undefined) {
+          throw new MissingKeyError(key, file)
+        }
 
-    if (value === undefined) {
-      return Promise.reject(new MissingKeyError(key, logFile))
-    }
-
-    return Promise.resolve(value)
+        return value
+      })
   }
 
   /**
@@ -116,23 +120,48 @@ class Bumpr {
    * @returns {Promise} a promise resolved when publish completes (or is skipped) or rejected on error
    */
   publish() {
-    return this.log('scope')
-      .then(scope => {
-        if (scope === 'none') {
+    return this.getLog()
+      .then(log => {
+        if (!log.scope) {
+          Logger.log('Skipping publish because no scope found.', true)
+          return Promise.resolve()
+        }
+
+        if (log.scope === 'none') {
           Logger.log('Skipping publish because of "none" scope.', true)
           return Promise.resolve()
         }
 
         // eslint-disable-next-line no-template-curly-in-string
-        return writeFile('.npmrc', '//registry.npmjs.org/:_authToken=${NPM_TOKEN}').then(() => exec('npm publish .'))
+        return writeFile('.npmrc', '//registry.npmjs.org/:_authToken=${NPM_TOKEN}')
+          .then(() => exec('npm publish .'))
+          .then(() => this.maybeSendSlackMessage(log))
       })
       .catch(err => {
-        if (err instanceof NoLogFileError || err instanceof MissingKeyError) {
+        if (err instanceof NoLogFileError) {
           Logger.log('Skipping publish because no scope found.', true)
         } else {
           throw err
         }
       })
+  }
+
+  /**
+   * Get the contents of the given log file
+   * @param {String} filename - the name of the log file
+   * @returns {Promise} a promise resolved with the log contents and filename or rejected with an error
+   */
+  getLog() {
+    const logFile = get(this.config, 'features.logging.file')
+    try {
+      return Promise.resolve({
+        file: logFile,
+        log: utils.readJsonFile(logFile)
+      })
+    } catch (err) {
+      const rejection = err.code === 'ENOENT' ? new NoLogFileError(logFile) : err
+      return Promise.reject(rejection)
+    }
   }
 
   /**
@@ -361,6 +390,29 @@ class Bumpr {
     }
 
     return this.ci.push(this.vcs).then(() => info)
+  }
+
+  /**
+   * Maybe send a slack message with the log info
+   * @param {Object} log - the already read log
+   * @returns {Promise} the promise that resolves when slack messages have sent or rejects on error
+   */
+  maybeSendSlackMessage({pr, scope, version}) {
+    if (!this.config.isEnabled('slack')) {
+      Logger.log('Skipping sending slack message because of config option.')
+      return Promise.resolve()
+    }
+
+    const url = this.config.computed.slackUrl
+    const pkg = utils.readJsonFile('package.json')
+    const message = `Published \`${pkg.name}@${version}\` from <${pr.url}|PR #${pr.number}> (${scope})`
+
+    const {channels} = this.config.features.slack
+    if (channels.length === 0) {
+      return postBody(url, {text: message})
+    }
+
+    return Promise.all(channels.map(channel => postBody(url, {channel, text: message})))
   }
 }
 
