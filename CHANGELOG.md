@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [1.2.1] - 2018-05-25
+### Fixed
+- `publish` command to properly wrap `NPM_TOKEN` env var in generated `.npmrc` file.
+
+
 ## [1.2.0] - 2018-05-25
 ### Added
 - `publish` command with previous contents of `scripts/maybe-publish.sh` script
