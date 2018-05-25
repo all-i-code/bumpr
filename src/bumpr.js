@@ -123,7 +123,8 @@ class Bumpr {
           return Promise.resolve()
         }
 
-        return writeFile('.npmrc', '//registry.npmjs.org/:_authToken=$NPM_TOKEN').then(() => exec('npm publish .'))
+        // eslint-disable-next-line no-template-curly-in-string
+        return writeFile('.npmrc', '//registry.npmjs.org/:_authToken=${NPM_TOKEN}').then(() => exec('npm publish .'))
       })
       .catch(err => {
         if (err instanceof NoLogFileError || err instanceof MissingKeyError) {
