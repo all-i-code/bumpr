@@ -168,7 +168,7 @@ const utils = {
       vcs: {
         domain: 'github.com',
         env: {
-          readToken: 'RO_GH_TOKEN',
+          readToken: 'GITHUB_READ_ONLY_TOKEN',
           writeToken: 'GITHUB_TOKEN'
         },
         provider: 'github',

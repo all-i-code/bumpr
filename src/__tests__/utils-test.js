@@ -154,7 +154,7 @@ describe('utils', () => {
         env = {
           TRAVIS_BRANCH: 'my-branch',
           TRAVIS_BUILD_NUMBER: '123',
-          RO_GH_TOKEN: '12345',
+          GITHUB_READ_ONLY_TOKEN: '12345',
           GITHUB_TOKEN: '54321'
         }
       })
