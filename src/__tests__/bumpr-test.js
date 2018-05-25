@@ -407,7 +407,8 @@ describe('Bumpr', () => {
       })
 
       it('should write out the .npmrc file', () => {
-        expect(writeFile).toHaveBeenCalledWith('.npmrc', '//registry.npmjs.org/:_authToken=$NPM_TOKEN')
+        // eslint-disable-next-line no-template-curly-in-string
+        expect(writeFile).toHaveBeenCalledWith('.npmrc', '//registry.npmjs.org/:_authToken=${NPM_TOKEN}')
       })
 
       it('should publish', () => {
