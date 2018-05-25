@@ -10,4 +10,4 @@ script:
 - yarn test
 - VERBOSE=1 ./bin/cli.js bump
 after_success:
-- ./scripts/maybe-publish.sh
+- ./bin/cli.js publish

@@ -1,10 +1,13 @@
-[ci-img]: https://img.shields.io/travis/jobsquad/bumpr.svg "Travis CI Build Status"
+[ci-img]: https://travis-ci.com/jobsquad/bumpr.svg?branch=master "Travis CI Build Status"
 [ci-url]: https://travis-ci.com/jobsquad/bumpr
 
 [npm-img]: https://img.shields.io/npm/v/bumpr.svg "NPM Version"
 [npm-url]: https://www.npmjs.com/package/bumpr
 
-# bumpr <br /> [![Travis][ci-img]][ci-url] [![NPM][npm-img]][npm-url]
+[cov-img]: https://img.shields.io/badge/coverage-100%25-brightgreen.svg
+[lic-img]: https://img.shields.io/npm/l/express.svg
+
+# bumpr <br /> [![Travis][ci-img]][ci-url] ![cov-img] [![NPM][npm-img]][npm-url] ![lic-img]
 
 Originally copied from [`pr-bumper@3.7.1`](https://github.com/ciena-blueplanet/pr-bumper).
 This project was created to simplify code and configuration.
@@ -81,6 +84,9 @@ It is also optimized to work with [Travis CI][travis-url] out-of-the box, but ca
 The specific version range is important so that you don't pick up a breaking major version bump without meaning to,
 for example in your CI script.
 
+Alternatively, you can add `bumpr` as a `devDependency` in your project and use something like `npx`
+or update your `PATH` to be able to execute it.
+
 ## Usage
 You can check for the existence of a valid directive in the current (open) pr (during the pr build) by using
 
@@ -93,6 +99,20 @@ You can perform the automated bump in the merge build by using:
   ```
   bumpr bump
   ```
+
+If you have the `logging` feature enabled, you can output a specific key from the log file using:
+
+  ```
+  bumpr log <key>
+  ```
+
+If you'd like to conditionally publish you package (only if a non-none bump has occurred) you can do so using:
+
+  ```
+  bumpr publish
+  ```
+
+> **NOTE** `bumpr publish` assumes the existence of an `NPM_TOKEN` environment variable to function properly.
 
 ## Configuration
 If you're using Travis CI and public GitHub, `bumpr` will probably work well for you with very little in your

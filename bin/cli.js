@@ -48,4 +48,11 @@ program
       .catch(handleError)
   })
 
+program
+  .command('publish')
+  .description('actually publish the newly bumped version')
+  .action(() => {
+    bumpr.publish().catch(handleError)
+  })
+
 program.parse(process.argv)
