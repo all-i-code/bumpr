@@ -24,6 +24,18 @@ function performPatch(v) {
   }
 }
 
+class MissingKeyError extends Error {
+  constructor(key, logFile) {
+    super(`no ${chalk.yellowBright(key)} key found in ${chalk.magentaBright(logFile)}`)
+  }
+}
+
+class NoLogFileError extends Error {
+  constructor(logFile) {
+    super(`log file ${chalk.magentaBright(logFile)} not found.`)
+  }
+}
+
 /**
  * Interacts with a Vcs to achieive a version bump
  * @class
@@ -88,15 +100,38 @@ class Bumpr {
     try {
       value = get(utils.readJsonFile(logFile), key)
     } catch (err) {
-      const rejection = err.code === 'ENOENT' ? new Error(`log file ${chalk.magentaBright(logFile)} not found.`) : err
+      const rejection = err.code === 'ENOENT' ? new NoLogFileError(logFile) : err
       return Promise.reject(rejection)
     }
 
     if (value === undefined) {
-      return Promise.reject(new Error(`no ${chalk.yellowBright(key)} key found in ${chalk.magentaBright(logFile)}`))
+      return Promise.reject(new MissingKeyError(key, logFile))
     }
 
     return Promise.resolve(value)
+  }
+
+  /**
+   * Publish the package if a non-none bump has occurred
+   * @returns {Promise} a promise resolved when publish completes (or is skipped) or rejected on error
+   */
+  publish() {
+    return this.log('scope')
+      .then(scope => {
+        if (scope === 'none') {
+          Logger.log('Skipping publish because of "none" scope.', true)
+          return Promise.resolve()
+        }
+
+        return writeFile('.npmrc', '//registry.npmjs.org/:_authToken=$NPM_TOKEN').then(() => exec('npm publish .'))
+      })
+      .catch(err => {
+        if (err instanceof NoLogFileError || err instanceof MissingKeyError) {
+          Logger.log('Skipping publish because no scope found.', true)
+        } else {
+          throw err
+        }
+      })
   }
 
   /**
@@ -327,5 +362,8 @@ class Bumpr {
     return this.ci.push(this.vcs).then(() => info)
   }
 }
+
+Bumpr.MissingKeyError = MissingKeyError
+Bumpr.NoLogFileError = NoLogFileError
 
 module.exports = Bumpr

@@ -3,7 +3,6 @@ jest.mock('../node-wrappers')
 jest.mock('../logger')
 jest.mock('../utils')
 
-const chalk = require('chalk')
 const cp = require('child_process')
 const {set} = require('lodash')
 const path = require('path')
@@ -265,7 +264,6 @@ describe('Bumpr', () => {
     })
   })
 
-  // ARM IS HERE
   describe('.log()', () => {
     beforeEach(() => {
       set(bumpr.config, 'features.logging.file', 'the-log-file')
@@ -288,7 +286,7 @@ describe('Bumpr', () => {
       })
 
       it('should reject with the proper error', () => {
-        expect(rejection).toEqual(new Error(`log file ${chalk.magentaBright('the-log-file')} not found.`))
+        expect(rejection).toEqual(new Bumpr.NoLogFileError('the-log-file'))
       })
     })
 
@@ -319,9 +317,7 @@ describe('Bumpr', () => {
       })
 
       it('should notify of the missing key', () => {
-        expect(rejection).toEqual(
-          new Error(`no ${chalk.yellowBright('fizz')} key found in ${chalk.magentaBright('the-log-file')}`)
-        )
+        expect(rejection).toEqual(new Bumpr.MissingKeyError('fizz', 'the-log-file'))
       })
     })
 
@@ -336,6 +332,86 @@ describe('Bumpr', () => {
 
       it('should resolve with the value', () => {
         expect(resolution).toEqual('bar')
+      })
+    })
+  })
+
+  describe('.publish()', () => {
+    afterEach(() => {
+      bumpr.log.mockReset()
+      writeFile.mockReset()
+      exec.mockReset()
+    })
+
+    describe('when file not found', () => {
+      beforeEach(() => {
+        jest.spyOn(bumpr, 'log').mockReturnValue(Promise.reject(new Bumpr.NoLogFileError()))
+        return bumpr.publish()
+      })
+
+      it('should look up the scope from the log', () => {
+        expect(bumpr.log).toHaveBeenCalledWith('scope')
+      })
+
+      it('should log message about why skipping', () => {
+        expect(Logger.log).toHaveBeenCalledWith('Skipping publish because no scope found.', true)
+      })
+    })
+
+    describe('when key is not found', () => {
+      beforeEach(() => {
+        jest.spyOn(bumpr, 'log').mockReturnValue(Promise.reject(new Bumpr.MissingKeyError()))
+        return bumpr.publish()
+      })
+
+      it('should log message about why skipping', () => {
+        expect(Logger.log).toHaveBeenCalledWith('Skipping publish because no scope found.', true)
+      })
+    })
+
+    describe('when some other error is thrown when reading log', () => {
+      let rejection
+      beforeEach(() => {
+        jest.spyOn(bumpr, 'log').mockReturnValue(Promise.reject(new Error('oh snap!')))
+        return bumpr.publish().catch(err => {
+          rejection = err
+        })
+      })
+
+      it('should reject with the raw error', () => {
+        expect(rejection).toEqual(new Error('oh snap!'))
+      })
+    })
+
+    describe('when scope is "none"', () => {
+      beforeEach(() => {
+        jest.spyOn(bumpr, 'log').mockReturnValue(Promise.resolve('none'))
+        return bumpr.publish()
+      })
+
+      it('should log message about why skipping', () => {
+        expect(Logger.log).toHaveBeenCalledWith('Skipping publish because of "none" scope.', true)
+      })
+    })
+
+    describe('when scope is not "none"', () => {
+      beforeEach(() => {
+        jest.spyOn(bumpr, 'log').mockReturnValue(Promise.resolve('minor'))
+        writeFile.mockReturnValue(Promise.resolve())
+        exec.mockReturnValue(Promise.resolve())
+        return bumpr.publish()
+      })
+
+      it('should not log anything', () => {
+        expect(Logger.log).not.toHaveBeenCalled()
+      })
+
+      it('should write out the .npmrc file', () => {
+        expect(writeFile).toHaveBeenCalledWith('.npmrc', '//registry.npmjs.org/:_authToken=$NPM_TOKEN')
+      })
+
+      it('should publish', () => {
+        expect(exec).toHaveBeenCalledWith('npm publish .')
       })
     })
   })
