@@ -31,9 +31,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `scripts/maybe-publish.sh` script which checks `bumpr` log and runs `yarn publish` if:
    - A `bumpr` log file is found
    - The `bumpr` log has a `scope` of something other than `none`
+
 ### Changed
 - Package name from `pr-bumper` to `bumpr`
 - Pull request template to be simpler
+
 ### Removed
 - Code coverage tracking
 - Dependency snapshot creation
@@ -41,6 +43,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Issue template
 - Code owners
 - All `.travis/` scripts
+
 
 ## [0.1.0] - 2018-05-24
 ### Added
