@@ -9,6 +9,7 @@ const utils = require('./utils')
 const GitHub = require('./vcs/github')
 
 // CI implementations
+const Circle = require('./ci/circle')
 const Travis = require('./ci/travis')
 
 /**
@@ -24,6 +25,8 @@ function getCi(config, vcs) {
 
   if (provider === 'travis') {
     return new Travis(config, vcs)
+  } else if (provider === 'circle') {
+    return new Circle(config, vcs)
   }
 
   throw new Error(`Invalid ci provider: ${chalk.red(provider)}`)
