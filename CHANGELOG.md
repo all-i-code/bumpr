@@ -12,6 +12,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [1.2.0] - 2018-05-25
+### Added
+- `publish` command with previous contents of `scripts/maybe-publish.sh` script
+
+### Removed
+- `scripts/maybe-publish.sh` (replaced with `publish` command on the `bumpr` cli) Technically breaking again, but no one using yet still. Should be the last breaking change in 1.x. 
+
+
 ## [1.1.0] - 2018-05-25
 ### Changed
 - Default read-only github token env variable from `RO_GH_TOKEN` to `GITHUB_READ_ONLY_TOKEN`. Technically a breaking change, but since 1.x was only released yesterday, I think we're OK. 
