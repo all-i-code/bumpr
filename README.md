@@ -146,7 +146,7 @@ The following defaults will be used if omitted in `.bumper.json`:
     "vcs": {
       "domain": "github.com",
       "env": {
-        "readToken": "RO_GH_TOKEN",
+        "readToken": "GITHUB_READ_ONLY_TOKEN",
         "writeToken": "GITHUB_TOKEN"
       },
       "provider": "github",
@@ -346,12 +346,12 @@ While one can access the GitHub API just fine without a token, there are rate-li
 Since those rate-limits are based on the IP of the requester, you'd be sharing a limit with anyone else building in
 your CI, which, for Travis CI, could be quite a few people. So, if you specify a `vcs.env.readToken` and
 set the corresponding environment variable in your CI environment, `bumpr` will use that token when making API
-requests to find out information about pull requests. Since we need to be able to access `RO_GH_TOKEN` during a PR
-build, it cannot be encrypted, and thus will not be private. See [travis docs][env-docs] for more info about encrypted
-environment variables.
+requests to find out information about pull requests. Since we need to be able to access `GITHUB_READ_ONLY_TOKEN`
+during a PR build, it cannot be encrypted, and thus will not be private. See [travis docs][env-docs] for more info
+about encrypted environment variables.
 
-> **NOTE** Since `RO_GH_TOKEN` is not secure, it is printed directly into your Travis Logs!!!
-> So, make sure it has only read access to your repository. Hence the name `RO_GH_TOKEN` (Read Only GitHub Token)
+> **NOTE** Since `GITHUB_READ_ONLY_TOKEN` is not secure, it is printed directly into your Travis Logs!!!
+> So, make sure it has only read access to your repository. Hence the name `GITHUB_READ_ONLY_TOKEN`
 
 ##### `vcs.env.writeToken`
 The name of the environment variable that holds the write access token to use when pushing commits to your vcs

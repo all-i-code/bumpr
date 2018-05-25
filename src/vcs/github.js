@@ -13,7 +13,7 @@ const {exec} = require('../node-wrappers')
 function getFetchOpts(config) {
   const {readToken} = config.computed.vcs.auth
   const headers = {}
-  Logger.log(`RO_GH_TOKEN = [${readToken}]`)
+  Logger.log(`GITHUB_READ_ONLY_TOKEN = [${readToken}]`)
   if (readToken) {
     headers.Authorization = `token ${readToken}`
   }
