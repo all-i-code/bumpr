@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [1.1.0] - 2018-05-25
+### Changed
+- Default read-only github token env variable from `RO_GH_TOKEN` to `GITHUB_READ_ONLY_TOKEN`. Technically a breaking change, but since 1.x was only released yesterday, I think we're OK. 
+
+
 ## [1.0.2] - 2018-05-24
 ### Fixed
 - Publish script (to include `--new-version`)
