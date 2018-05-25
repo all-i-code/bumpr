@@ -5,7 +5,7 @@ const {exec} = require('../node-wrappers')
 const CiBase = require('./base')
 
 /**
- * CI interface for public Travis (travis-ci.org)
+ * CI interface for public Travis (travis-ci.org/travis-ci.com)
  *
  * @class
  * @implements {Ci}

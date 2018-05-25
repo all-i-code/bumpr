@@ -1,11 +1,13 @@
 jest.mock('../logger')
 jest.mock('../utils')
 jest.mock('../bumpr')
+jest.mock('../ci/circle')
 jest.mock('../ci/travis')
 jest.mock('../vcs/github')
 
 const chalk = require('chalk')
 const Bumpr = require('../bumpr')
+const Circle = require('../ci/circle')
 const Travis = require('../ci/travis')
 const {createBumpr} = require('../cli')
 const utils = require('../utils')
@@ -58,6 +60,23 @@ describe('createBumpr()', () => {
     })
 
     itShouldCreateBumprWith(cfg, Travis, GitHub)
+  })
+
+  describe('When circle/github are configured', () => {
+    const circleCfg = {
+      ci: {provider: 'circle'},
+      vcs: {provider: 'github'}
+    }
+    beforeEach(() => {
+      utils.getConfig.mockReturnValue(circleCfg)
+      bumpr = createBumpr()
+    })
+
+    it('should return an instance of Bumpr', () => {
+      expect(bumpr).toBeInstanceOf(Bumpr)
+    })
+
+    itShouldCreateBumprWith(circleCfg, Circle, GitHub)
   })
 
   describe('with invalid ci provider', () => {
