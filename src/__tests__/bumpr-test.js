@@ -374,7 +374,8 @@ describe('Bumpr', () => {
 
     describe('when key is not found', () => {
       beforeEach(() => {
-        jest.spyOn(bumpr, 'getLog').mockReturnValue(Promise.resolve({foo: 'bar'}))
+        const log = {foo: 'bar'}
+        jest.spyOn(bumpr, 'getLog').mockReturnValue(Promise.resolve({log}))
         return bumpr.publish()
       })
 
@@ -415,7 +416,8 @@ describe('Bumpr', () => {
 
     describe('when scope is "none"', () => {
       beforeEach(() => {
-        jest.spyOn(bumpr, 'getLog').mockReturnValue(Promise.resolve({scope: 'none'}))
+        const log = {scope: 'none'}
+        jest.spyOn(bumpr, 'getLog').mockReturnValue(Promise.resolve({log}))
         return bumpr.publish()
       })
 
@@ -435,7 +437,8 @@ describe('Bumpr', () => {
     describe('when scope is not "none"', () => {
       let result
       beforeEach(() => {
-        jest.spyOn(bumpr, 'getLog').mockReturnValue(Promise.resolve({scope: 'minor'}))
+        const log = {scope: 'minor'}
+        jest.spyOn(bumpr, 'getLog').mockReturnValue(Promise.resolve({log}))
         writeFile.mockReturnValue(Promise.resolve())
         exec.mockReturnValue(Promise.resolve())
         return bumpr.publish().then(r => {

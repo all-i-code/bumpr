@@ -12,11 +12,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
-## [1.4.2] - 2018-05-29
+## [1.4.2] - 2018-05-29 (Unpublished)
 ### Added
 - `VERBOSE` flag when doing `publish` command in this project
 ### Changed
-- Logging message when log file not found to be distinct from message when scope not found within log. 
+- Logging message when log file not found to be distinct from message when scope not found within log.
 
 
 ## [1.4.1] - 2018-05-29 (Unpublished)
