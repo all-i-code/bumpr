@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [1.4.4] - 2018-05-29
+### Fixed
+- `slack` feature to properly parse `bumpr` log file for required info. 
+
+
 ## [1.4.3] - 2018-05-29
 ### Fixed
 - `publish` command to actually, you know, publish the package again.
