@@ -121,7 +121,7 @@ class Bumpr {
    */
   publish() {
     return this.getLog()
-      .then(log => {
+      .then(({log}) => {
         if (!log.scope) {
           Logger.log('Skipping publish because no scope found.', true)
           return Promise.resolve()
