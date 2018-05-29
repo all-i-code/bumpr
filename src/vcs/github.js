@@ -98,7 +98,7 @@ class GitHub {
    */
   postComment(prNumber, comment) {
     const {owner, name} = this.config.vcs.repository
-    const url = `https://api.github.com/repos/${owner}/${name}/issues/${prNumber}/comments`
+    const url = `https://api.github.com/repos/${owner}/${name}/pulls/${prNumber}/comments`
     Logger.log(`About to send POST to ${url}`)
 
     return fetch(url, {
