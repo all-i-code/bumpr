@@ -1154,7 +1154,7 @@ describe('Bumpr', () => {
       })
 
       it('should not log info about skipping', () => {
-        expect(Logger.log).toHaveBeenCalledTimes(0)
+        expect(Logger.log).not.toHaveBeenCalledWith(expect.stringMatching(/^Skipping/))
       })
 
       it('should set up the git env', () => {
@@ -1315,7 +1315,7 @@ describe('Bumpr', () => {
       })
 
       it('should not log a message explaining why it is skipping', () => {
-        expect(Logger.log).toHaveBeenCalledTimes(0)
+        expect(Logger.log).not.toHaveBeenCalledWith(expect.stringMatching(/^Skipping/))
       })
 
       it('should update the changelog', () => {
@@ -1389,7 +1389,7 @@ describe('Bumpr', () => {
       })
 
       it('should not log a message about why it is skipping', () => {
-        expect(Logger.log).toHaveBeenCalledTimes(0)
+        expect(Logger.log).not.toHaveBeenCalledWith(expect.stringMatching(/^Skipping/))
       })
 
       it('should push the change', () => {
@@ -1450,7 +1450,7 @@ describe('Bumpr', () => {
       })
 
       it('should not log a message explaining why it is skipping', () => {
-        expect(Logger.log).toHaveBeenCalledTimes(0)
+        expect(Logger.log).not.toHaveBeenCalledWith(expect.stringMatching(/^Skipping/))
       })
 
       it('should write the log', () => {
@@ -1519,7 +1519,7 @@ describe('Bumpr', () => {
       })
 
       it('should not log a message explaining why it is skipping', () => {
-        expect(Logger.log).not.toHaveBeenCalled()
+        expect(Logger.log).not.toHaveBeenCalledWith(expect.stringMatching(/^Skipping/))
       })
 
       it('should send the slack message', () => {
@@ -1543,7 +1543,7 @@ describe('Bumpr', () => {
       })
 
       it('should not log a message explaining why it is skipping', () => {
-        expect(Logger.log).not.toHaveBeenCalled()
+        expect(Logger.log).not.toHaveBeenCalledWith(expect.stringMatching(/^Skipping/))
       })
 
       it('should send the first slack message', () => {
