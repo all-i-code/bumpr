@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [1.4.0] - 2018-05-29
+### Added
+- `slack` feature, which allows sending a slack message to a configured set of channels after a `publish` command is executed. Since this only affects `publish`, it only works when `logging` is also configured. You specify the URL for the slack webhook in an environment variable (default `SLACK_URL`. 
+
+
 ## [1.3.0] - 2018-05-25
 ### Added
 - Support for circleci.com (via the `circle` option in `ci.provider`)
