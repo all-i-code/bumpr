@@ -226,7 +226,7 @@ describe('VCS / GitHub /', () => {
     })
 
     it('should call fetch with proper params', () => {
-      const url = 'https://api.github.com/repos/me/my-repo/issues/5/comments'
+      const url = 'https://api.github.com/repos/me/my-repo/pulls/5/comments'
       expect(fetch).toHaveBeenCalledWith(url, {
         method: 'POST',
         body: JSON.stringify({body: 'Missing PR scope!'}),
