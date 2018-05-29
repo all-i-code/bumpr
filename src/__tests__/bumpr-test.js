@@ -1477,10 +1477,8 @@ describe('Bumpr', () => {
     beforeEach(() => {
       info = {
         changelog: 'the-changelog-content',
-        pr: {
-          number: 5,
-          url: 'the-pr-url'
-        },
+        number: 5,
+        url: 'the-pr-url',
         scope: 'patch',
         version: '1.2.3'
       }

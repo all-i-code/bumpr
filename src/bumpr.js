@@ -400,22 +400,22 @@ class Bumpr {
    * @param {Object} log - the already read log
    * @returns {Promise} the promise that resolves when slack messages have sent or rejects on error
    */
-  maybeSendSlackMessage({pr, scope, version}) {
+  maybeSendSlackMessage({number, url, scope, version}) {
     if (!this.config.isEnabled('slack')) {
       Logger.log('Skipping sending slack message because of config option.')
       return Promise.resolve()
     }
 
-    const url = this.config.computed.slackUrl
+    const {slackUrl} = this.config.computed
     const pkg = utils.readJsonFile('package.json')
-    const message = `Published \`${pkg.name}@${version}\` from <${pr.url}|PR #${pr.number}> (${scope})`
+    const message = `Published \`${pkg.name}@${version}\` from <${url}|PR #${number}> (${scope})`
 
     const {channels} = this.config.features.slack
     if (channels.length === 0) {
-      return postBody(url, {text: message})
+      return postBody(slackUrl, {text: message})
     }
 
-    return Promise.all(channels.map(channel => postBody(url, {channel, text: message})))
+    return Promise.all(channels.map(channel => postBody(slackUrl, {channel, text: message})))
   }
 }
 
