@@ -12,14 +12,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
-## [1.4.1] - 2018-05-29
+## [1.4.1] - 2018-05-29 (Unpublished)
 ### Added
 - Additional logging to make debugging failed `publish` easier
 
 
-## [1.4.0] - 2018-05-29
+## [1.4.0] - 2018-05-29 (Unpublished)
 ### Added
-- `slack` feature, which allows sending a slack message to a configured set of channels after a `publish` command is executed. Since this only affects `publish`, it only works when `logging` is also configured. You specify the URL for the slack webhook in an environment variable (default `SLACK_URL`. 
+- `slack` feature, which allows sending a slack message to a configured set of channels after a `publish` command is executed. Since this only affects `publish`, it only works when `logging` is also configured. You specify the URL for the slack webhook in an environment variable (default `SLACK_URL`.
 
 
 ## [1.3.0] - 2018-05-25
@@ -36,12 +36,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `publish` command with previous contents of `scripts/maybe-publish.sh` script
 
 ### Removed
-- `scripts/maybe-publish.sh` (replaced with `publish` command on the `bumpr` cli) Technically breaking again, but no one using yet still. Should be the last breaking change in 1.x. 
+- `scripts/maybe-publish.sh` (replaced with `publish` command on the `bumpr` cli) Technically breaking again, but no one using yet still. Should be the last breaking change in 1.x.
 
 
 ## [1.1.0] - 2018-05-25
 ### Changed
-- Default read-only github token env variable from `RO_GH_TOKEN` to `GITHUB_READ_ONLY_TOKEN`. Technically a breaking change, but since 1.x was only released yesterday, I think we're OK. 
+- Default read-only github token env variable from `RO_GH_TOKEN` to `GITHUB_READ_ONLY_TOKEN`. Technically a breaking change, but since 1.x was only released yesterday, I think we're OK.
 
 
 ## [1.0.2] - 2018-05-24
