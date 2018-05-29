@@ -364,7 +364,7 @@ describe('Bumpr', () => {
       })
 
       it('should log message about why skipping', () => {
-        expect(Logger.log).toHaveBeenCalledWith('Skipping publish because no scope found.', true)
+        expect(Logger.log).toHaveBeenCalledWith('Skipping publish because no log file found.', true)
       })
 
       it('should not maybe send a slack message', () => {
