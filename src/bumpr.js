@@ -139,7 +139,7 @@ class Bumpr {
       })
       .catch(err => {
         if (err instanceof NoLogFileError) {
-          Logger.log('Skipping publish because no scope found.', true)
+          Logger.log('Skipping publish because no log file found.', true)
         } else {
           throw err
         }
