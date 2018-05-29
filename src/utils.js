@@ -95,6 +95,11 @@ function processEnv(config) {
   config.computed.ci.isPr = config.computed.ci.prNumber !== 'false'
   config.computed.ci.branch = getEnv(config.ci.env.branch, 'master')
 
+  // Grab slack URL from env (if feature enabled)
+  if (config.features.slack.enabled) {
+    config.computed.slackUrl = getEnv(config.features.slack.env.url)
+  }
+
   Logger.log(`bumpr::config: prNumber [${config.computed.ci.prNumber}], isPr [${config.computed.ci.isPr}]`)
 
   // Grab the VCS stuff from the env
@@ -162,6 +167,13 @@ const utils = {
         logging: {
           enabled: false,
           file: 'bumpr-log.json'
+        },
+        slack: {
+          enabled: false,
+          env: {
+            url: 'SLACK_URL'
+          },
+          channels: []
         }
       },
       files: ['package.json'],
