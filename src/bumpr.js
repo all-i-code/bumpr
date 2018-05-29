@@ -154,12 +154,14 @@ class Bumpr {
   getLog() {
     const logFile = get(this.config, 'features.logging.file')
     try {
+      Logger.log(`Reading log file from ${logFile}`)
       return Promise.resolve({
         file: logFile,
         log: utils.readJsonFile(logFile)
       })
     } catch (err) {
       const rejection = err.code === 'ENOENT' ? new NoLogFileError(logFile) : err
+      Logger.log(`Error reading log file: ${rejection.message}`)
       return Promise.reject(rejection)
     }
   }
@@ -338,6 +340,7 @@ class Bumpr {
     delete logInfo.modifiedFiles
 
     const filename = this.config.features.logging.file
+    Logger.log(`Writing ${JSON.stringify(logInfo)} to ${filename}`)
     return writeFile(filename, JSON.stringify(logInfo, null, 2)).then(() => info)
   }
 
