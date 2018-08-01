@@ -1,11 +1,15 @@
+jest.mock('cosmiconfig')
 jest.mock('fs')
 jest.mock('../logger')
 
 const {readFileSync} = require('fs')
+const cosmiconfig = require('cosmiconfig')
 const {forEach, forIn} = require('lodash')
+const path = require('path')
+
 const utils = require('../utils')
 
-function mockJSONFileRead(data) {
+function mockJsonFileRead(data) {
   readFileSync.mockImplementationOnce(() => {
     if (data instanceof Error) {
       throw data
@@ -138,12 +142,24 @@ describe('utils', () => {
   describe('.getConfig()', () => {
     let env
     let realEnv
+    let resolver
 
     beforeEach(() => {
+      resolver = {}
+      resolver.promise = new Promise((resolve, reject) => {
+        resolver.resolve = resolve
+        resolver.reject = reject
+      })
+
+      cosmiconfig.mockReturnValue({
+        search: jest.fn().mockReturnValue(resolver.promise)
+      })
+
       realEnv = {}
     })
 
     afterEach(() => {
+      cosmiconfig.mockReset()
       setEnv(realEnv)
     })
 
@@ -167,10 +183,15 @@ describe('utils', () => {
           saveEnv(Object.keys(env), realEnv)
           setEnv(env)
 
-          // '.pr-bumper.json'
-          mockJSONFileRead(new Error())
+          resolver.resolve()
 
-          ctx.config = utils.getConfig()
+          return utils.getConfig().then(config => {
+            ctx.config = config
+          })
+        })
+
+        it('should configure cosmiconfig properly', () => {
+          expect(cosmiconfig).toHaveBeenCalledWith('bumpr')
         })
 
         verifyGitHubTravisDefaults(ctx)
@@ -192,10 +213,11 @@ describe('utils', () => {
           saveEnv(Object.keys(env), realEnv)
           setEnv(env)
 
-          // '.pr-bumper.json'
-          mockJSONFileRead(new Error())
+          resolver.resolve()
 
-          ctx.config = utils.getConfig()
+          return utils.getConfig().then(config => {
+            ctx.config = config
+          })
         })
 
         verifyGitHubTravisDefaults(ctx)
@@ -217,14 +239,17 @@ describe('utils', () => {
           saveEnv(Object.keys(env), realEnv)
           setEnv(env)
 
-          // '.pr-bumper.json'
-          mockJSONFileRead({
-            features: {
-              slack: {enabled: true}
+          resolver.resolve({
+            config: {
+              features: {
+                slack: {enabled: true}
+              }
             }
           })
 
-          ctx.config = utils.getConfig()
+          return utils.getConfig().then(config => {
+            ctx.config = config
+          })
         })
 
         it('should set prNumber to false', () => {
@@ -237,23 +262,26 @@ describe('utils', () => {
           saveEnv(Object.keys(env), realEnv)
           setEnv(env)
 
-          // '.pr-bumper.json'
-          mockJSONFileRead({
-            ci: {
-              gitUser: {
-                email: 'some.other.user@domain.com',
-                name: 'Some Other User'
-              }
-            },
-            features: {
-              changelog: {
-                enabled: true,
-                file: 'CHANGES.md'
+          resolver.resolve({
+            config: {
+              ci: {
+                gitUser: {
+                  email: 'some.other.user@domain.com',
+                  name: 'Some Other User'
+                }
+              },
+              features: {
+                changelog: {
+                  enabled: true,
+                  file: 'CHANGES.md'
+                }
               }
             }
           })
 
-          ctx.config = utils.getConfig()
+          return utils.getConfig().then(config => {
+            ctx.config = config
+          })
         })
 
         verifyGitHubTravisDefaults(ctx, ['ci.gitUser'])
@@ -280,13 +308,11 @@ describe('utils', () => {
           saveEnv(Object.keys(env), realEnv)
           setEnv(env)
 
-          // '.pr-bumper.json'
-          mockJSONFileRead(new Error())
+          resolver.resolve()
 
-          // 'package.json'
-          mockJSONFileRead({})
-
-          ctx.config = utils.getConfig()
+          return utils.getConfig().then(config => {
+            ctx.config = config
+          })
         })
 
         it('should not consider it a PR', () => {
@@ -1018,6 +1044,24 @@ describe('utils', () => {
           })
         })
       })
+    })
+  })
+
+  describe('.readJsonFile()', () => {
+    let cwd
+    let json
+    beforeEach(() => {
+      cwd = process.cwd()
+      mockJsonFileRead({foo: 'bar'})
+      json = utils.readJsonFile('foo.json')
+    })
+
+    it('should read appropriate file', () => {
+      expect(readFileSync).toHaveBeenCalledWith(path.join(cwd, 'foo.json'), {encoding: 'utf8'})
+    })
+
+    it('should return the contents of the file, parsed', () => {
+      expect(json).toEqual({foo: 'bar'})
     })
   })
 })

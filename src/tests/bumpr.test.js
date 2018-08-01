@@ -1242,8 +1242,10 @@ describe('Bumpr', () => {
     beforeEach(() => {
       info = {
         changelog: 'the-changelog-content',
-        scope: 'patch',
         modifiedFiles: [],
+        number: 123,
+        scope: 'patch',
+        url: 'https://github.com/org/repo/pulls/123',
         version: '1.2.3'
       }
       set(bumpr.config, 'features.changelog.file', 'the-changelog-file')
@@ -1328,7 +1330,8 @@ describe('Bumpr', () => {
           .split('T')
           .slice(0, 1)
           .join('')
-        const data = `<!-- bumpr -->\n\n## [${info.version}] - ${dateString}\n${info.changelog}`
+        const prLink = '[PR 123](https://github.com/org/repo/pulls/123)'
+        const data = `<!-- bumpr -->\n\n## [${info.version}] - ${dateString} (${prLink})\n${info.changelog}`
         expect(replace).toHaveBeenCalledWith({
           files: 'the-changelog-file',
           from: /<!-- bumpr -->/,

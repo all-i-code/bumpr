@@ -367,7 +367,8 @@ class Bumpr {
       .slice(0, 1)
       .join('')
 
-    const data = `<!-- bumpr -->\n\n## [${info.version}] - ${dateString}\n${info.changelog}`
+    const prLink = `[PR ${info.number}](${info.url})`
+    const data = `<!-- bumpr -->\n\n## [${info.version}] - ${dateString} (${prLink})\n${info.changelog}`
     const filename = this.config.features.changelog.file
     const options = {
       files: filename,

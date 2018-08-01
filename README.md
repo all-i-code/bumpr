@@ -78,7 +78,7 @@ It is also optimized to work with [Travis CI][travis-url] out-of-the box, but ca
 ## Installation
 
   ```bash
-  npm install -g bumpr@^1.0.0
+  npm install -g bumpr@^2.0.0
   ```
 
 The specific version range is important so that you don't pick up a breaking major version bump without meaning to,
@@ -115,77 +115,80 @@ If you'd like to conditionally publish you package (only if a non-none bump has 
 > **NOTE** `bumpr publish` assumes the existence of an `NPM_TOKEN` environment variable to function properly.
 
 ## Configuration
+As of `2.0.0`, `bumpr` now uses [`cosmiconfig`](https://github.com/davidtheclark/cosmiconfig), so you can configure
+`bumpr` using any method supported by `cosmiconfig`, but we'll refer to the configuration as `.bumprrc.js` in this
+document.
+
 If you're using Travis CI and public GitHub, `bumpr` will probably work well for you with very little in your
-`.bumpr.json`:
+`.bumprrc.js`:
 
-  ```json
-  {
-    "vcs": {
-      "repository": {
-        "name": "bumpr", # <- Your repo name here
-        "owner": "jobsquad" # <- Your organization name here
-      }
+  ```js
+  module.exports = {
+  vcs: {
+    repository: {
+      name: 'bumpr', # <- Your repo name here
+      owner: 'jobsquad' # <- Your organization name here
     }
   }
   ```
 
-The following defaults will be used if omitted in `.bumper.json`:
+The following defaults will be used if omitted in `.bumperrc.js`:
 
-  ```json
+  ```js
   {
-    "ci": {
-      "env": {
-        "branch": "TRAVIS_BRANCH",
-        "buildNumber": "TRAVIS_BUILD_NUMBER",
-        "prNumber": "TRAVIS_PULL_REQUEST"
+    ci: {
+      env: {
+        branch: 'TRAVIS_BRANCH',
+        buildNumber: 'TRAVIS_BUILD_NUMBER',
+        prNumber: 'TRAVIS_PULL_REQUEST'
       },
-      "gitUser": {
-        "email": "bumpr@domain.com",
-        "name": "Bumpr"
+      gitUser: {
+        email: 'bumpr@domain.com',
+        name: 'Bumpr'
       },
-      "provider": "travis"
+      provider: 'travis'
     },
-    "features": {
-      "changelog": {
-        "enabled": false,
-        "file": "CHANGELOG.md"
+    features: {
+      changelog: {
+        enabled: false,
+        file: 'CHANGELOG.md'
       },
-      "comments": {
-        "enabled": false
+      comments: {
+        enabled: false
       },
-      "maxScope": {
-        "enabled": false,
-        "value": "major"
+      maxScope: {
+        enabled: false,
+        value: 'major'
       },
-      "logging": {
-        "enabled": false,
-        "file": "bumpr-log.json"
+      logging: {
+        enabled: false,
+        file: '.bumpr-log.json'
       },
-      "slack": {
-        "enabled": false,
-        "env": {
-          "url": "SLACK_URL"
+      slack: {
+        enabled: false,
+        env: {
+          url: 'SLACK_URL'
         },
-        "channels": []
+        channels: []
       }
     },
-    "files": ['package.json'],
-    "vcs": {
-      "domain": "github.com",
-      "env": {
-        "readToken": "GITHUB_READ_ONLY_TOKEN",
-        "writeToken": "GITHUB_TOKEN"
+    files: ['package.json'],
+    vcs: {
+      domain: 'github.com',
+      env: {
+        readToken: 'GITHUB_READ_ONLY_TOKEN',
+        writeToken: 'GITHUB_TOKEN'
       },
-      "provider": "github",
-      "repository": {
-        "name": "",
-        "owner": ""
+      provider: 'github',
+      repository: {
+        name: '',
+        owner: ''
       }
     }
   }
   ```
 
-You'll notice the data in `.bumpr.json` is separated into three top-level properties, `ci`, `features` and `vcs`.
+You'll notice the data in `.bumprrc.js` is separated into three top-level properties, `ci`, `features` and `vcs`.
 [`ci`](#ci) and [`vcs`](#vcs) help `bumpr` work with your particular environment, while [`features`](#features)
 allows you to enable and configure optional features within `bumpr`.
 
@@ -198,11 +201,11 @@ The default values are set based on `ci.provider`. When `ci.provider` is omitted
 the `ci.env` values are defaulted as shown above. If the `ci.provider` is set to `circle` the `cei.env` defaults
 will be:
 
-```json
+```js
 {
-  "branch": "CIRCLE_BRANCH",
-  "buildNumber": "CIRCLE_BUILD_NUM",
-  "prNumber": "CIRCLE_PR_NUMBER"
+  branch: 'CIRCLE_BRANCH',
+  buildNumber: 'CIRCLE_BUILD_NUM',
+  prNumber: 'CIRCLE_PR_NUMBER'
 }
 ```
 
@@ -264,7 +267,7 @@ This command will now also take all the content below the `## CHANGELOG` line, a
 It will give this new content a heading with the newly bumped version number, along with the date
 (in ISO `yyyy-mm-dd` format, based on UTC timezone)
 
-So, if your project is at version `1.2.3` and you have a PR description that looks like:
+So, if your project is at version `1.2.3` and you have a PR (#123) description that looks like:
 
   ```gfm
   This is a new #feature#
@@ -277,7 +280,7 @@ So, if your project is at version `1.2.3` and you have a PR description that loo
 that is merged on January 15th, 2017, `bumpr` will insert the following into your changelog:
 
   ```gfm
-  ## [1.3.0] - 2017-01-15
+  ## [1.3.0] - 2017-01-15 [PR 123](http://github.com/project/repo/pulls/123)
   ### Added
   - The ability to do fizz-bang
   ```
@@ -339,7 +342,7 @@ The log file that will be created will look something like this:
     "url": "https://github.com/jobsquad/bumpr/pull/123"
   },
   "scope": "minor",
-  "version": "1.3.0",
+  "version": "1.3.0"
 }
 ```
 
