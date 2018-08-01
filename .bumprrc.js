@@ -12,7 +12,7 @@ module.exports = {
     }
   },
   vcs: {
-    respository: {
+    repository: {
       name: 'bumpr',
       owner: 'jobsquad'
     }
