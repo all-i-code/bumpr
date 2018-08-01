@@ -2,6 +2,7 @@
 
 require('./typedefs')
 
+const cosmiconfig = require('cosmiconfig')
 const fs = require('fs')
 const path = require('path')
 const {get, isArray, isObject, set} = require('lodash')
@@ -116,101 +117,105 @@ const utils = {
    * @returns {Config} the config object
    */
   getConfig() {
-    let config = {}
+    return cosmiconfig('bumpr')
+      .search()
+      .then(result => {
+        let config = {}
+        if (result && result.config) {
+          config = result.config // eslint-disable-line prefer-destructuring
+        } else {
+          Logger.log('No config file found, using defaults')
+        }
 
-    try {
-      config = this.readJsonFile('.bumpr.json')
-    } catch (e) {
-      Logger.log('No .bumpr.json found, using defaults')
-    }
-    const leaves = {}
-    const defaults = {
-      ci: {
-        env: {
-          branch: 'TRAVIS_BRANCH',
-          buildNumber: 'TRAVIS_BUILD_NUMBER',
-          prNumber: 'TRAVIS_PULL_REQUEST'
-        },
-        gitUser: {
-          email: 'bumpr@domain.com',
-          name: 'Bumpr'
-        },
-        provider: 'travis'
-      },
-      // This is where we put everything we calculate/compute based on other settings (@job13er 2017-06-16)
-      computed: {
-        ci: {
-          buildNumber: '',
-          branch: '',
-          isPr: false,
-          prNumber: ''
-        },
-        vcs: {
-          auth: {
-            readToken: '',
-            writeToken: ''
+        const leaves = {}
+        const defaults = {
+          ci: {
+            env: {
+              branch: 'TRAVIS_BRANCH',
+              buildNumber: 'TRAVIS_BUILD_NUMBER',
+              prNumber: 'TRAVIS_PULL_REQUEST'
+            },
+            gitUser: {
+              email: 'bumpr@domain.com',
+              name: 'Bumpr'
+            },
+            provider: 'travis'
+          },
+          // This is where we put everything we calculate/compute based on other settings (@job13er 2017-06-16)
+          computed: {
+            ci: {
+              buildNumber: '',
+              branch: '',
+              isPr: false,
+              prNumber: ''
+            },
+            vcs: {
+              auth: {
+                readToken: '',
+                writeToken: ''
+              }
+            }
+          },
+          features: {
+            changelog: {
+              enabled: false,
+              file: 'CHANGELOG.md'
+            },
+            comments: {
+              enabled: false
+            },
+            maxScope: {
+              enabled: false,
+              value: 'major'
+            },
+            logging: {
+              enabled: false,
+              file: '.bumpr-log.json'
+            },
+            slack: {
+              enabled: false,
+              env: {
+                url: 'SLACK_URL'
+              },
+              channels: []
+            }
+          },
+          files: ['package.json'],
+          vcs: {
+            domain: 'github.com',
+            env: {
+              readToken: 'GITHUB_READ_ONLY_TOKEN',
+              writeToken: 'GITHUB_TOKEN'
+            },
+            provider: 'github',
+            repository: {
+              name: '',
+              owner: ''
+            }
           }
         }
-      },
-      features: {
-        changelog: {
-          enabled: false,
-          file: 'CHANGELOG.md'
-        },
-        comments: {
-          enabled: false
-        },
-        maxScope: {
-          enabled: false,
-          value: 'major'
-        },
-        logging: {
-          enabled: false,
-          file: 'bumpr-log.json'
-        },
-        slack: {
-          enabled: false,
-          env: {
-            url: 'SLACK_URL'
-          },
-          channels: []
+
+        walkObject('', defaults, leaves)
+        Object.keys(leaves).forEach(key => {
+          const value = leaves[key]
+          if (get(config, key) === undefined) {
+            set(config, key, value)
+          }
+        })
+
+        processEnv(config)
+
+        /**
+         * Check if given feature is enabled
+         * @param {String} featureName - the name of the feature to check
+         * @returns {Boolean} true if feature enabled, else false
+         */
+        config.isEnabled = function isEnabled(featureName) {
+          return get(this, `features.${featureName}.enabled`) || false
         }
-      },
-      files: ['package.json'],
-      vcs: {
-        domain: 'github.com',
-        env: {
-          readToken: 'GITHUB_READ_ONLY_TOKEN',
-          writeToken: 'GITHUB_TOKEN'
-        },
-        provider: 'github',
-        repository: {
-          name: '',
-          owner: ''
-        }
-      }
-    }
 
-    walkObject('', defaults, leaves)
-    Object.keys(leaves).forEach(key => {
-      const value = leaves[key]
-      if (get(config, key) === undefined) {
-        set(config, key, value)
-      }
-    })
-
-    processEnv(config)
-
-    /**
-     * Check if given feature is enabled
-     * @param {String} featureName - the name of the feature to check
-     * @returns {Boolean} true if feature enabled, else false
-     */
-    config.isEnabled = function isEnabled(featureName) {
-      return get(this, `features.${featureName}.enabled`) || false
-    }
-
-    return config
+        return config
+      })
   },
 
   /**

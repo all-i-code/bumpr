@@ -55,8 +55,9 @@ function getVcs(config) {
  * @returns {Promise} a promise resolved when command finishes, or rejected with failure
  */
 exports.createBumpr = function createBumpr() {
-  const config = utils.getConfig()
-  const vcs = getVcs(config)
-  const ci = getCi(config, vcs)
-  return new Bumpr({ci, config, vcs})
+  return utils.getConfig().then(config => {
+    const vcs = getVcs(config)
+    const ci = getCi(config, vcs)
+    return new Bumpr({ci, config, vcs})
+  })
 }

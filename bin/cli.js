@@ -13,11 +13,10 @@ function handleError(error) {
   process.exit(1)
 }
 
-let bumpr
-try {
-  bumpr = createBumpr()
-} catch (err) {
-  handleError(err)
+function withBumpr(callback) {
+  createBumpr()
+    .then(bumpr => callback(bumpr))
+    .catch(handleError)
 }
 
 program.version(version)
@@ -26,33 +25,28 @@ program
   .command('check')
   .description('verify an open PR has a version bump comment')
   .action(() => {
-    bumpr.check().catch(handleError)
+    withBumpr(bumpr => bumpr.check())
   })
 
 program
   .command('bump')
   .description('actually bump the version based on a merged PR')
   .action(() => {
-    bumpr.bump().catch(handleError)
+    withBumpr(bumpr => bumpr.bump())
   })
 
 program
   .command('log <key>')
   .description(`Output the given key from the ${name} log file`)
   .action(key => {
-    bumpr
-      .log(key)
-      .then(value => {
-        console.log(value)
-      })
-      .catch(handleError)
+    withBumpr(bumpr => bumpr.log(key).then(value => console.log(value)))
   })
 
 program
   .command('publish')
   .description('actually publish the newly bumped version')
   .action(() => {
-    bumpr.publish().catch(handleError)
+    withBumpr(bumpr => bumpr.publish())
   })
 
 program.parse(process.argv)

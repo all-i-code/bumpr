@@ -51,8 +51,10 @@ describe('createBumpr()', () => {
 
   describe('When travis/github are configured', () => {
     beforeEach(() => {
-      utils.getConfig.mockReturnValue(cfg)
-      bumpr = createBumpr()
+      utils.getConfig.mockReturnValue(Promise.resolve(cfg))
+      return createBumpr().then(b => {
+        bumpr = b
+      })
     })
 
     it('should return an instance of Bumpr', () => {
@@ -68,8 +70,10 @@ describe('createBumpr()', () => {
       vcs: {provider: 'github'}
     }
     beforeEach(() => {
-      utils.getConfig.mockReturnValue(circleCfg)
-      bumpr = createBumpr()
+      utils.getConfig.mockReturnValue(Promise.resolve(circleCfg))
+      return createBumpr().then(b => {
+        bumpr = b
+      })
     })
 
     it('should return an instance of Bumpr', () => {
@@ -80,38 +84,43 @@ describe('createBumpr()', () => {
   })
 
   describe('with invalid ci provider', () => {
-    let wrapper
+    let err
     beforeEach(() => {
-      utils.getConfig.mockReturnValue({
-        ci: {provider: 'fizz-bang'},
-        vcs: {provider: 'github'}
-      })
+      bumpr = null
+      utils.getConfig.mockReturnValue(
+        Promise.resolve({
+          ci: {provider: 'fizz-bang'},
+          vcs: {provider: 'github'}
+        })
+      )
 
-      wrapper = () => {
-        createBumpr()
-      }
+      return createBumpr().catch(e => {
+        err = e
+      })
     })
 
     it('should error', () => {
-      expect(wrapper).toThrow(new Error(`Invalid ci provider: ${chalk.red('fizz-bang')}`))
+      expect(err).toEqual(new Error(`Invalid ci provider: ${chalk.red('fizz-bang')}`))
     })
   })
 
   describe('with invalid vcs provider', () => {
-    let wrapper
+    let err
     beforeEach(() => {
-      utils.getConfig.mockReturnValue({
-        ci: {provider: 'travis'},
-        vcs: {provider: 'fizz-bang'}
-      })
+      utils.getConfig.mockReturnValue(
+        Promise.resolve({
+          ci: {provider: 'travis'},
+          vcs: {provider: 'fizz-bang'}
+        })
+      )
 
-      wrapper = () => {
-        createBumpr()
-      }
+      return createBumpr().catch(e => {
+        err = e
+      })
     })
 
     it('should error', () => {
-      expect(wrapper).toThrow(new Error(`Invalid vcs provider: ${chalk.red('fizz-bang')}`))
+      expect(err).toEqual(new Error(`Invalid vcs provider: ${chalk.red('fizz-bang')}`))
     })
   })
 })
