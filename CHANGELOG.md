@@ -12,6 +12,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.0.0] - 2018-08-01 ([PR 19](https://github.com/jobsquad/bumpr/pull/19))
+### Added
+- [`cosmiconfig`](https://github.com/davidtheclark/cosmiconfig) support (Fixes [#15](https://github.com/jobsquad/bumpr/issues/15))
+- A link to the PR that was merged to create a particular version in the section for that version `bumpr` adds to `CHANGELOG.md`
+
+### Removed
+- Support for `.bumpr.json` configuration file
+
+
 ## [1.4.4] - 2018-05-29
 ### Fixed
 - `slack` feature to properly parse `bumpr` log file for required info. 
