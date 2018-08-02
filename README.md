@@ -170,6 +170,10 @@ The following defaults will be used if omitted in `.bumperrc.js`:
           url: 'SLACK_URL'
         },
         channels: []
+      },
+      timezone: {
+        enabled: false,
+        zone: 'Etc/UTC'
       }
     },
     files: ['package.json'],
@@ -379,6 +383,19 @@ The name of the environment variable that holds the URL for your slack webhook.
 An array of channels. The message will be sent to each one individually, using the `channel` property in the slack
 message JSON body. If no channels are given, only a single message will be sent, with no `channel` property, and so
 the default channel for the webhook will be used.
+
+#### `features.timezone`
+Report dates in changelog based on a given timezone. By default, `bumpr` uses the UTC timezone to figure out what
+date a version is being published. When enabled, this feature allows you to configure a timezone to use to determine
+the date.
+
+##### `features.timezone.enabled`
+Set this value to `true` to enable overriding the timezone used by `bumpr` when computing the date string to add into
+your changelog.
+
+##### `features.timezone.zone`
+The timezone to use. You can use any time zone name supported by [`moment-timezone`](https://momentjs.com/timezone/).
+For example, `America/Los_Angeles`, `America/Denver`, or `America/New_York`
 
 ### `vcs`
 Holds all the information `bumpr` needs to interact with your version control system.

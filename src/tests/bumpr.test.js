@@ -7,6 +7,7 @@ jest.mock('../utils')
 const cp = require('child_process')
 const {set} = require('lodash')
 const fetch = require('node-fetch')
+const moment = require('moment-timezone')
 const path = require('path')
 const Promise = require('promise')
 const replace = require('replace-in-file')
@@ -1294,11 +1295,10 @@ describe('Bumpr', () => {
       })
     })
 
-    describe('when feature is enabled and scope is not "none"', () => {
+    describe('when feature is enabled and scope is not "none" (no timzeone set)', () => {
       beforeEach(() => {
         info.scope = 'patch'
         bumpr.config.isEnabled.mockImplementation(name => name === 'changelog')
-        bumpr.config.changelogFile = 'the-changelog-file'
 
         return bumpr.maybeUpdateChangelog(info).then(resp => {
           result = resp
@@ -1310,12 +1310,46 @@ describe('Bumpr', () => {
       })
 
       it('should update the changelog', () => {
-        const now = new Date()
-        const dateString = now
-          .toISOString()
-          .split('T')
-          .slice(0, 1)
-          .join('')
+        const dateString = moment()
+          .tz('Etc/UTC')
+          .format('YYYY-MM-DD')
+        const prLink = '[PR 123](https://github.com/org/repo/pulls/123)'
+        const data = `<!-- bumpr -->\n\n## [${info.version}] - ${dateString} (${prLink})\n${info.changelog}`
+        expect(replace).toHaveBeenCalledWith({
+          files: 'the-changelog-file',
+          from: /<!-- bumpr -->/,
+          to: data
+        })
+      })
+
+      it('should add the changelog file to the modifiedFiles list', () => {
+        expect(info.modifiedFiles).toContain('the-changelog-file')
+      })
+
+      it('should resolve with the info', () => {
+        expect(result).toBe(info)
+      })
+    })
+
+    describe('when feature is enabled and scope is not "none" (with timezone set)', () => {
+      beforeEach(() => {
+        info.scope = 'patch'
+        bumpr.config.isEnabled.mockImplementation(name => ['changelog', 'timezone'].includes(name))
+        set(bumpr.config, 'features.timezone.zone', 'America/Denver')
+
+        return bumpr.maybeUpdateChangelog(info).then(resp => {
+          result = resp
+        })
+      })
+
+      it('should not log a message explaining why it is skipping', () => {
+        expect(Logger.log).not.toHaveBeenCalledWith(expect.stringMatching(/^Skipping/))
+      })
+
+      it('should update the changelog', () => {
+        const dateString = moment()
+          .tz('America/Denver')
+          .format('YYYY-MM-DD')
         const prLink = '[PR 123](https://github.com/org/repo/pulls/123)'
         const data = `<!-- bumpr -->\n\n## [${info.version}] - ${dateString} (${prLink})\n${info.changelog}`
         expect(replace).toHaveBeenCalledWith({

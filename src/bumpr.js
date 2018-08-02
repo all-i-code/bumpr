@@ -1,7 +1,8 @@
 require('./typedefs')
 
 const chalk = require('chalk')
-const {cloneDeep, find, get} = require('lodash')
+const {cloneDeep, get} = require('lodash')
+const moment = require('moment-timezone')
 const fetch = require('node-fetch')
 const Promise = require('promise')
 const replace = require('replace-in-file')
@@ -350,12 +351,14 @@ class Bumpr {
       return Promise.resolve(info)
     }
 
-    const now = new Date()
-    const dateString = now
-      .toISOString()
-      .split('T')
-      .slice(0, 1)
-      .join('')
+    let timezone = 'Etc/UTC'
+    if (this.config.isEnabled('timezone')) {
+      timezone = this.config.features.timezone.zone
+    }
+
+    const dateString = moment()
+      .tz(timezone)
+      .format('YYYY-MM-DD')
 
     const prLink = `[PR ${info.number}](${info.url})`
     const data = `<!-- bumpr -->\n\n## [${info.version}] - ${dateString} (${prLink})\n${info.changelog}`
