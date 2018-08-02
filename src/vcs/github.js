@@ -30,8 +30,10 @@ function convertLineEndings(str) {
  */
 function convertPr(ghPr) {
   return {
-    number: ghPr.number,
+    author: ghPr.user.login,
+    authorUrl: ghPr.user.html_url,
     description: convertLineEndings(ghPr.body),
+    number: ghPr.number,
     url: ghPr.html_url
   }
 }

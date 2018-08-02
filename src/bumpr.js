@@ -193,6 +193,8 @@ class Bumpr {
       const getChangelog = this.config.isEnabled('changelog') && scope !== 'none'
 
       return {
+        author: pr.author,
+        authorUrl: pr.authorUrl,
         changelog: getChangelog ? utils.getChangelogForPr(pr) : '',
         modifiedFiles: [],
         number: pr.number,
@@ -326,9 +328,21 @@ class Bumpr {
       Logger.log('Skipping logging because of config option.')
       return Promise.resolve(info)
     }
+    const {author, authorUrl, changelog, number, scope, url, version} = info
 
-    const logInfo = cloneDeep(info)
-    delete logInfo.modifiedFiles
+    const logInfo = {
+      changelog,
+      pr: {
+        number,
+        url,
+        user: {
+          login: author,
+          url: authorUrl
+        }
+      },
+      scope,
+      version
+    }
 
     const filename = this.config.features.logging.file
     Logger.log(`Writing ${JSON.stringify(logInfo)} to ${filename}`)
@@ -394,15 +408,16 @@ class Bumpr {
    * @param {Object} log - the already read log
    * @returns {Promise} the promise that resolves when slack messages have sent or rejects on error
    */
-  maybeSendSlackMessage({number, url, scope, version}) {
+  maybeSendSlackMessage({pr, scope, version}) {
     if (!this.config.isEnabled('slack')) {
       Logger.log('Skipping sending slack message because of config option.')
       return Promise.resolve()
     }
-
+    const {number, url, user} = pr
     const {slackUrl} = this.config.computed
     const pkg = utils.readJsonFile('package.json')
-    const message = `Published \`${pkg.name}@${version}\` from <${url}|PR #${number}> (${scope})`
+    const pkgStr = `${pkg.name}@${version}`
+    const message = `Published \`${pkgStr}\` (${scope}) from <${url}|PR #${number}> by <${user.url}|${user.login}>`
 
     const {channels} = this.config.features.slack
     if (channels.length === 0) {

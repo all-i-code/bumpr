@@ -343,7 +343,11 @@ The log file that will be created will look something like this:
   "changelog": "### Added\n- Some cool new feature",
   "pr": {
     "number": 123,
-    "url": "https://github.com/jobsquad/bumpr/pull/123"
+    "url": "https://github.com/jobsquad/bumpr/pull/123",
+    "user": {
+      "login": "job13er",
+      "url": "https://github.com/job13er"
+    },
   },
   "scope": "minor",
   "version": "1.3.0"
@@ -353,7 +357,10 @@ The log file that will be created will look something like this:
 - `changelog` - The full text of the changelog that was added during this `bump`
 - `pr.number` - The pull request number that was merged for this `bump`
 - `pr.url` - The URL for the pull request that was merged for this `bump`
+- `pr.user.login` - The username of the user who created the pull request that was merged for this `bump`
+- `pr.user.url` - The profile URL of the user who created the pull request that was merged for this `bump`
 - `scope` - the scope of the `bump` performed
+- `user.login` - the scope of the `bump` performed
 - `version` - the new version after the `bump`
 
 ##### `features.logging.enabled`

@@ -114,18 +114,30 @@ describe('VCS / GitHub /', () => {
           {
             number: 5,
             body: '#minor#\r\n## Changelog\r\n### Added\r\n- Some kinda cool stuff',
+            user: {
+              login: 'bot1',
+              html_url: 'profile-of-bot1'
+            },
             html_url: 'link-to-pr-5',
             merge_commit_sha: 'sha-1'
           },
           {
             number: 4,
             body: '#minor#\r\n## Changelog\r\n### Added\r\n- Some really cool stuff',
+            user: {
+              login: 'bot2',
+              html_url: 'profile-of-bot2'
+            },
             html_url: 'link-to-pr-4',
             merge_commit_sha: 'sha-2'
           },
           {
             number: 3,
             body: '#minor#\r\n## Changelog\r\n### Added\r\n- Some super cool stuff',
+            user: {
+              login: 'bot3',
+              html_url: 'profile-of-bot3'
+            },
             html_url: 'link-to-pr-3',
             merge_commit_sha: 'sha-3'
           }
@@ -146,6 +158,8 @@ describe('VCS / GitHub /', () => {
 
       it('should resolve with the correct PR', () => {
         expect(resolution).toEqual({
+          author: 'bot2',
+          authorUrl: 'profile-of-bot2',
           description: '#minor#\n## Changelog\n### Added\n- Some really cool stuff',
           number: 4,
           url: 'link-to-pr-4'
@@ -293,6 +307,10 @@ describe('VCS / GitHub /', () => {
       beforeEach(done => {
         const pr = {
           number: 5,
+          user: {
+            login: 'bot',
+            html_url: 'bot-profile'
+          },
           body: '#minor#\r\n## Changelog\r\n### Added\r\n- Some really cool stuff',
           html_url: 'my-link-to-myself',
           head: {
@@ -315,6 +333,8 @@ describe('VCS / GitHub /', () => {
 
       it('should resolve with the correct PR', () => {
         expect(resolution).toEqual({
+          author: 'bot',
+          authorUrl: 'bot-profile',
           description: '#minor#\n## Changelog\n### Added\n- Some really cool stuff',
           number: 5,
           url: 'my-link-to-myself'

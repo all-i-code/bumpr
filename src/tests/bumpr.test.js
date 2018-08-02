@@ -543,6 +543,7 @@ describe('Bumpr', () => {
     ;['major', 'minor', 'patch'].forEach(scope => {
       describe(`when scope is ${scope}`, () => {
         let result
+        let pr
 
         beforeEach(() => {
           bumpr.config = {
@@ -555,8 +556,14 @@ describe('Bumpr', () => {
             isEnabled: jest.fn()
           }
           bumpr.vcs = {bar: 'baz'}
+          pr = {
+            author: 'bot',
+            authorUrl: 'bot-profile',
+            number: '1',
+            url: '/pulls/1'
+          }
 
-          jest.spyOn(bumpr, 'getLastPr').mockReturnValue(Promise.resolve('the-pr'))
+          jest.spyOn(bumpr, 'getLastPr').mockReturnValue(Promise.resolve(pr))
           utils.getChangelogForPr.mockReturnValue('my-changelog')
           utils.getScopeForPr.mockReturnValue(scope)
         })
@@ -585,15 +592,23 @@ describe('Bumpr', () => {
             })
 
             it('should gets the scope for the given pr', () => {
-              expect(utils.getScopeForPr).toHaveBeenCalledWith('the-pr', 'minor')
+              expect(utils.getScopeForPr).toHaveBeenCalledWith(pr, 'minor')
             })
 
             it('should get the changelog for the given pr', () => {
-              expect(utils.getChangelogForPr).toHaveBeenCalledWith('the-pr')
+              expect(utils.getChangelogForPr).toHaveBeenCalledWith(pr)
             })
 
             it('should resolve with the info', () => {
-              expect(result).toEqual({changelog: 'my-changelog', modifiedFiles: [], scope})
+              expect(result).toEqual({
+                author: 'bot',
+                authorUrl: 'bot-profile',
+                changelog: 'my-changelog',
+                modifiedFiles: [],
+                number: '1',
+                scope,
+                url: '/pulls/1'
+              })
             })
           })
 
@@ -611,7 +626,7 @@ describe('Bumpr', () => {
             })
 
             it('should gets the scope for the given pr', () => {
-              expect(utils.getScopeForPr).toHaveBeenCalledWith('the-pr', 'minor')
+              expect(utils.getScopeForPr).toHaveBeenCalledWith(pr, 'minor')
             })
 
             it('should not get the changelog for the given pr', () => {
@@ -619,7 +634,15 @@ describe('Bumpr', () => {
             })
 
             it('should resolve with the info', () => {
-              expect(result).toEqual({changelog: '', modifiedFiles: [], scope})
+              expect(result).toEqual({
+                author: 'bot',
+                authorUrl: 'bot-profile',
+                changelog: '',
+                modifiedFiles: [],
+                number: '1',
+                scope,
+                url: '/pulls/1'
+              })
             })
           })
         })
@@ -637,20 +660,8 @@ describe('Bumpr', () => {
               })
             })
 
-            it('should get the last PR to be merged', () => {
-              expect(bumpr.getLastPr).toHaveBeenCalledTimes(1)
-            })
-
             it('should gets the scope for the given pr', () => {
-              expect(utils.getScopeForPr).toHaveBeenCalledWith('the-pr', 'major')
-            })
-
-            it('should get the changelog for the given pr', () => {
-              expect(utils.getChangelogForPr).toHaveBeenCalledWith('the-pr')
-            })
-
-            it('should resolve with the info', () => {
-              expect(result).toEqual({changelog: 'my-changelog', modifiedFiles: [], scope})
+              expect(utils.getScopeForPr).toHaveBeenCalledWith(pr, 'major')
             })
           })
 
@@ -663,20 +674,8 @@ describe('Bumpr', () => {
             })
             /* eslint-enable arrow-body-style */
 
-            it('should get the last PR to be merged', () => {
-              expect(bumpr.getLastPr).toHaveBeenCalledTimes(1)
-            })
-
             it('should gets the scope for the given pr', () => {
-              expect(utils.getScopeForPr).toHaveBeenCalledWith('the-pr', 'major')
-            })
-
-            it('should not get the changelog for the given pr', () => {
-              expect(utils.getChangelogForPr).toHaveBeenCalledTimes(0)
-            })
-
-            it('should resolve with the info', () => {
-              expect(result).toEqual({changelog: '', modifiedFiles: [], scope})
+              expect(utils.getScopeForPr).toHaveBeenCalledWith(pr, 'major')
             })
           })
         })
@@ -1434,9 +1433,13 @@ describe('Bumpr', () => {
 
     beforeEach(() => {
       info = {
+        author: 'bot',
+        authorUrl: 'bot-profile',
         changelog: 'the-changelog-content',
-        scope: 'patch',
         modifiedFiles: [],
+        number: '1',
+        scope: 'patch',
+        url: '/pulls/1',
         version: '1.2.3'
       }
       set(bumpr.config, 'features.logging.file', 'the-log-file')
@@ -1482,6 +1485,14 @@ describe('Bumpr', () => {
       it('should write the log', () => {
         const logInfo = {
           changelog: 'the-changelog-content',
+          pr: {
+            number: '1',
+            url: '/pulls/1',
+            user: {
+              login: 'bot',
+              url: 'bot-profile'
+            }
+          },
           scope: 'patch',
           version: '1.2.3'
         }
@@ -1500,8 +1511,14 @@ describe('Bumpr', () => {
     beforeEach(() => {
       info = {
         changelog: 'the-changelog-content',
-        number: 5,
-        url: 'the-pr-url',
+        pr: {
+          number: 5,
+          url: 'the-pr-url',
+          user: {
+            login: 'bot',
+            url: 'bot-profile'
+          }
+        },
         scope: 'patch',
         version: '1.2.3'
       }
@@ -1551,7 +1568,7 @@ describe('Bumpr', () => {
           headers: {'Content-Type': 'application/json'},
           method: 'POST',
           body: JSON.stringify({
-            text: 'Published `the-package@1.2.3` from <the-pr-url|PR #5> (patch)'
+            text: 'Published `the-package@1.2.3` (patch) from <the-pr-url|PR #5> by <bot-profile|bot>'
           })
         })
       })
@@ -1576,7 +1593,7 @@ describe('Bumpr', () => {
           method: 'POST',
           body: JSON.stringify({
             channel: '#foo',
-            text: 'Published `the-package@1.2.3` from <the-pr-url|PR #5> (patch)'
+            text: 'Published `the-package@1.2.3` (patch) from <the-pr-url|PR #5> by <bot-profile|bot>'
           })
         })
       })
@@ -1587,7 +1604,7 @@ describe('Bumpr', () => {
           method: 'POST',
           body: JSON.stringify({
             channel: '#bar',
-            text: 'Published `the-package@1.2.3` from <the-pr-url|PR #5> (patch)'
+            text: 'Published `the-package@1.2.3` (patch) from <the-pr-url|PR #5> by <bot-profile|bot>'
           })
         })
       })
@@ -1598,7 +1615,7 @@ describe('Bumpr', () => {
           method: 'POST',
           body: JSON.stringify({
             channel: '#baz',
-            text: 'Published `the-package@1.2.3` from <the-pr-url|PR #5> (patch)'
+            text: 'Published `the-package@1.2.3` (patch) from <the-pr-url|PR #5> by <bot-profile|bot>'
           })
         })
       })
