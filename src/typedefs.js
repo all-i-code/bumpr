@@ -109,13 +109,22 @@
  */
 
 /**
+ * The representation of a user on github
+ * @typedef GitHubUser
+ * @property {String} login - username
+ * @property {String} html_url - profile url
+ */
+
+/**
  * The shape of the PR pulled from GitHub's `/repos/:owner/:repo/pulls` API
  * {@link https://developer.github.com/v3/pulls/}
  *
  * @typedef GitHubPullRequest
  * @property {Number} number - the PR #
  * @property {String} body - the description of the PR
+ * @property {GitHubUser} user - the user who opened the PR
  * @property {String} html_url - the URL for the web interface of the PR
+ * @property {String} merge_commit_sha - sha of the merge commit
  * @property {GitHubCommit} head - representation of the tip commit from the branch being merged
  * @property {GitHubCommit} base - representation of the tip commit from the branch being merged into
  */
@@ -127,13 +136,16 @@
  * @property {Number} number - the PR #
  * @property {String} description - the description of the PR
  * @property {String} url - the URL for the web interface of the PR
- * @property {String} headCommitSha - SHA for the head commit of the incoming branch for the PR
+ * @property {String} author - username of the PR author
+ * @property {String} authorUrl - URL of the PR author's profile
  */
 
 /**
  * Generic Pull Request info (used for updating package.json and CHANGELOG.md files)
  *
  * @typedef PrInfo
+ * @property {String} author - the username of the PR author
+ * @property {String} authorUrl - the profile URL of the PR author
  * @property {String} changelog - the changelog text
  * @property {Number} number - the PR #
  * @property {String} scope - the scope of the PR

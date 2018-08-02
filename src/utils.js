@@ -178,6 +178,10 @@ const utils = {
                 url: 'SLACK_URL'
               },
               channels: []
+            },
+            timezone: {
+              enabled: false,
+              zone: 'Etc/UTC'
             }
           },
           files: ['package.json'],
