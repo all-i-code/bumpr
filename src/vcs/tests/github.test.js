@@ -66,6 +66,190 @@ describe('VCS / GitHub /', () => {
     })
   })
 
+  describe('.getMergedPrBySha()', () => {
+    let resolution
+    let rejection
+    let promise
+    let fetchResolver
+
+    beforeEach(() => {
+      fetchResolver = {}
+      const fetchPromise = new Promise((resolve, reject) => {
+        fetchResolver.resolve = resolve
+        fetchResolver.reject = reject
+      })
+
+      fetch.mockReturnValue(fetchPromise)
+
+      resolution = null
+      rejection = null
+      promise = github
+        .getMergedPrBySha('sha-2')
+        .then(resp => {
+          resolution = resp
+          return resolution
+        })
+        .catch(err => {
+          rejection = err
+          throw err
+        })
+    })
+
+    it('should call fetch with proper params', () => {
+      expect(fetch).toHaveBeenCalledWith(
+        'https://api.github.com/repos/me/my-repo/pulls?state=closed&sort=updated&direction=desc',
+        {
+          headers: {
+            Authorization: 'token my-ro-gh-token'
+          }
+        }
+      )
+    })
+
+    describe('when fetch resolves with success (and matching PR found)', () => {
+      let resp
+
+      beforeEach(done => {
+        const prs = [
+          {
+            number: 5,
+            body: '#minor#\r\n## Changelog\r\n### Added\r\n- Some kinda cool stuff',
+            html_url: 'link-to-pr-5',
+            merge_commit_sha: 'sha-1'
+          },
+          {
+            number: 4,
+            body: '#minor#\r\n## Changelog\r\n### Added\r\n- Some really cool stuff',
+            html_url: 'link-to-pr-4',
+            merge_commit_sha: 'sha-2'
+          },
+          {
+            number: 3,
+            body: '#minor#\r\n## Changelog\r\n### Added\r\n- Some super cool stuff',
+            html_url: 'link-to-pr-3',
+            merge_commit_sha: 'sha-3'
+          }
+        ]
+
+        resp = {
+          json: jest.fn().mockReturnValue(Promise.resolve(prs)),
+          ok: true,
+          status: 200
+        }
+
+        promise.then(() => {
+          done()
+        })
+
+        fetchResolver.resolve(resp)
+      })
+
+      it('should resolve with the correct PR', () => {
+        expect(resolution).toEqual({
+          description: '#minor#\n## Changelog\n### Added\n- Some really cool stuff',
+          number: 4,
+          url: 'link-to-pr-4'
+        })
+      })
+    })
+
+    describe('when fetch resolves with success (and no matching PR found)', () => {
+      let resp
+
+      beforeEach(done => {
+        const prs = [
+          {
+            number: 5,
+            body: '#minor#\r\n## Changelog\r\n### Added\r\n- Some kinda cool stuff',
+            html_url: 'link-to-pr-5',
+            merge_commit_sha: 'sha-1'
+          },
+          {
+            number: 3,
+            body: '#minor#\r\n## Changelog\r\n### Added\r\n- Some super cool stuff',
+            html_url: 'link-to-pr-3',
+            merge_commit_sha: 'sha-3'
+          }
+        ]
+
+        resp = {
+          json: jest.fn().mockReturnValue(Promise.resolve(prs)),
+          ok: true,
+          status: 200
+        }
+
+        promise.catch(() => {
+          done()
+        })
+
+        fetchResolver.resolve(resp)
+      })
+
+      it('should reject with the proper error', () => {
+        expect(rejection).toEqual(new Error('Unable to find a merged PR for sha sha-2'))
+      })
+    })
+
+    describe('when fetch resolves with error', () => {
+      let err
+      let resp
+
+      beforeEach(done => {
+        err = {
+          message: 'Uh oh'
+        }
+
+        resp = {
+          json: jest.fn().mockReturnValue(Promise.resolve(err)),
+          ok: false,
+          status: 400
+        }
+
+        promise.catch(() => {
+          done()
+        })
+
+        fetchResolver.resolve(resp)
+      })
+
+      it('should not resolve', () => {
+        expect(resolution).toBe(null)
+      })
+
+      it('should reject with the proper error', () => {
+        expect(rejection).toEqual(new Error('Unable to find a merged PR for sha sha-2'))
+      })
+    })
+
+    describe('when fetch errors', () => {
+      beforeEach(done => {
+        promise.catch(() => {
+          done()
+        })
+
+        fetchResolver.reject('my-error')
+      })
+
+      it('should pass up the error', () => {
+        expect(rejection).toEqual(new Error('Unable to find a merged PR for sha sha-2'))
+      })
+    })
+
+    describe('with no readToken', () => {
+      beforeEach(() => {
+        delete github.config.computed.vcs.auth.readToken
+        github.getMergedPrBySha('sha-2')
+      })
+
+      it('should call fetch with proper params', () => {
+        expect(fetch).toHaveBeenCalledWith(
+          'https://api.github.com/repos/me/my-repo/pulls?state=closed&sort=updated&direction=desc',
+          {headers: {}}
+        )
+      })
+    })
+  })
+
   describe('.getPr()', () => {
     let resolution
     let rejection
@@ -132,7 +316,6 @@ describe('VCS / GitHub /', () => {
       it('should resolve with the correct PR', () => {
         expect(resolution).toEqual({
           description: '#minor#\n## Changelog\n### Added\n- Some really cool stuff',
-          headSha: 'sha-1',
           number: 5,
           url: 'my-link-to-myself'
         })

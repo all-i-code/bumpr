@@ -486,23 +486,13 @@ describe('Bumpr', () => {
         resolver.reject = reject
       })
       bumpr.vcs = {
-        getPr: jest.fn().mockReturnValue(resolver.promise)
+        getMergedPrBySha: jest.fn().mockReturnValue(resolver.promise)
       }
 
-      // actual results of git log -10 --oneline on pr-bumper repo
-      const gitLog =
-        '98a148c Added some more tests, just a few more to go\n' +
-        '1b1bd97 Added some real unit tests\n' +
-        'edf85e0 Merge pull request #30 from job13er/remove-newline\n' +
-        'fa066f2 Removed newline from parsed PR number\n' +
-        'fc416cc Merge pull request #29 from job13er/make-bumping-more-robust\n' +
-        '67db358 Fix for #26 by reading PR # from git commit\n' +
-        '4a61a20 Automated version bump\n' +
-        '7db44e1 Merge pull request #24 from sandersky/master\n' +
-        'f571451 add pullapprove config\n' +
-        '4398a26 address PR concerns\n'
+      // actual results of git rev-list HEAD --max-count=1 on bumpr repo
+      const gitRevList = '\n7fcea24fae604a47cdb3436b49ecc18882aa5e31\n'
 
-      exec.mockReturnValue(Promise.resolve(gitLog))
+      exec.mockReturnValue(Promise.resolve(gitRevList))
       promise = bumpr
         .getLastPr()
         .then(pr => {
@@ -515,18 +505,18 @@ describe('Bumpr', () => {
         })
     })
 
-    it('should call git log', () => {
-      expect(exec).toHaveBeenCalledWith('git log -10 --oneline')
+    it('should call git rev-list', () => {
+      expect(exec).toHaveBeenCalledWith('git rev-list HEAD --max-count=1')
     })
 
-    describe('when getPr() succeeds', () => {
+    describe('when getMergedPrBySha() succeeds', () => {
       beforeEach(() => {
         resolver.resolve('the-pr')
         return promise
       })
 
-      it('should parse out the PR number from the git log and passes it to vcs.getPr()', () => {
-        expect(bumpr.vcs.getPr).toHaveBeenCalledWith('30')
+      it('should lookup merged PR by sha', () => {
+        expect(bumpr.vcs.getMergedPrBySha).toHaveBeenCalledWith('7fcea24fae604a47cdb3436b49ecc18882aa5e31')
       })
 
       it('should resolve with the pr', () => {
@@ -534,16 +524,12 @@ describe('Bumpr', () => {
       })
     })
 
-    describe('when getPr() fails', () => {
+    describe('when getMergedPrBySha() fails', () => {
       beforeEach(done => {
         resolver.reject('the-error')
         promise.catch(() => {
           done()
         })
-      })
-
-      it('should parse out the PR number from the git log and passes it to vcs.getPr()', () => {
-        expect(bumpr.vcs.getPr).toHaveBeenCalledWith('30')
       })
 
       it('should reject with the error', () => {

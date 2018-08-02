@@ -127,7 +127,6 @@
  * @property {Number} number - the PR #
  * @property {String} description - the description of the PR
  * @property {String} url - the URL for the web interface of the PR
- * @property {String} headCommitSha - SHA for the head commit of the incoming branch for the PR
  */
 
 /**

@@ -171,20 +171,10 @@ class Bumpr {
    * @returns {PrPromise} a promise resolved with the most recent PR
    */
   getLastPr() {
-    return exec('git log -10 --oneline').then(stdout => {
-      // the --oneline format for `git log` puts each commit on a single line, with the hash and then
-      // the commit message, so we first split on \n to get an array of commits
-      const commits = stdout.split('\n')
-
-      // The commit that represents the merging of the PR will include the text 'pull request #' so
-      // we find that one
-      const mergeCommit = find(commits, commit => commit.match('pull request #') !== null)
-
-      // Get the number from the PR commit
-      const prNumber = mergeCommit.match(/pull request #(\d*)/)[1]
-
-      Logger.log(`Fetching PR [${prNumber}]`)
-      return this.vcs.getPr(prNumber)
+    return exec('git rev-list HEAD --max-count=1').then(stdout => {
+      const sha = stdout.trim()
+      Logger.log(`Fetching PR for sha [${sha}]`)
+      return this.vcs.getMergedPrBySha(sha)
     })
   }
 
