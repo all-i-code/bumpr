@@ -1,6 +1,8 @@
 require('../typedefs')
 
+const {readFileSync} = require('fs')
 const fetch = require('node-fetch')
+const path = require('path')
 
 const {Logger} = require('../logger')
 const {exec} = require('../node-wrappers')
@@ -50,6 +52,45 @@ class GitHub {
    */
   constructor(config) {
     this.config = config
+
+    if (!this.config.vcs) {
+      this.config.vcs = {}
+    }
+
+    if (!this.config.vcs.repository) {
+      const filePath = path.join(process.cwd(), 'package.json')
+
+      let contents
+
+      try {
+        contents = readFileSync(filePath)
+      } catch (err) {
+        throw new Error(`Failed to read file: ${filePath}`)
+      }
+
+      let repository
+
+      try {
+        repository = JSON.parse(contents).repository // eslint-disable-line prefer-destructuring
+      } catch (err) {
+        throw new Error(`Failed to parse contents of ${filePath} as JSON`)
+      }
+
+      let str
+
+      if (typeof repository === 'string') {
+        str = repository
+      } else {
+        str = repository.url
+      }
+
+      const [owner, name] = str
+        .replace('git@github.com:', '')
+        .replace('.git', '')
+        .split('/')
+
+      this.config.vcs.repository = {owner, name}
+    }
   }
 
   /**
