@@ -191,11 +191,7 @@ const utils = {
               readToken: 'GITHUB_READ_ONLY_TOKEN',
               writeToken: 'GITHUB_TOKEN'
             },
-            provider: 'github',
-            repository: {
-              name: '',
-              owner: ''
-            }
+            provider: 'github'
           }
         }
 
