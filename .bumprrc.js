@@ -10,11 +10,5 @@ module.exports = {
       enabled: true,
       file: '.bumpr-log.json'
     }
-  },
-  vcs: {
-    repository: {
-      name: 'bumpr',
-      owner: 'jobsquad'
-    }
   }
 }
