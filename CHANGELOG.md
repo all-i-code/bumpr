@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.2.0] - 2018-09-04 ([PR 22](https://github.com/jobsquad/bumpr/pull/22))
+### Added
+-   Support for automatically parsing the Github repository owner and name out of the `repository` property in `package.json`
+
 ## [2.1.0] - 2018-08-02 ([PR 21](https://github.com/jobsquad/bumpr/pull/21))
 ### Added
 - `timezone` feature, allowing users to configure the timezone `bumpr` uses when creating dates to add to changelog entries (Fixes [#17](https://github.com/jobsquad/bumpr/issues/17))
