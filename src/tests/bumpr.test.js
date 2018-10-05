@@ -474,6 +474,100 @@ describe('Bumpr', () => {
     })
   })
 
+  describe('.tag()', () => {
+    let result
+    let info
+    let error
+
+    beforeEach(() => {
+      result = null
+      error = null
+      bumpr.config.foo = 'bar'
+      bumpr.vcs = {foo: 'bar'}
+      bumpr.ci = {push() {}}
+      info = {
+        modifiedFiles: ['package.json'], // not really, but if we don't put something in here tag won't be pushed
+        scope: 'patch', // must be anything but 'none' so that tag is created
+        version: '1.2.3'
+      }
+
+      jest.spyOn(bumpr, 'maybeCreateTag').mockReturnValue(Promise.resolve(info))
+      jest.spyOn(bumpr, 'maybePushChanges').mockReturnValue(Promise.resolve('pushed'))
+      jest.spyOn(utils, 'readJsonFile').mockReturnValue({version: '1.2.3'})
+    })
+
+    afterEach(() => {
+      utils.readJsonFile.mockRestore()
+      bumpr.maybeCreateTag.mockRestore()
+      bumpr.maybePushChanges.mockRestore()
+    })
+
+    describe('when a merge build', () => {
+      beforeEach(done => {
+        bumpr
+          .tag()
+          .then(res => {
+            result = res
+          })
+          .catch(err => {
+            error = err
+          })
+          .finally(() => {
+            done()
+          })
+      })
+
+      it('should maybe create the tag', () => {
+        expect(bumpr.maybeCreateTag).toHaveBeenCalledWith(info)
+      })
+
+      it('should maybe push the changes', () => {
+        expect(bumpr.maybePushChanges).toHaveBeenCalledWith(info)
+      })
+
+      it('should resolve with the result of the maybePushChanges() call', () => {
+        expect(result).toBe('pushed')
+      })
+
+      it('should not reject', () => {
+        expect(error).toBe(null)
+      })
+    })
+
+    describe('when not a merge build', () => {
+      beforeEach(done => {
+        set(bumpr.config, 'computed.ci.isPr', true)
+        bumpr
+          .tag()
+          .then(res => {
+            result = res
+          })
+          .catch(err => {
+            error = err
+          })
+          .finally(() => {
+            done()
+          })
+      })
+
+      it('should log that non merge builds are skipped', () => {
+        expect(Logger.log).toHaveBeenCalledWith('Not a merge build, skipping bump')
+      })
+
+      it('should not maybe create a tag', () => {
+        expect(bumpr.maybeCreateTag).toHaveBeenCalledTimes(0)
+      })
+
+      it('should not maybe push commit', () => {
+        expect(bumpr.maybePushChanges).toHaveBeenCalledTimes(0)
+      })
+
+      it('should not reject', () => {
+        expect(error).toBe(null)
+      })
+    })
+  })
+
   describe('.getLastPr()', () => {
     let resolver
     let resolution

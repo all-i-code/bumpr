@@ -49,4 +49,11 @@ program
     withBumpr(bumpr => bumpr.publish())
   })
 
+program
+  .command('tag')
+  .description('create a git tag for the current version (without doing any bumping)')
+  .action(() => {
+    withBumpr(bumpr => bumpr.tag())
+  })
+
 program.parse(process.argv)
