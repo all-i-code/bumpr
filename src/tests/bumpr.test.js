@@ -484,7 +484,10 @@ describe('Bumpr', () => {
       error = null
       bumpr.config.foo = 'bar'
       bumpr.vcs = {foo: 'bar'}
-      bumpr.ci = {push() {}}
+      bumpr.ci = {
+        push() {},
+        setupGitEnv: jest.fn().mockReturnValue(Promise.resolve())
+      }
       info = {
         modifiedFiles: ['package.json'], // not really, but if we don't put something in here tag won't be pushed
         scope: 'patch', // must be anything but 'none' so that tag is created
@@ -515,6 +518,10 @@ describe('Bumpr', () => {
           .finally(() => {
             done()
           })
+      })
+
+      it('should setup git env', () => {
+        expect(bumpr.ci.setupGitEnv).toHaveBeenCalled()
       })
 
       it('should maybe create the tag', () => {
@@ -554,6 +561,9 @@ describe('Bumpr', () => {
         expect(Logger.log).toHaveBeenCalledWith('Not a merge build, skipping bump')
       })
 
+      it('should not setup git env', () => {
+        expect(bumpr.ci.setupGitEnv).not.toHaveBeenCalled()
+      })
       it('should not maybe create a tag', () => {
         expect(bumpr.maybeCreateTag).toHaveBeenCalledTimes(0)
       })
