@@ -148,6 +148,26 @@ class Bumpr {
   }
 
   /**
+   * Create a git tag for the current version (without any bumping)
+   * @returns {Promise} a promise resolved with the value or rejected on error
+   */
+  tag() {
+    if (get(this.config, 'computed.ci.isPr')) {
+      Logger.log('Not a merge build, skipping bump')
+      return Promise.resolve()
+    }
+
+    // Since we may not have a PR, we'll construct a fake 'info' object
+    const fakeInfo = {
+      modifiedFiles: ['package.json'], // not really, but if we don't put something in here tag won't be pushed
+      scope: 'patch', // must be anything but 'none' so that tag is created
+      version: utils.readJsonFile('package.json').version // current version
+    }
+
+    return this.maybeCreateTag(fakeInfo).then(info => this.maybePushChanges(info))
+  }
+
+  /**
    * Get the contents of the given log file
    * @param {String} filename - the name of the log file
    * @returns {Promise} a promise resolved with the log contents and filename or rejected with an error
