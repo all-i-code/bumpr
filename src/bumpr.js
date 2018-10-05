@@ -164,7 +164,10 @@ class Bumpr {
       version: utils.readJsonFile('package.json').version // current version
     }
 
-    return this.maybeCreateTag(fakeInfo).then(info => this.maybePushChanges(info))
+    return this.ci
+      .setupGitEnv()
+      .then(() => this.maybeCreateTag(fakeInfo))
+      .then(info => this.maybePushChanges(info))
   }
 
   /**
