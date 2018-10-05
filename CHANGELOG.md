@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.3.1] - 2018-10-05 ([PR 25](https://github.com/jobsquad/bumpr/pull/25))
+### Fixed
+- `bumpr tag` command by setting up git environment before trying to create the tag
+
+
+
 ## [2.3.0] - 2018-10-05 ([PR 24](https://github.com/jobsquad/bumpr/pull/24))
 ### Added
 - New `tag` CLI command to just create a `git` tag and push it, with no bumping
