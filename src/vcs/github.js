@@ -86,6 +86,7 @@ class GitHub {
 
       const [owner, name] = str
         .replace('git@github.com:', '')
+        .replace('git+ssh://git@github.com/', '')
         .replace('.git', '')
         .split('/')
 

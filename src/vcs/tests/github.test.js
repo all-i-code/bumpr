@@ -548,6 +548,27 @@ describe('VCS / GitHub /', () => {
             })
           })
         })
+
+        describe('when repository is an object with git+ssh url', () => {
+          beforeEach(() => {
+            readFileSync.mockReturnValue(
+              JSON.stringify({
+                repository: {
+                  url: 'git+ssh://git@github.com/jobsquad/bumpr.git'
+                }
+              })
+            )
+
+            github = new GitHub(config)
+          })
+
+          it('should set vcs config as expected', () => {
+            expect(github.config.vcs.repository).toEqual({
+              name: 'bumpr',
+              owner: 'jobsquad'
+            })
+          })
+        })
       })
 
       it('should throw expected error when package.json contents is invalid JSON', () => {
