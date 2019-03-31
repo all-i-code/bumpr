@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.4.0] - 2019-03-31 ([PR 27](https://github.com/jobsquad/bumpr/pull/27))
+### Added
+-   Support for `git+ssh://git@github.com/<owner>/<repo>` URL in `package.json`'s `repository.url` attribute to avoid #26 
+
 ## [2.3.1] - 2018-10-05 ([PR 25](https://github.com/jobsquad/bumpr/pull/25))
 ### Fixed
 - `bumpr tag` command by setting up git environment before trying to create the tag
