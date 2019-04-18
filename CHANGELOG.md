@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.5.0] - 2019-04-18 ([PR 28](https://github.com/jobsquad/bumpr/pull/28))
+### Added
+- Support for GitHub Release creation during a `bump` or `tag` command ([#7](https://github.com/jobsquad/bumpr/issues/7))
+
+
 ## [2.4.0] - 2019-03-31 ([PR 27](https://github.com/jobsquad/bumpr/pull/27))
 ### Added
 -   Support for `git+ssh://git@github.com/<owner>/<repo>` URL in `package.json`'s `repository.url` attribute to avoid #26 
