@@ -172,6 +172,10 @@ const utils = {
               enabled: false,
               file: '.bumpr-log.json'
             },
+            release: {
+              enabled: false,
+              artifacts: ''
+            },
             slack: {
               enabled: false,
               env: {

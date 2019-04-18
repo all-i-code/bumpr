@@ -15,7 +15,7 @@ const replace = require('replace-in-file')
 const pkgJson = require('../../package.json')
 const Bumpr = require('../bumpr')
 const {Logger} = require('../logger')
-const {exec, writeFile} = require('../node-wrappers')
+const {createReadStream, exec, readdir, statSync, writeFile} = require('../node-wrappers')
 const utils = require('../utils')
 
 const realExec = Promise.denodeify(cp.exec)
@@ -92,7 +92,10 @@ describe('Bumpr', () => {
 
   afterEach(() => {
     Logger.log.mockReset()
+    createReadStream.mockReset()
     exec.mockReset()
+    readdir.mockReset()
+    statSync.mockReset()
     writeFile.mockReset()
   })
 
@@ -154,6 +157,7 @@ describe('Bumpr', () => {
       jest.spyOn(bumpr, 'maybeCreateTag').mockReturnValue(Promise.resolve(info))
       jest.spyOn(bumpr, 'maybeUpdateChangelog').mockReturnValue(Promise.resolve(info))
       jest.spyOn(bumpr, 'maybePushChanges').mockReturnValue(Promise.resolve(info))
+      jest.spyOn(bumpr, 'maybeCreateRelease').mockReturnValue(Promise.resolve(info))
       jest.spyOn(bumpr, 'maybeLogChanges').mockReturnValue(Promise.resolve('logged'))
     })
 
@@ -164,6 +168,7 @@ describe('Bumpr', () => {
       bumpr.maybeCreateTag.mockRestore()
       bumpr.maybeUpdateChangelog.mockRestore()
       bumpr.maybePushChanges.mockRestore()
+      bumpr.maybeCreateRelease.mockRestore()
       bumpr.maybeLogChanges.mockRestore()
     })
 
@@ -261,6 +266,10 @@ describe('Bumpr', () => {
 
       it('should not maybe push commit', () => {
         expect(bumpr.maybePushChanges).toHaveBeenCalledTimes(0)
+      })
+
+      it('should not maybe create a release', () => {
+        expect(bumpr.maybeCreateRelease).toHaveBeenCalledTimes(0)
       })
 
       it('should not reject', () => {
@@ -495,7 +504,8 @@ describe('Bumpr', () => {
       }
 
       jest.spyOn(bumpr, 'maybeCreateTag').mockReturnValue(Promise.resolve(info))
-      jest.spyOn(bumpr, 'maybePushChanges').mockReturnValue(Promise.resolve('pushed'))
+      jest.spyOn(bumpr, 'maybePushChanges').mockReturnValue(Promise.resolve(info))
+      jest.spyOn(bumpr, 'maybeCreateRelease').mockReturnValue(Promise.resolve('released'))
       jest.spyOn(utils, 'readJsonFile').mockReturnValue({version: '1.2.3'})
     })
 
@@ -532,8 +542,12 @@ describe('Bumpr', () => {
         expect(bumpr.maybePushChanges).toHaveBeenCalledWith(info)
       })
 
-      it('should resolve with the result of the maybePushChanges() call', () => {
-        expect(result).toBe('pushed')
+      it('should maybe create a release', () => {
+        expect(bumpr.maybeCreateRelease).toHaveBeenCalledWith(info)
+      })
+
+      it('should resolve with the result of the maybeCreateRelease() call', () => {
+        expect(result).toBe('released')
       })
 
       it('should not reject', () => {
@@ -1266,6 +1280,142 @@ describe('Bumpr', () => {
 
       it('should not reject', () => {
         expect(error).toBe(null)
+      })
+
+      it('should resolve with the info', () => {
+        expect(result).toBe(info)
+      })
+    })
+  })
+
+  describe('.maybeCreateRelease()', () => {
+    let result
+    let info
+
+    beforeEach(() => {
+      info = {
+        version: '1.2.3'
+      }
+      set(bumpr.config, 'computed.ci.buildNumber', '12345')
+      bumpr.vcs = {
+        createRelease: jest.fn().mockReturnValue(Promise.resolve({upload_url: 'upload-url{?name,label}'})),
+        uploadReleaseAsset: jest.fn().mockReturnValue(Promise.resolve('uploaded'))
+      }
+    })
+
+    describe('when feature is not enabled', () => {
+      beforeEach(() => {
+        bumpr.config.isEnabled.mockReturnValue(false)
+        return bumpr.maybeCreateRelease(info).then(res => {
+          result = res
+        })
+      })
+
+      it('should not create a release', () => {
+        expect(bumpr.vcs.createRelease).toHaveBeenCalledTimes(0)
+      })
+
+      it('should resolve with the info', () => {
+        expect(result).toBe(info)
+      })
+    })
+
+    describe('when scope is "none"', () => {
+      beforeEach(() => {
+        info.scope = 'none'
+        bumpr.config.isEnabled.mockImplementation(name => name === 'release')
+        return bumpr.maybeCreateRelease(info).then(res => {
+          result = res
+        })
+      })
+
+      it('should not create a release', () => {
+        expect(bumpr.vcs.createRelease).toHaveBeenCalledTimes(0)
+      })
+
+      it('should resolve with the info', () => {
+        expect(result).toBe(info)
+      })
+    })
+
+    describe('when scope is not "none", but no artifacts exist', () => {
+      let dateString
+      beforeEach(() => {
+        bumpr.config.isEnabled.mockImplementation(name => name === 'release')
+        bumpr.config.features = {release: {enabled: true}}
+        info.scope = 'patch'
+        info.changelog = 'the-changelog'
+        dateString = bumpr.getDateString()
+        return bumpr.maybeCreateRelease(info).then(res => {
+          result = res
+        })
+      })
+
+      it('should create a release', () => {
+        expect(bumpr.vcs.createRelease).toHaveBeenCalledWith(
+          'v1.2.3',
+          `[1.2.3] - ${dateString}`,
+          '## Changelog\nthe-changelog'
+        )
+      })
+
+      it('should resolve with the info', () => {
+        expect(result).toBe(info)
+      })
+    })
+
+    describe('when scope is not "none", with artifacts', () => {
+      let dateString
+      beforeEach(() => {
+        bumpr.config.isEnabled.mockImplementation(name => name === 'release')
+        bumpr.config.features = {release: {enabled: true, artifacts: 'artifacts-dir'}}
+        info.scope = 'patch'
+        info.changelog = 'the-changelog'
+        dateString = bumpr.getDateString()
+
+        readdir.mockReturnValueOnce(Promise.resolve(['file1.txt', 'file2.zip', 'file3.png', 'file4.foo']))
+        statSync.mockReturnValueOnce({size: 123})
+        statSync.mockReturnValueOnce({size: 321})
+        statSync.mockReturnValueOnce({size: 999})
+        statSync.mockReturnValueOnce({size: 8888})
+        createReadStream.mockReturnValueOnce('stream1')
+        createReadStream.mockReturnValueOnce('stream2')
+        createReadStream.mockReturnValueOnce('stream3')
+        createReadStream.mockReturnValueOnce('stream4')
+
+        return bumpr.maybeCreateRelease(info).then(res => {
+          result = res
+        })
+      })
+
+      it('should create a release', () => {
+        expect(bumpr.vcs.createRelease).toHaveBeenCalledWith(
+          'v1.2.3',
+          `[1.2.3] - ${dateString}`,
+          '## Changelog\nthe-changelog'
+        )
+      })
+
+      it('should list files in the artifacts dir', () => {
+        expect(readdir).toHaveBeenCalledWith('artifacts-dir')
+      })
+
+      it('should lookup file size for all artifacts', () => {
+        expect(statSync.mock.calls).toEqual([
+          ['artifacts-dir/file1.txt'],
+          ['artifacts-dir/file2.zip'],
+          ['artifacts-dir/file3.png'],
+          ['artifacts-dir/file4.foo']
+        ])
+      })
+
+      it('should upload all the  artifacts', () => {
+        expect(bumpr.vcs.uploadReleaseAsset.mock.calls).toEqual([
+          ['upload-url?name=file1.txt', 'text/plain; charset=utf-8', 123, 'stream1'],
+          ['upload-url?name=file2.zip', 'application/zip', 321, 'stream2'],
+          ['upload-url?name=file3.png', 'image/png', 999, 'stream3'],
+          ['upload-url?name=file4.foo', 'application/octet-stream', 8888, 'stream4']
+        ])
       })
 
       it('should resolve with the info', () => {
