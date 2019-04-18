@@ -75,6 +75,125 @@ describe('VCS / GitHub /', () => {
       })
     })
 
+    describe('.createRelease()', () => {
+      let resolution
+      let rejection
+      let promise
+      let fetchResolver
+
+      beforeEach(() => {
+        fetchResolver = {}
+        const fetchPromise = new Promise((resolve, reject) => {
+          fetchResolver.resolve = resolve
+          fetchResolver.reject = reject
+        })
+
+        fetch.mockReturnValue(fetchPromise)
+
+        resolution = null
+        rejection = null
+        promise = github
+          .createRelease('tag1', 'Release 1', 'Some description')
+          .then(resp => {
+            resolution = resp
+            return resolution
+          })
+          .catch(err => {
+            rejection = err
+            throw err
+          })
+      })
+
+      it('should call fetch with proper params', () => {
+        expect(fetch).toHaveBeenCalledWith('https://api.github.com/repos/me/my-repo/releases', {
+          method: 'POST',
+          body: JSON.stringify({
+            body: 'Some description',
+            name: 'Release 1',
+            tag_name: 'tag1'
+          }),
+          headers: {
+            Authorization: 'token my-gh-token',
+            'Content-Type': 'application/json'
+          }
+        })
+      })
+
+      describe('when fetch resolves with success', () => {
+        let resp
+        let release
+
+        beforeEach(done => {
+          release = {
+            id: 1,
+            name: 'Release 1',
+            body: 'Some description'
+          }
+
+          resp = {
+            json: jest.fn().mockReturnValue(Promise.resolve(release)),
+            ok: true,
+            status: 200
+          }
+
+          promise.then(() => {
+            done()
+          })
+
+          fetchResolver.resolve(resp)
+        })
+
+        it('should resolve with the correct PR', () => {
+          expect(resolution).toEqual(release)
+        })
+      })
+
+      describe('when fetch resolves with error', () => {
+        let err
+        let resp
+
+        beforeEach(done => {
+          err = {
+            message: 'Uh oh'
+          }
+
+          resp = {
+            json: jest.fn().mockReturnValue(Promise.resolve(err)),
+            ok: false,
+            status: 400
+          }
+
+          promise.catch(() => {
+            done()
+          })
+
+          fetchResolver.resolve(resp)
+        })
+
+        it('should not resolve', () => {
+          expect(resolution).toBe(null)
+        })
+
+        it('should reject with the proper error', () => {
+          expect(rejection).toEqual(new Error('400: {"message":"Uh oh"}'))
+        })
+      })
+
+      describe('when fetch errors', () => {
+        beforeEach(done => {
+          promise.catch(() => {
+            done()
+          })
+
+          fetchResolver.reject('my-error')
+        })
+
+        it('should pass up the error', () => {
+          expect(rejection).toEqual('my-error')
+        })
+      })
+    })
+
     describe('.getMergedPrBySha()', () => {
       let resolution
       let rejection
@@ -501,6 +620,122 @@ describe('VCS / GitHub /', () => {
 
         it('should reject with proper error', () => {
           expect(rejection).toBe('Uh oh')
+        })
+      })
+    })
+
+    describe('.uploadReleaseAsset()', () => {
+      let resolution
+      let rejection
+      let promise
+      let fetchResolver
+
+      beforeEach(() => {
+        fetchResolver = {}
+        const fetchPromise = new Promise((resolve, reject) => {
+          fetchResolver.resolve = resolve
+          fetchResolver.reject = reject
+        })
+
+        fetch.mockReturnValue(fetchPromise)
+
+        resolution = null
+        rejection = null
+        promise = github
+          .uploadReleaseAsset('upload-url', 'application/zip', 123, 'mock-stream')
+          .then(resp => {
+            resolution = resp
+            return resolution
+          })
+          .catch(err => {
+            rejection = err
+            throw err
+          })
+      })
+
+      it('should call fetch with proper params', () => {
+        expect(fetch).toHaveBeenCalledWith('upload-url', {
+          method: 'POST',
+          body: 'mock-stream',
+          headers: {
+            Authorization: 'token my-gh-token',
+            'Content-Type': 'application/zip',
+            'Content-Length': 123
+          }
+        })
+      })
+
+      describe('when fetch resolves with success', () => {
+        let resp
+        let release
+
+        beforeEach(done => {
+          release = {
+            id: 1,
+            name: 'Release 1',
+            body: 'Some description'
+          }
+
+          resp = {
+            json: jest.fn().mockReturnValue(Promise.resolve(release)),
+            ok: true,
+            status: 200
+          }
+
+          promise.then(() => {
+            done()
+          })
+
+          fetchResolver.resolve(resp)
+        })
+
+        it('should resolve with the correct PR', () => {
+          expect(resolution).toEqual(release)
+        })
+      })
+
+      describe('when fetch resolves with error', () => {
+        let err
+        let resp
+
+        beforeEach(done => {
+          err = {
+            message: 'Uh oh'
+          }
+
+          resp = {
+            json: jest.fn().mockReturnValue(Promise.resolve(err)),
+            ok: false,
+            status: 400
+          }
+
+          promise.catch(() => {
+            done()
+          })
+
+          fetchResolver.resolve(resp)
+        })
+
+        it('should not resolve', () => {
+          expect(resolution).toBe(null)
+        })
+
+        it('should reject with the proper error', () => {
+          expect(rejection).toEqual(new Error('400: {"message":"Uh oh"}'))
+        })
+      })
+
+      describe('when fetch errors', () => {
+        beforeEach(done => {
+          promise.catch(() => {
+            done()
+          })
+
+          fetchResolver.reject('my-error')
+        })
+
+        it('should pass up the error', () => {
+          expect(rejection).toEqual('my-error')
         })
       })
     })

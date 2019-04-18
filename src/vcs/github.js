@@ -112,6 +112,41 @@ class GitHub {
   }
 
   /**
+   * Create a release based on given tag name
+   * @param {String} tagName - the name of the tag to use to create release
+   * @param {String} releaseName - the name of the release
+   * @param {String} description - the description of the release (changelog info)
+   * @returns {Promise} a promise resolved with result of creating the release
+   */
+  createRelease(tagName, releaseName, description) {
+    const {owner, name} = this.config.vcs.repository
+    const url = `https://api.github.com/repos/${owner}/${name}/releases`
+    Logger.log(`About to send POST to ${url}`)
+
+    const ghToken = this.config.computed.vcs.auth.writeToken
+    return fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({
+        body: description,
+        name: releaseName,
+        tag_name: tagName
+      }),
+      headers: {
+        Authorization: `token ${ghToken}`,
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(resp => resp.json().then(json => ({resp, json})))
+      .then(({resp, json}) => {
+        if (!resp.ok) {
+          throw new Error(`${resp.status}: ${JSON.stringify(json)}`)
+        }
+
+        return json
+      })
+  }
+
+  /**
    * Get the merged PR by the given sha
    * @param {String} sha - the merge_commit_sha of the PR
    * @returns {Promise} a promise resolved with the PR object from the API
@@ -180,6 +215,37 @@ class GitHub {
         if (!resp.ok) {
           throw new Error(`${resp.status}: ${JSON.stringify(json)}`)
         }
+      })
+  }
+
+  /**
+   * Upload a release asset
+   * @param {String} url - the url to upload to
+   * @param {String} type - the content-type of the file being uploaded
+   * @param {Number} size - the content-size of the file being uploaded
+   * @param {ByteStream} stream - the stream of the asset to upload
+   * @returns {Promise} a promise resolved with result of creating the release
+   */
+  uploadReleaseAsset(url, type, size, stream) {
+    Logger.log(`About to send POST to ${url}`)
+
+    const ghToken = this.config.computed.vcs.auth.writeToken
+    return fetch(url, {
+      method: 'POST',
+      body: stream,
+      headers: {
+        Authorization: `token ${ghToken}`,
+        'Content-Type': type,
+        'Content-Length': size
+      }
+    })
+      .then(resp => resp.json().then(json => ({resp, json})))
+      .then(({resp, json}) => {
+        if (!resp.ok) {
+          throw new Error(`${resp.status}: ${JSON.stringify(json)}`)
+        }
+
+        return json
       })
   }
 }

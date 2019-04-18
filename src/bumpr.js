@@ -2,14 +2,16 @@ require('./typedefs')
 
 const chalk = require('chalk')
 const {cloneDeep, get} = require('lodash')
+const mime = require('mime-types')
 const moment = require('moment-timezone')
 const fetch = require('node-fetch')
+const path = require('path')
 const Promise = require('promise')
 const replace = require('replace-in-file')
 const versiony = require('versiony')
 
 const {name} = require('../package.json')
-const {exec, writeFile} = require('./node-wrappers')
+const {createReadStream, exec, readdir, statSync, writeFile} = require('./node-wrappers')
 
 const {Logger} = require('./logger')
 const utils = require('./utils')
@@ -82,6 +84,7 @@ class Bumpr {
       .then(info => this.maybeCommitChanges(info))
       .then(info => this.maybeCreateTag(info))
       .then(info => this.maybePushChanges(info))
+      .then(info => this.maybeCreateRelease(info))
       .then(info => this.maybeLogChanges(info))
   }
 
@@ -168,6 +171,22 @@ class Bumpr {
       .setupGitEnv()
       .then(() => this.maybeCreateTag(fakeInfo))
       .then(info => this.maybePushChanges(info))
+      .then(info => this.maybeCreateRelease(info))
+  }
+
+  /**
+   * Get the date string used to identify when this change happened
+   * @returns {String}
+   */
+  getDateString() {
+    let timezone = 'Etc/UTC'
+    if (this.config.isEnabled('timezone')) {
+      timezone = this.config.features.timezone.zone
+    }
+
+    return moment()
+      .tz(timezone)
+      .format('YYYY-MM-DD')
   }
 
   /**
@@ -327,6 +346,55 @@ class Bumpr {
   }
 
   /**
+   * Maybe create a release based on the current version
+   * @param {PrInfo} info - the info for the PR being bumped
+   * @returns {Promise} - a promise resolved with the results of the git commands
+   */
+  maybeCreateRelease(info) {
+    if (!this.config.isEnabled('release')) {
+      Logger.log('Skipping creating a release because of config option.')
+      return Promise.resolve(info)
+    }
+
+    if (info.scope === 'none') {
+      Logger.log('Skipping release creation because of "none" scope.')
+      return Promise.resolve(info)
+    }
+
+    const dateString = this.getDateString()
+    const tagName = `v${info.version}`
+    const releaseName = `[${info.version}] - ${dateString}`
+    const description = `## Changelog\n${info.changelog}`
+
+    return this.vcs
+      .createRelease(tagName, releaseName, description)
+      .then(json => {
+        const {artifacts} = this.config.features.release
+        if (artifacts) {
+          const urlBase = json.upload_url.replace('{?name,label}', '')
+          return readdir(artifacts).then(files => ({files, urlBase}))
+        }
+
+        return {files: [], urlBase: ''}
+      })
+      .then(({files, urlBase}) => {
+        const {artifacts} = this.config.features.release
+        const promises = []
+
+        files.forEach(filename => {
+          const url = `${urlBase}?name=${filename}`
+          const fullPath = path.join(artifacts, filename)
+          const {size} = statSync(fullPath)
+          const stream = createReadStream(fullPath)
+          const contentType = mime.contentType(filename) || 'application/octet-stream'
+          promises.push(this.vcs.uploadReleaseAsset(url, contentType, size, stream))
+        })
+
+        return Promise.all(promises).then(() => info)
+      })
+  }
+
+  /**
    * Maybe create a tag based on the current version
    * @param {PrInfo} info - the info for the PR being bumped
    * @returns {Promise} - a promise resolved with the results of the git commands
@@ -388,15 +456,7 @@ class Bumpr {
       return Promise.resolve(info)
     }
 
-    let timezone = 'Etc/UTC'
-    if (this.config.isEnabled('timezone')) {
-      timezone = this.config.features.timezone.zone
-    }
-
-    const dateString = moment()
-      .tz(timezone)
-      .format('YYYY-MM-DD')
-
+    const dateString = this.getDateString()
     const prLink = `[PR ${info.number}](${info.url})`
     const data = `<!-- bumpr -->\n\n## [${info.version}] - ${dateString} (${prLink})\n${info.changelog}`
     const filename = this.config.features.changelog.file
