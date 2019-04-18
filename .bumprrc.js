@@ -9,6 +9,9 @@ module.exports = {
     logging: {
       enabled: true,
       file: '.bumpr-log.json'
+    },
+    release: {
+      enabled: true
     }
   }
 }
