@@ -100,6 +100,25 @@ You can perform the automated bump in the merge build by using:
   bumpr bump
   ```
 
+If you have some other CI script you want to run only in a PR build, you can check by using
+
+  ```
+  bumpr is-pr
+  ```
+
+This command will exit with a 0 exit code if the current build is a PR build, and a 1 if it is not. So you can have
+a CI script like this:
+
+  ```
+  bumpr is-pr && echo "Do PR stuff"
+  ```
+
+or
+
+  ```
+  bumpr is-pr || echo "Do merge stuff"
+  ```
+
 If you have the `logging` feature enabled, you can output a specific key from the log file using:
 
   ```

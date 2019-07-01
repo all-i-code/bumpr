@@ -278,6 +278,31 @@ describe('Bumpr', () => {
     })
   })
 
+  describe('.isPr()', () => {
+    let ret
+    describe('when not a PR build', () => {
+      beforeEach(() => {
+        set(bumpr.config, 'computed.ci.isPr', false)
+        ret = bumpr.isPr()
+      })
+
+      it('should return false', () => {
+        expect(ret).toEqual(false)
+      })
+    })
+
+    describe('when it is a PR build', () => {
+      beforeEach(() => {
+        set(bumpr.config, 'computed.ci.isPr', true)
+        ret = bumpr.isPr()
+      })
+
+      it('should return true', () => {
+        expect(ret).toEqual(true)
+      })
+    })
+  })
+
   describe('.log()', () => {
     beforeEach(() => {
       set(bumpr.config, 'features.logging.file', 'the-log-file')
