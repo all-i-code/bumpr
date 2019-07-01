@@ -104,6 +104,13 @@ class Bumpr {
   }
 
   /**
+   * Check if a build is happening in a PR
+   */
+  isPr() {
+    return this.config.computed.ci.isPr
+  }
+
+  /**
    * Read the bumpr log and output the given key from it
    * @returns {Promise} a promise resolved with the value or rejected on error
    */

@@ -36,6 +36,17 @@ program
   })
 
 program
+  .command('is-pr')
+  .description('check if current build is a PR build')
+  .action(() => {
+    // Use exit code 0 if the current build is a PR build, 1 if it is not
+    // this will allow CI scripts to do things like:
+    // $ bumpr is-pr && echo "A PR build"
+    // $ bumpr is-pr || echo "A merge build"
+    withBumpr(bumpr => process.exit(bumpr.isPr() ? 0 : 1))
+  })
+
+program
   .command('log <key>')
   .description(`Output the given key from the ${name} log file`)
   .action(key => {
