@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.6.0] - 2019-07-01 ([PR 29](https://github.com/jobsquad/bumpr/pull/29))
+### Added
+- `bumpr is-pr` command to check if a current build is a PR build
+
+
+
 ## [2.5.0] - 2019-04-18 ([PR 28](https://github.com/jobsquad/bumpr/pull/28))
 ### Added
 - Support for GitHub Release creation during a `bump` or `tag` command ([#7](https://github.com/jobsquad/bumpr/issues/7))

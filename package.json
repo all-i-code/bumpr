@@ -1,6 +1,6 @@
 {
   "name": "bumpr",
-  "version": "2.5.0",
+  "version": "2.6.0",
   "description": "Bump the version of an package based on a Pull Request",
   "bin": {
     "bumpr": "./bin/cli.js"
