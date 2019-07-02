@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.7.0] - 2019-07-02 ([PR 30](https://github.com/jobsquad/bumpr/pull/30))
+### Added
+- `--num-extra-commits` option to `bumpr bump` commit in case CI scripts create additional commits before bumping versions. 
+- Some additional logging for when `VERBOSE` is set
+- An explicit `maxBuffer` to `exec` when doing `npm publish .` as the `stderr` there seem to be kinda big. 
+
+
 ## [2.6.0] - 2019-07-01 ([PR 29](https://github.com/jobsquad/bumpr/pull/29))
 ### Added
 - `bumpr is-pr` command to check if a current build is a PR build
