@@ -70,15 +70,16 @@ class Bumpr {
   /**
    * Bump the version based on the last merged PR's version-bump comment
    * @param {Object} options the cli options
+   * @param {Number} options.numExtraCommits - the number of commits to skip when looking for merge commit
    * @returns {Promise} a promise resolved with the results of the push
    */
-  bump() {
+  bump({numExtraCommits}) {
     if (get(this.config, 'computed.ci.isPr')) {
       Logger.log('Not a merge build, skipping bump')
       return Promise.resolve()
     }
 
-    return this.getMergedPrInfo()
+    return this.getMergedPrInfo(numExtraCommits)
       .then(info => this.maybeBumpVersion(info))
       .then(info => this.maybeUpdateChangelog(info))
       .then(info => this.maybeCommitChanges(info))
@@ -143,9 +144,11 @@ class Bumpr {
           return Promise.resolve()
         }
 
+        Logger.log('Publishing to npm')
+
         // eslint-disable-next-line no-template-curly-in-string
         return writeFile('.npmrc', '//registry.npmjs.org/:_authToken=${NPM_TOKEN}')
-          .then(() => exec('npm publish .'))
+          .then(() => exec('npm publish .', {maxBuffer: 1024 * 1024}))
           .then(() => this.maybeSendSlackMessage(log))
       })
       .catch(err => {
@@ -218,10 +221,11 @@ class Bumpr {
 
   /**
    * Grab the most recent PR
+   * @param {Number} numExtraCommits - the number of commits after the PR merge commit
    * @returns {PrPromise} a promise resolved with the most recent PR
    */
-  getLastPr() {
-    return exec('git rev-list HEAD --max-count=1').then(stdout => {
+  getLastPr(numExtraCommits) {
+    return exec(`git rev-list HEAD --max-count=1 --skip=${numExtraCommits}`).then(stdout => {
       const sha = stdout.trim()
       Logger.log(`Fetching PR for sha [${sha}]`)
       return this.vcs.getMergedPrBySha(sha)
@@ -230,10 +234,11 @@ class Bumpr {
 
   /**
    * Get the PR scope for the current (merged) pull request
+   * @param {Number} numExtraCommits - the number of commits after the PR merge commit
    * @returns {Promise} a promise - resolved with PR info (changelog and scope) or rejected on error
    */
-  getMergedPrInfo() {
-    return this.getLastPr().then(pr => {
+  getMergedPrInfo(numExtraCommits) {
+    return this.getLastPr(numExtraCommits).then(pr => {
       let maxScope = 'major'
       if (this.config.isEnabled('maxScope')) {
         maxScope = this.config.features.maxScope.value
@@ -342,6 +347,7 @@ class Bumpr {
 
     const {buildNumber} = this.config.computed.ci
 
+    Logger.log('Committing changes')
     return this.ci
       .setupGitEnv()
       .then(() => this.ci.add(info.modifiedFiles))
@@ -372,6 +378,8 @@ class Bumpr {
     const tagName = `v${info.version}`
     const releaseName = `[${info.version}] - ${dateString}`
     const description = `## Changelog\n${info.changelog}`
+
+    Logger.log('Creating release')
 
     return this.vcs
       .createRelease(tagName, releaseName, description)
@@ -412,6 +420,7 @@ class Bumpr {
       return Promise.resolve(info)
     }
 
+    Logger.log('Creating tag')
     const {buildNumber} = this.config.computed.ci
     return this.ci.tag(`v${info.version}`, `Generated tag from CI build ${buildNumber}`).then(() => info)
   }
@@ -490,6 +499,7 @@ class Bumpr {
       return Promise.resolve(info)
     }
 
+    Logger.log('Pushing changes')
     return this.ci.push(this.vcs).then(() => info)
   }
 
@@ -509,6 +519,7 @@ class Bumpr {
     const pkgStr = `${pkg.name}@${version}`
     const message = `Published \`${pkgStr}\` (${scope}) from <${url}|PR #${number}> by <${user.url}|${user.login}>`
 
+    Logger.log('Sending slack message')
     const {channels} = this.config.features.slack
     if (channels.length === 0) {
       return postBody(slackUrl, {text: message})

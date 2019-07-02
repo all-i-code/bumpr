@@ -30,9 +30,10 @@ program
 
 program
   .command('bump')
+  .option('-n, --num-extra-commits <num>', 'Number of extra commits made after PR merge commit', 0)
   .description('actually bump the version based on a merged PR')
-  .action(() => {
-    withBumpr(bumpr => bumpr.bump())
+  .action(cmd => {
+    withBumpr(bumpr => bumpr.bump(cmd))
   })
 
 program

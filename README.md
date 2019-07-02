@@ -100,6 +100,14 @@ You can perform the automated bump in the merge build by using:
   bumpr bump
   ```
 
+If your CI script creates any other commits after the merge commit, you can inform `bumpr` by using the
+`--num-extra-commits` flag. This allows `bumpr` to identify the PR merge commit which it uses to find info about
+the PR that was merged (to determine the scope, etc.)
+
+  ```
+  bumpr bump --num-extra-commits=1
+  ```
+
 If you have some other CI script you want to run only in a PR build, you can check by using
 
   ```
