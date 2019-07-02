@@ -175,7 +175,7 @@ describe('Bumpr', () => {
     describe('when a merge build', () => {
       beforeEach(done => {
         bumpr
-          .bump()
+          .bump({numExtraCommits: 1})
           .then(res => {
             result = res
           })
@@ -188,7 +188,7 @@ describe('Bumpr', () => {
       })
 
       it('should get the merged pr info', () => {
-        expect(bumpr.getMergedPrInfo).toHaveBeenCalledTimes(1)
+        expect(bumpr.getMergedPrInfo).toHaveBeenCalledWith(1)
       })
 
       it('should maybe bump the version', () => {
@@ -228,7 +228,7 @@ describe('Bumpr', () => {
       beforeEach(done => {
         set(bumpr.config, 'computed.ci.isPr', true)
         bumpr
-          .bump()
+          .bump({numExtraCommits: 0})
           .then(res => {
             result = res
           })
@@ -485,8 +485,8 @@ describe('Bumpr', () => {
         bumpr.getLog.mockReset()
       })
 
-      it('should not log anything', () => {
-        expect(Logger.log).not.toHaveBeenCalled()
+      it('should log publishing', () => {
+        expect(Logger.log).toHaveBeenCalledWith('Publishing to npm')
       })
 
       it('should write out the .npmrc file', () => {
@@ -495,7 +495,7 @@ describe('Bumpr', () => {
       })
 
       it('should publish', () => {
-        expect(exec).toHaveBeenCalledWith('npm publish .')
+        expect(exec).toHaveBeenCalledWith('npm publish .', {maxBuffer: 1024 * 1024})
       })
 
       it('should maybe send a slack message', () => {
@@ -638,7 +638,7 @@ describe('Bumpr', () => {
 
       exec.mockReturnValue(Promise.resolve(gitRevList))
       promise = bumpr
-        .getLastPr()
+        .getLastPr(1)
         .then(pr => {
           resolution = pr
           return pr
@@ -650,7 +650,7 @@ describe('Bumpr', () => {
     })
 
     it('should call git rev-list', () => {
-      expect(exec).toHaveBeenCalledWith('git rev-list HEAD --max-count=1')
+      expect(exec).toHaveBeenCalledWith('git rev-list HEAD --max-count=1 --skip=1')
     })
 
     describe('when getMergedPrBySha() succeeds', () => {
@@ -725,13 +725,13 @@ describe('Bumpr', () => {
           describe('when changelog feature is enabled', () => {
             beforeEach(() => {
               bumpr.config.isEnabled.mockImplementation(name => ['changelog', 'maxScope'].includes(name))
-              return bumpr.getMergedPrInfo().then(res => {
+              return bumpr.getMergedPrInfo(1).then(res => {
                 result = res
               })
             })
 
             it('should get the last PR to be merged', () => {
-              expect(bumpr.getLastPr).toHaveBeenCalledTimes(1)
+              expect(bumpr.getLastPr).toHaveBeenCalledWith(1)
             })
 
             it('should gets the scope for the given pr', () => {
@@ -758,14 +758,14 @@ describe('Bumpr', () => {
           describe('when changelog feature is not enabled', () => {
             /* eslint-disable arrow-body-style */
             beforeEach(() => {
-              return bumpr.getMergedPrInfo().then(res => {
+              return bumpr.getMergedPrInfo(2).then(res => {
                 result = res
               })
             })
             /* eslint-enable arrow-body-style */
 
             it('should get the last PR to be merged', () => {
-              expect(bumpr.getLastPr).toHaveBeenCalledTimes(1)
+              expect(bumpr.getLastPr).toHaveBeenCalledWith(2)
             })
 
             it('should gets the scope for the given pr', () => {
@@ -798,7 +798,7 @@ describe('Bumpr', () => {
           describe('when changelog feature is enabled', () => {
             beforeEach(() => {
               bumpr.config.isEnabled.mockImplementation(name => name === 'changelog')
-              return bumpr.getMergedPrInfo().then(res => {
+              return bumpr.getMergedPrInfo(0).then(res => {
                 result = res
               })
             })
@@ -811,7 +811,7 @@ describe('Bumpr', () => {
           describe('when changelog feature is not enabled', () => {
             /* eslint-disable arrow-body-style */
             beforeEach(() => {
-              return bumpr.getMergedPrInfo().then(res => {
+              return bumpr.getMergedPrInfo(0).then(res => {
                 result = res
               })
             })
@@ -846,13 +846,13 @@ describe('Bumpr', () => {
       describe('and changelog feature is enabled', () => {
         beforeEach(() => {
           bumpr.config.isEnabled.mockImplementation(name => name === 'changelog')
-          return bumpr.getMergedPrInfo().then(res => {
+          return bumpr.getMergedPrInfo(3).then(res => {
             result = res
           })
         })
 
         it('should get the last PR to be merged', () => {
-          expect(bumpr.getLastPr).toHaveBeenCalledTimes(1)
+          expect(bumpr.getLastPr).toHaveBeenCalledWith(3)
         })
 
         it('should gets the scope for the given pr', () => {
@@ -871,13 +871,13 @@ describe('Bumpr', () => {
       describe('and changelog feature is not enabled', () => {
         beforeEach(() => {
           bumpr.config.isEnabled.mockReturnValue(false)
-          return bumpr.getMergedPrInfo().then(res => {
+          return bumpr.getMergedPrInfo(0).then(res => {
             result = res
           })
         })
 
         it('should get the last PR to be merged', () => {
-          expect(bumpr.getLastPr).toHaveBeenCalledTimes(1)
+          expect(bumpr.getLastPr).toHaveBeenCalledWith(0)
         })
 
         it('should gets the scope for the given pr', () => {
