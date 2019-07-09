@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.7.1] - 2019-07-09 ([PR 31](https://github.com/jobsquad/bumpr/pull/31))
+### Added
+- Some additional logging when `VERBOSE` is set
+
+
 ## [2.7.0] - 2019-07-02 ([PR 30](https://github.com/jobsquad/bumpr/pull/30))
 ### Added
 - `--num-extra-commits` option to `bumpr bump` commit in case CI scripts create additional commits before bumping versions. 
