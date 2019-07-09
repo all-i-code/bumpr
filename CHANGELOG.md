@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.7.2] - 2019-07-09 ([PR 32](https://github.com/jobsquad/bumpr/pull/32))
+### Removed
+- Unused dev dependencies
+
+
 ## [2.7.1] - 2019-07-09 ([PR 31](https://github.com/jobsquad/bumpr/pull/31))
 ### Added
 - Some additional logging when `VERBOSE` is set
