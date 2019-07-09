@@ -108,7 +108,9 @@ class Bumpr {
    * Check if a build is happening in a PR
    */
   isPr() {
-    return this.config.computed.ci.isPr
+    const {isPr} = this.config.computed.ci
+    Logger.log(`This build is${isPr ? '' : ' not'} a PR`)
+    return isPr
   }
 
   /**
@@ -225,6 +227,7 @@ class Bumpr {
    * @returns {PrPromise} a promise resolved with the most recent PR
    */
   getLastPr(numExtraCommits) {
+    Logger.log(`Getting last PR: numExtraCommits = ${numExtraCommits}`)
     return exec(`git rev-list HEAD --max-count=1 --skip=${numExtraCommits}`).then(stdout => {
       const sha = stdout.trim()
       Logger.log(`Fetching PR for sha [${sha}]`)
@@ -238,6 +241,7 @@ class Bumpr {
    * @returns {Promise} a promise - resolved with PR info (changelog and scope) or rejected on error
    */
   getMergedPrInfo(numExtraCommits) {
+    Logger.log(`Getting merged PR info: numExtraCommits = ${numExtraCommits}`)
     return this.getLastPr(numExtraCommits).then(pr => {
       let maxScope = 'major'
       if (this.config.isEnabled('maxScope')) {
