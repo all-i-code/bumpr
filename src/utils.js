@@ -268,7 +268,7 @@ const utils = {
 
     if (!matches) {
       const example = 'Please include a scope (e.g. `#major#`, `#minor#`, `#patch#`) in your PR description.'
-      const exampleLink = 'See https://github.com/jobsquad/bumpr#pull-requests for more details.'
+      const exampleLink = 'See https://github.com/all-i-code/bumpr#pull-requests for more details.'
       throw new Error(`No version-bump scope found for ${prLink}\n${example}\n${exampleLink}`)
     }
 
@@ -311,10 +311,10 @@ const utils = {
     }
 
     if (changelog.trim() === '') {
-      const link = 'https://github.com/jobsquad/bumpr#changelog'
+      const link = 'https://github.com/all-i-code/bumpr#changelog'
       const msg =
         'No CHANGELOG content found in PR description.\n' +
-        'Please add a `# CHANGELOG` section to your PR description with some content describing your change.\n' +
+        'Please add a `## CHANGELOG` section to your PR description with some content describing your change.\n' +
         `See ${link} for details.`
       throw new Error(msg)
     }
