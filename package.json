@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:jobsquad/bumpr.git"
+    "url": "git@github.com:all-i-code/bumpr.git"
   },
   "engines": {
     "node": ">= 9.0"
@@ -27,9 +27,9 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jobsquad/bumpr/issues"
+    "url": "https://github.com/all-i-code/bumpr/issues"
   },
-  "homepage": "https://github.com/jobsquad/bumpr#readme",
+  "homepage": "https://github.com/all-i-code/bumpr#readme",
   "scripts": {
     "lint": "eslint *.js bin src",
     "watch-test": "jest --coverage --watch",
@@ -43,7 +43,7 @@
     "mime-types": "^2.1.22",
     "moment-timezone": "^0.5.21",
     "nlf": "^1.4.1",
-    "node-fetch": "^1.3.3",
+    "node-fetch": "^2.6.1",
     "promise": "^7.1.1",
     "replace-in-file": "^3.4.0",
     "versiony": "^2.0.1"

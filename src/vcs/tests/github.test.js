@@ -384,7 +384,9 @@ describe('VCS / GitHub /', () => {
         })
 
         it('should call fetch with proper params', () => {
-          expect(fetch).toHaveBeenCalledWith(
+          expect(
+            fetch
+          ).toHaveBeenCalledWith(
             'https://api.github.com/repos/me/my-repo/pulls?state=closed&sort=updated&direction=desc',
             {headers: {}}
           )
@@ -748,7 +750,7 @@ describe('VCS / GitHub /', () => {
           beforeEach(() => {
             readFileSync.mockReturnValue(
               JSON.stringify({
-                repository: 'git@github.com:jobsquad/bumpr.git'
+                repository: 'git@github.com:all-i-code/bumpr.git'
               })
             )
 
@@ -758,7 +760,7 @@ describe('VCS / GitHub /', () => {
           it('should set vcs config as expected', () => {
             expect(github.config.vcs.repository).toEqual({
               name: 'bumpr',
-              owner: 'jobsquad'
+              owner: 'all-i-code'
             })
           })
         })
@@ -768,7 +770,7 @@ describe('VCS / GitHub /', () => {
             readFileSync.mockReturnValue(
               JSON.stringify({
                 repository: {
-                  url: 'git@github.com:jobsquad/bumpr.git'
+                  url: 'git@github.com:all-i-code/bumpr.git'
                 }
               })
             )
@@ -779,7 +781,7 @@ describe('VCS / GitHub /', () => {
           it('should set vcs config as expected', () => {
             expect(github.config.vcs.repository).toEqual({
               name: 'bumpr',
-              owner: 'jobsquad'
+              owner: 'all-i-code'
             })
           })
         })
@@ -789,7 +791,7 @@ describe('VCS / GitHub /', () => {
             readFileSync.mockReturnValue(
               JSON.stringify({
                 repository: {
-                  url: 'git+ssh://git@github.com/jobsquad/bumpr.git'
+                  url: 'git+ssh://git@github.com/all-i-code/bumpr.git'
                 }
               })
             )
@@ -800,7 +802,7 @@ describe('VCS / GitHub /', () => {
           it('should set vcs config as expected', () => {
             expect(github.config.vcs.repository).toEqual({
               name: 'bumpr',
-              owner: 'jobsquad'
+              owner: 'all-i-code'
             })
           })
         })
