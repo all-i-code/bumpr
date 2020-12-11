@@ -1,5 +1,5 @@
-[ci-img]: https://travis-ci.com/jobsquad/bumpr.svg?branch=master "Travis CI Build Status"
-[ci-url]: https://travis-ci.com/jobsquad/bumpr
+[ci-img]: https://travis-ci.com/all-i-code/bumpr.svg?branch=master "Travis CI Build Status"
+[ci-url]: https://travis-ci.com/all-i-code/bumpr
 
 [npm-img]: https://img.shields.io/npm/v/bumpr.svg "NPM Version"
 [npm-url]: https://www.npmjs.com/package/bumpr
@@ -154,7 +154,7 @@ If you're using Travis CI and public GitHub, `bumpr` will probably work well for
   vcs: {
     repository: {
       name: 'bumpr', # <- Your repo name here
-      owner: 'jobsquad' # <- Your organization name here
+      owner: 'all-i-code' # <- Your organization name here
     }
   }
   ```
@@ -370,7 +370,7 @@ The log file that will be created will look something like this:
   "changelog": "### Added\n- Some cool new feature",
   "pr": {
     "number": 123,
-    "url": "https://github.com/jobsquad/bumpr/pull/123",
+    "url": "https://github.com/all-i-code/bumpr/pull/123",
     "user": {
       "login": "job13er",
       "url": "https://github.com/job13er"

@@ -420,7 +420,7 @@ describe('utils', () => {
     it('should throw error when no version-bump present', () => {
       pr.description = 'My super-cool new feature'
       const example = 'Please include a scope (e.g. `#major#`, `#minor#`, `#patch#`) in your PR description.'
-      const exampleLink = 'See https://github.com/jobsquad/bumpr#pull-requests for more details.'
+      const exampleLink = 'See https://github.com/all-i-code/bumpr#pull-requests for more details.'
       expect(() => {
         utils.getScopeForPr(pr)
       }).toThrow(`No version-bump scope found for [PR #12345](my-pr-url)\n${example}\n${exampleLink}`)
@@ -504,7 +504,7 @@ describe('utils', () => {
   })
 
   describe('.getChangelogForPr()', () => {
-    const link = 'https://github.com/jobsquad/bumpr#changelog'
+    const link = 'https://github.com/all-i-code/bumpr#changelog'
     const errorMsg =
       'No CHANGELOG content found in PR description.\n' +
       'Please add a `## CHANGELOG` section to your PR description with some content describing your change.\n' +
