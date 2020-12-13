@@ -35,6 +35,7 @@ function convertPr(ghPr) {
     author: ghPr.user.login,
     authorUrl: ghPr.user.html_url,
     description: convertLineEndings(ghPr.body),
+    name: ghPr.title,
     number: ghPr.number,
     url: ghPr.html_url
   }

@@ -323,9 +323,15 @@ const utils = {
    * @returns {String} the changelog of the PR (from the pr description, if one exists, else '')
    */
   getChangelogForPr(pr) {
+    let changelog = ''
+
+    // First check for dependabot PR description
+    if (pr.description.includes(DEPENDABOT_IDENTIFIER)) {
+      changelog = `### Security\n- [Dependabot] ${pr.name}`
+    }
+
     const lines = pr.description.split('\n')
     const index = getChangelogSectionIndex(lines)
-    let changelog = ''
 
     if (index >= 0) {
       changelog = lines.slice(index + 1).join('\n')
