@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.10.0] - 2020-12-13 ([PR 44](https://github.com/all-i-code/bumpr/pull/44))
+### Added
+- Support for parsing `changelog` from a `dependabot` PR (using the title of the PR)
+
+
 ## [2.9.0] - 2020-12-13 ([PR 43](https://github.com/all-i-code/bumpr/pull/43))
 ### Added
 - Support for Circle-ci PRs from non-forks (where `CIRCLE_PR_NUMBER` isn't set, but rather `CIRLCE_PULL_REQUEST` is set)
