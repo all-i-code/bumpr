@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.8.0] - 2020-12-13 ([PR 42](https://github.com/all-i-code/bumpr/pull/42))
+### Added
+- Support for parsing `dependabot` PR descriptions (currently treated as `patch`)
+
+
+
 ## [2.7.3] - 2020-12-11 ([PR 40](https://github.com/all-i-code/bumpr/pull/40))
 ### Fixed
 - Repo URL references in code
