@@ -94,6 +94,15 @@ function processEnv(config) {
   /* eslint-disable no-param-reassign */
   config.computed.ci.buildNumber = getEnv(config.ci.env.buildNumber)
   config.computed.ci.prNumber = getEnv(config.ci.env.prNumber, 'false')
+
+  // If no prNumber, check prUrl (some CIs don't have prNumber on branch builds)
+  if (config.computed.ci.prNumber === 'false') {
+    const parts = getEnv(config.ci.env.prUrl, '').split('/')
+    if (parts.length > 1) {
+      config.computed.ci.prNumber = parts[parts.length - 1] || 'false'
+    }
+  }
+
   config.computed.ci.isPr = config.computed.ci.prNumber !== 'false'
   config.computed.ci.branch = getEnv(config.ci.env.branch, 'master')
 
@@ -134,7 +143,8 @@ const utils = {
             env: {
               branch: 'TRAVIS_BRANCH',
               buildNumber: 'TRAVIS_BUILD_NUMBER',
-              prNumber: 'TRAVIS_PULL_REQUEST'
+              prNumber: 'TRAVIS_PULL_REQUEST',
+              prUrl: ''
             },
             gitUser: {
               email: 'bumpr@domain.com',

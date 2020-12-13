@@ -320,6 +320,183 @@ describe('utils', () => {
         })
       })
     })
+
+    describe('GitHub/CircleCI', () => {
+      const ctx = {}
+      let circleConfig
+
+      beforeEach(() => {
+        env = {
+          CIRCLE_BRANCH: 'my-branch',
+          CIRCLE_BUILD_NUM: '123',
+          GITHUB_READ_ONLY_TOKEN: '12345',
+          GITHUB_TOKEN: '54321',
+          SLACK_URL: 'slack-webhook-url'
+        }
+
+        circleConfig = {
+          config: {
+            ci: {
+              env: {
+                branch: 'CIRCLE_BRANCH',
+                buildNumber: 'CIRCLE_BUILD_NUM',
+                prNumber: 'CIRCLE_PR_NUMBER',
+                prUrl: 'CIRCLE_PULL_REQUEST'
+              },
+              provider: 'circle'
+            }
+          }
+        }
+      })
+
+      describe('when doing a pull request build (from fork)', () => {
+        beforeEach(() => {
+          env.CIRCLE_PR_NUMBER = '13'
+
+          saveEnv(Object.keys(env), realEnv)
+          setEnv(env)
+
+          resolver.resolve(circleConfig)
+
+          return utils.getConfig().then(config => {
+            ctx.config = config
+          })
+        })
+
+        it('should configure cosmiconfig properly', () => {
+          expect(cosmiconfig).toHaveBeenCalledWith('bumpr')
+        })
+
+        verifyGitHubTravisDefaults(ctx, ['ci.provider'])
+        verifyFeatureDefaults(ctx)
+
+        it('should set isPr to true', () => {
+          expect(ctx.config.computed.ci.isPr).toBe(true)
+        })
+
+        it('should set prNumber to the PR number', () => {
+          expect(ctx.config.computed.ci.prNumber).toBe('13')
+        })
+      })
+
+      describe('when doing a pull request build (from branch)', () => {
+        beforeEach(() => {
+          env.CIRCLE_PULL_REQUEST = 'https://github.com/my-org/my-repo/pulls/14'
+
+          saveEnv(Object.keys(env), realEnv)
+          setEnv(env)
+
+          resolver.resolve(circleConfig)
+
+          return utils.getConfig().then(config => {
+            ctx.config = config
+          })
+        })
+
+        it('should configure cosmiconfig properly', () => {
+          expect(cosmiconfig).toHaveBeenCalledWith('bumpr')
+        })
+
+        verifyGitHubTravisDefaults(ctx, ['ci.provider'])
+        verifyFeatureDefaults(ctx)
+
+        it('should set isPr to true', () => {
+          expect(ctx.config.computed.ci.isPr).toBe(true)
+        })
+
+        it('should set prNumber to the PR number', () => {
+          expect(ctx.config.computed.ci.prNumber).toBe('14')
+        })
+      })
+
+      // Not expected, just testing defensive code (@job13er 2020-12-13)
+      describe('when pull request URL is malformed', () => {
+        beforeEach(() => {
+          env.CIRCLE_PULL_REQUEST = 'https://github.com/my-org/my-repo/pulls/14/'
+
+          saveEnv(Object.keys(env), realEnv)
+          setEnv(env)
+
+          resolver.resolve(circleConfig)
+
+          return utils.getConfig().then(config => {
+            ctx.config = config
+          })
+        })
+
+        it('should configure cosmiconfig properly', () => {
+          expect(cosmiconfig).toHaveBeenCalledWith('bumpr')
+        })
+
+        verifyGitHubTravisDefaults(ctx, ['ci.provider'])
+        verifyFeatureDefaults(ctx)
+
+        it('should set isPr to false', () => {
+          expect(ctx.config.computed.ci.isPr).toBe(false)
+        })
+
+        it('should set prNumber to false', () => {
+          expect(ctx.config.computed.ci.prNumber).toBe('false')
+        })
+      })
+
+      // Not expected, just testing defensive code (@job13er 2020-12-13)
+      describe('when pull request URL is empty', () => {
+        beforeEach(() => {
+          env.CIRCLE_PULL_REQUEST = ''
+
+          saveEnv(Object.keys(env), realEnv)
+          setEnv(env)
+
+          resolver.resolve(circleConfig)
+
+          return utils.getConfig().then(config => {
+            ctx.config = config
+          })
+        })
+
+        it('should configure cosmiconfig properly', () => {
+          expect(cosmiconfig).toHaveBeenCalledWith('bumpr')
+        })
+
+        verifyGitHubTravisDefaults(ctx, ['ci.provider'])
+        verifyFeatureDefaults(ctx)
+
+        it('should set isPr to false', () => {
+          expect(ctx.config.computed.ci.isPr).toBe(false)
+        })
+
+        it('should set prNumber to false', () => {
+          expect(ctx.config.computed.ci.prNumber).toBe('false')
+        })
+      })
+
+      describe('when doing a merge build', () => {
+        beforeEach(() => {
+          env.CIRCLE_PR_NUMBER = undefined
+          env.CIRCLE_PULL_REQUEST = undefined
+          saveEnv(Object.keys(env), realEnv)
+          setEnv(env)
+
+          resolver.resolve(circleConfig)
+
+          return utils.getConfig().then(config => {
+            ctx.config = config
+          })
+        })
+
+        verifyGitHubTravisDefaults(ctx, ['ci.provider'])
+        verifyFeatureDefaults(ctx)
+
+        it('should set isPr to false', () => {
+          expect(ctx.config.computed.ci.isPr).toBe(false)
+        })
+
+        it('should set prNumber to false', () => {
+          expect(ctx.config.computed.ci.prNumber).toBe('false')
+        })
+      })
+    })
   })
 
   describe('.getValidatedScope()', () => {
