@@ -721,6 +721,7 @@ You can disable automated security fix PRs for this repo from the [Security Aler
     beforeEach(() => {
       pr = {
         description: '',
+        name: '',
         number: '12345',
         url: 'my-pr-url'
       }
@@ -781,6 +782,18 @@ You can disable automated security fix PRs for this repo from the [Security Aler
 
       it('should grab the changelog text', () => {
         expect(changelog).toEqual('## Fixes\nFoo, Bar, Baz\n## Features\nFizz, Bang')
+      })
+    })
+
+    describe('when dependabot PR description', () => {
+      beforeEach(() => {
+        pr.name = 'Bump foo from 1.2.3 to 1.2.5'
+        pr.description = '<summary>Dependabot commands and options</summary>'
+        changelog = utils.getChangelogForPr(pr)
+      })
+
+      it('should generate changelog from pr name/title', () => {
+        expect(changelog).toEqual('### Security\n- [Dependabot] Bump foo from 1.2.3 to 1.2.5')
       })
     })
   })
