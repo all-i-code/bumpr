@@ -11,6 +11,7 @@ const {Logger} = require('./logger')
 
 const GFM_CHECKBOX_CHECKED_REGEX = /(-|\*)\s+\[x\].*?#(\w+)#/gi
 const GFM_CHECKBOX_UNCHECKED_REGEX = /(-|\*)\s+\[\s\].*?#(\w+)#/gi
+const DEPENDABOT_IDENTIFIER = '<summary>Dependabot commands and options</summary>'
 
 /**
  * Walk the properties of an object (recursively) while converting it to a flat representation of the leaves of the
@@ -263,6 +264,16 @@ const utils = {
    * @throws Error if there is not a single, valid scope in the PR description
    */
   getScopeForPr(pr, maxScope = 'major') {
+    // First check for dependabot PR description
+    if (pr.description.includes(DEPENDABOT_IDENTIFIER)) {
+      return utils.getValidatedScope({
+        scope: 'patch',
+        maxScope,
+        prNumber: pr.number,
+        prUrl: pr.url
+      })
+    }
+
     const matches = pr.description.match(/#[A-Za-z]+#/g)
     const prLink = `[PR #${pr.number}](${pr.url})`
 
