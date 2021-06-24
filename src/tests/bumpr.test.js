@@ -739,7 +739,7 @@ describe('Bumpr', () => {
             })
 
             it('should get the changelog for the given pr', () => {
-              expect(utils.getChangelogForPr).toHaveBeenCalledWith(pr)
+              expect(utils.getChangelogForPr).toHaveBeenCalledWith(pr, [])
             })
 
             it('should resolve with the info', () => {
@@ -1152,7 +1152,7 @@ describe('Bumpr', () => {
           })
 
           it('should get the changelog', () => {
-            expect(utils.getChangelogForPr).toHaveBeenCalledWith('the-pr')
+            expect(utils.getChangelogForPr).toHaveBeenCalledWith('the-pr', [])
           })
 
           it('should return the changelog and scope', () => {
@@ -1160,6 +1160,35 @@ describe('Bumpr', () => {
               changelog: 'the-changelog',
               scope: 'the-scope'
             })
+          })
+        })
+      })
+    })
+
+    describe('when changelog is enabled and required set', () => {
+      beforeEach(() => {
+        bumpr.config.isEnabled.mockImplementation(name => name === 'changelog')
+        bumpr.config.features = {changelog: {enabled: true, required: ['DEV-\\d+']}}
+
+        return bumpr.getOpenPrInfo().then(res => {
+          result = res
+        })
+      })
+
+      describe('the second call to maybePostCommentOnError()', () => {
+        let args
+
+        beforeEach(() => {
+          ;[, args] = utils.maybePostCommentOnError.mock.calls
+        })
+
+        describe('when the wrapped function is called', () => {
+          beforeEach(() => {
+            args[2]()
+          })
+
+          it('should get the changelog and look for required', () => {
+            expect(utils.getChangelogForPr).toHaveBeenCalledWith('the-pr', ['DEV-\\d+'])
           })
         })
       })

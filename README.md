@@ -178,7 +178,8 @@ The following defaults will be used if omitted in `.bumperrc.js`:
     features: {
       changelog: {
         enabled: false,
-        file: 'CHANGELOG.md'
+        file: 'CHANGELOG.md',
+        required: [],
       },
       comments: {
         enabled: false
@@ -321,6 +322,12 @@ Set this value to `true` to enable changelog processing
 
 ##### `features.changelog.file`
 The file to modify when adding the `## CHANGELOG` section of your pull request description (default is `CHANGELOG.md`).
+
+##### `feature.changelog.requires`
+A list of regular expression strings the changelog must match in order for `bumpr check` to pass. For example if you want to ensure your changelog contains ticket links in the form `[####](https://ticket.example.com/####)`, you could set it to:
+```json
+"required": ["\\[\d+]\(https:\\/\\/ticket.example.com\\/\d+\)"],
+```
 
 #### `features.comments`
 `bumpr` has the ability to post comments to the pull request in certain scenarios. Unfortunately, due to the fact

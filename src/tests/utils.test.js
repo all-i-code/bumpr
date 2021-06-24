@@ -734,7 +734,7 @@ You can disable automated security fix PRs for this repo from the [Security Aler
 
       it('should throw an error', () => {
         expect(() => {
-          utils.getChangelogForPr(pr)
+          utils.getChangelogForPr(pr, [])
         }).toThrow(Error, errorMsg)
       })
     })
@@ -746,7 +746,7 @@ You can disable automated security fix PRs for this repo from the [Security Aler
 
       it('should throw an error', () => {
         expect(() => {
-          utils.getChangelogForPr(pr)
+          utils.getChangelogForPr(pr, [])
         }).toThrow(Error, errorMsg)
       })
     })
@@ -758,7 +758,7 @@ You can disable automated security fix PRs for this repo from the [Security Aler
 
       it('should throw an error', () => {
         expect(() => {
-          utils.getChangelogForPr(pr)
+          utils.getChangelogForPr(pr, [])
         }).toThrow(Error, 'Multiple changelog sections found. Line 1 and line 4.')
       })
     })
@@ -766,7 +766,7 @@ You can disable automated security fix PRs for this repo from the [Security Aler
     describe('when changelog section is present', () => {
       beforeEach(() => {
         pr.description = '##changelog\r\n## Fixes\nFoo, Bar, Baz\n## Features\nFizz, Bang'
-        changelog = utils.getChangelogForPr(pr)
+        changelog = utils.getChangelogForPr(pr, [])
       })
 
       it('should grab the changelog text', () => {
@@ -777,7 +777,7 @@ You can disable automated security fix PRs for this repo from the [Security Aler
     describe('when changelog section has extra space at the end', () => {
       beforeEach(() => {
         pr.description = '## CHANGELOG    \n## Fixes\nFoo, Bar, Baz\n## Features\nFizz, Bang'
-        changelog = utils.getChangelogForPr(pr)
+        changelog = utils.getChangelogForPr(pr, [])
       })
 
       it('should grab the changelog text', () => {
@@ -789,11 +789,31 @@ You can disable automated security fix PRs for this repo from the [Security Aler
       beforeEach(() => {
         pr.name = 'Bump foo from 1.2.3 to 1.2.5'
         pr.description = '<summary>Dependabot commands and options</summary>'
-        changelog = utils.getChangelogForPr(pr)
+        changelog = utils.getChangelogForPr(pr, [])
       })
 
       it('should generate changelog from pr name/title', () => {
         expect(changelog).toEqual('### Security\n- [Dependabot] Bump foo from 1.2.3 to 1.2.5')
+      })
+    })
+
+    describe('when required present', () => {
+      it('should err when changelog does not match pattern', () => {
+        pr.description = '##changelog\r\n## Fixes\nFoo, Bar, Baz\n## Features\nFizz, Bang'
+        expect(() => {
+          utils.getChangelogForPr(pr, ['DEV-\\d+'])
+        }).toThrow('Changelog does not match pattern: DEV-\\d+')
+      })
+
+      describe('when changelog matches pattern', () => {
+        beforeEach(() => {
+          pr.description = '##changelog\r\n## Fixes\nFoo, Bar, Baz DEV-1234\n## Features\nFizz, Bang'
+          changelog = utils.getChangelogForPr(pr, ['DEV-\\d+'])
+        })
+
+        it('should grab the changelog text', () => {
+          expect(changelog).toEqual('## Fixes\nFoo, Bar, Baz DEV-1234\n## Features\nFizz, Bang')
+        })
       })
     })
   })
