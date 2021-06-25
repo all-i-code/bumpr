@@ -25,7 +25,9 @@ function getCi(config, vcs) {
 
   if (provider === 'travis') {
     return new Travis(config, vcs)
-  } else if (provider === 'circle') {
+  }
+
+  if (provider === 'circle') {
     return new Circle(config, vcs)
   }
 

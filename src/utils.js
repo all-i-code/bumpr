@@ -2,7 +2,7 @@
 
 require('./typedefs')
 
-const cosmiconfig = require('cosmiconfig')
+const {cosmiconfig} = require('cosmiconfig')
 const fs = require('fs')
 const path = require('path')
 const {get, isArray, isObject, set} = require('lodash')
@@ -340,10 +340,9 @@ const utils = {
 
     if (changelog.trim() === '') {
       const link = 'https://github.com/all-i-code/bumpr#changelog'
-      const msg =
-        'No CHANGELOG content found in PR description.\n' +
-        'Please add a `## CHANGELOG` section to your PR description with some content describing your change.\n' +
-        `See ${link} for details.`
+      const msg = 'No CHANGELOG content found in PR description.\n'
+        + 'Please add a `## CHANGELOG` section to your PR description with some content describing your change.\n'
+        + `See ${link} for details.`
       throw new Error(msg)
     }
 

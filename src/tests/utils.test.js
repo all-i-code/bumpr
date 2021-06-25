@@ -3,7 +3,7 @@ jest.mock('fs')
 jest.mock('../logger')
 
 const {readFileSync} = require('fs')
-const cosmiconfig = require('cosmiconfig')
+const {cosmiconfig} = require('cosmiconfig')
 const {forEach, forIn} = require('lodash')
 const path = require('path')
 
@@ -696,7 +696,7 @@ You can disable automated security fix PRs for this repo from the [Security Aler
       }).toThrow('No version-bump scope found for [PR #12345](my-pr-url)')
     })
 
-    it('should return scope when GFM checkbox syntax is present with one scope checked and other scopes mentioned', () => {
+    it('should return scope when GFM checkbox is present with one scope checked and other scopes mentioned', () => {
       pr.description = `
   ### Check the scope of this pr:
   - [ ] #patch# - bugfix, dependency update
@@ -711,10 +711,9 @@ You can disable automated security fix PRs for this repo from the [Security Aler
 
   describe('.getChangelogForPr()', () => {
     const link = 'https://github.com/all-i-code/bumpr#changelog'
-    const errorMsg =
-      'No CHANGELOG content found in PR description.\n' +
-      'Please add a `## CHANGELOG` section to your PR description with some content describing your change.\n' +
-      `See ${link} for details.`
+    const errorMsg = 'No CHANGELOG content found in PR description.\n'
+      + 'Please add a `## CHANGELOG` section to your PR description with some content describing your change.\n'
+      + `See ${link} for details.`
 
     let pr
     let changelog

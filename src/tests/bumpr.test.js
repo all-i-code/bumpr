@@ -1203,8 +1203,8 @@ describe('Bumpr', () => {
 
       const original = path.join(__dirname, '_package.json')
       const otherOriginal = path.join(__dirname, '_package-with-pre-release.json')
-      return realExec(`cp ${original} _package.json`).then(() =>
-        realExec(`cp ${otherOriginal} _package-with-pre-release.json`)
+      return realExec(`cp ${original} _package.json`).then(
+        () => realExec(`cp ${otherOriginal} _package-with-pre-release.json`)
       )
     })
 
