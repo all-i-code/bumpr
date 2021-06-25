@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.11.1] - 2021-06-25 ([PR 51](https://github.com/all-i-code/bumpr/pull/51))
+### Changed
+- Dependencies to latest available version
+- Some code style to match latest `eslint` defaults
+
+
+
 ## [2.11.0] - 2021-06-25 ([PR 48](https://github.com/all-i-code/bumpr/pull/48))
 ### Added
 -   New optional `required` option in changelog config to ensure changelog matches a list of regular expressions (ie to ensure proper links to tickets/issues exist)
