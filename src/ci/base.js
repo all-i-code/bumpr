@@ -59,8 +59,8 @@ class CiBase {
    */
   setupGitEnv() {
     const user = this.config.ci.gitUser
-    return exec(`git config --global user.email "${user.email}"`).then(() =>
-      exec(`git config --global user.name "${user.name}"`)
+    return exec(`git config --global user.email "${user.email}"`).then(
+      () => exec(`git config --global user.name "${user.name}"`)
     )
   }
 

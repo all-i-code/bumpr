@@ -36,27 +36,29 @@
     "test": "yarn run lint && jest --coverage"
   },
   "dependencies": {
-    "chalk": "^2.4.1",
-    "commander": "^2.20.0",
-    "cosmiconfig": "^5.2.1",
-    "lodash": "^4.17.11",
+    "chalk": "^4.1.1",
+    "commander": "^8.0.0",
+    "cosmiconfig": "^7.0.0",
+    "lodash": "^4.17.21",
     "mime-types": "^2.1.22",
     "moment-timezone": "^0.5.21",
-    "nlf": "^1.4.1",
+    "nlf": "^2.1.1",
     "node-fetch": "^2.6.1",
-    "promise": "^7.1.1",
+    "promise": "^8.1.0",
     "replace-in-file": "^3.4.0",
     "versiony": "^2.0.1"
   },
   "devDependencies": {
-    "eslint": "^4.19.1",
-    "eslint-config-airbnb-base": "^12.1.0",
-    "eslint-config-prettier-airbnb": "^0.3.0",
+    "eslint": "^7.29.0",
+    "eslint-config-airbnb": "^18.2.1",
     "eslint-plugin-import": "^2.11.0",
-    "freezly": "^1.0.0",
-    "husky": "^1.0.0-rc.12",
-    "jest": "^23.1.0",
-    "lint-staged": "^7.2.0",
-    "prettier": "^1.13.7"
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-react": "^7.21.5",
+    "eslint-plugin-react-hooks": "^4",
+    "freezly": "^2.0.2",
+    "husky": "^6.0.0",
+    "jest": "^27.0.5",
+    "lint-staged": "^11.0.0",
+    "prettier": "^2.3.1"
   }
 }

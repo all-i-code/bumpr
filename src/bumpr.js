@@ -1,6 +1,5 @@
 require('./typedefs')
 
-const chalk = require('chalk')
 const {cloneDeep, get} = require('lodash')
 const mime = require('mime-types')
 const moment = require('moment-timezone')
@@ -13,6 +12,8 @@ const versiony = require('versiony')
 const {name} = require('../package.json')
 const {createReadStream, exec, readdir, statSync, writeFile} = require('./node-wrappers')
 
+const MissingKeyError = require('./errors/missing-key')
+const NoLogFileError = require('./errors/no-log-file')
 const {Logger} = require('./logger')
 const utils = require('./utils')
 
@@ -34,18 +35,6 @@ function postBody(url, body) {
     method: 'POST',
     body: JSON.stringify(body)
   })
-}
-
-class MissingKeyError extends Error {
-  constructor(key, logFile) {
-    super(`no ${chalk.yellowBright(key)} key found in ${chalk.magentaBright(logFile)}`)
-  }
-}
-
-class NoLogFileError extends Error {
-  constructor(logFile) {
-    super(`log file ${chalk.magentaBright(logFile)} not found.`)
-  }
 }
 
 /**
