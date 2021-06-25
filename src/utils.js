@@ -320,9 +320,10 @@ const utils = {
   /**
    * Extract the changelog string from the PR object
    * @param {PullRequest} pr - the PR object
+   * @param {String[]} required - regular expression patterns that changelog must match
    * @returns {String} the changelog of the PR (from the pr description, if one exists, else '')
    */
-  getChangelogForPr(pr) {
+  getChangelogForPr(pr, required) {
     let changelog = ''
 
     // First check for dependabot PR description
@@ -345,6 +346,12 @@ const utils = {
         `See ${link} for details.`
       throw new Error(msg)
     }
+
+    required.forEach(pattern => {
+      if (!new RegExp(pattern).test(changelog)) {
+        throw new Error(`Changelog does not match pattern: ${pattern}`)
+      }
+    })
 
     return changelog
   },

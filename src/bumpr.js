@@ -253,7 +253,7 @@ class Bumpr {
       return {
         author: pr.author,
         authorUrl: pr.authorUrl,
-        changelog: getChangelog ? utils.getChangelogForPr(pr) : '',
+        changelog: getChangelog ? utils.getChangelogForPr(pr, []) : '',
         modifiedFiles: [],
         number: pr.number,
         scope,
@@ -287,7 +287,7 @@ class Bumpr {
         let changelog = ''
         if (getChangelog) {
           return utils.maybePostCommentOnError(this.config, this.vcs, () => {
-            changelog = utils.getChangelogForPr(pr)
+            changelog = utils.getChangelogForPr(pr, get(this.config, 'features.changelog.required', []))
             return {changelog, number: pr.number, scope, url: pr.url}
           })
         }
