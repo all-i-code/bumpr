@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.11.0] - 2021-06-25 ([PR 48](https://github.com/all-i-code/bumpr/pull/48))
+### Added
+-   New optional `required` option in changelog config to ensure changelog matches a list of regular expressions (ie to ensure proper links to tickets/issues exist)
+
 ## [2.10.0] - 2020-12-13 ([PR 44](https://github.com/all-i-code/bumpr/pull/44))
 ### Added
 - Support for parsing `changelog` from a `dependabot` PR (using the title of the PR)
