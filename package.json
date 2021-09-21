@@ -3,14 +3,14 @@
   "version": "2.11.1",
   "description": "Bump the version of an package based on a Pull Request",
   "bin": {
-    "bumpr": "./bin/cli.js"
+    "bumpr": "./bin/cli.mjs"
   },
   "repository": {
     "type": "git",
     "url": "git@github.com:all-i-code/bumpr.git"
   },
   "engines": {
-    "node": ">= 9.0"
+    "node": ">= 16.0.0"
   },
   "keywords": [
     "github",
@@ -31,7 +31,7 @@
   },
   "homepage": "https://github.com/all-i-code/bumpr#readme",
   "scripts": {
-    "lint": "eslint *.js bin src",
+    "lint": "eslint *.mjs bin/**/*.mjs src/**/*.mjs",
     "watch-test": "jest --coverage --watch",
     "test": "yarn run lint && jest --coverage"
   },
@@ -40,15 +40,16 @@
     "commander": "^8.0.0",
     "cosmiconfig": "^7.0.0",
     "lodash": "^4.17.21",
-    "mime-types": "^2.1.22",
+    "mime-types": "^2.1.32",
     "moment-timezone": "^0.5.21",
     "nlf": "^2.1.1",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^3.0.0",
     "promise": "^8.1.0",
-    "replace-in-file": "^3.4.0",
+    "replace-in-file": "^6.2.0",
     "versiony": "^2.0.1"
   },
   "devDependencies": {
+    "@jest/globals": "^27.2.1",
     "eslint": "^7.29.0",
     "eslint-config-airbnb": "^18.2.1",
     "eslint-plugin-import": "^2.11.0",
@@ -56,9 +57,9 @@
     "eslint-plugin-react": "^7.21.5",
     "eslint-plugin-react-hooks": "^4",
     "freezly": "^2.0.2",
-    "husky": "^6.0.0",
+    "husky": "^7.0.0",
     "jest": "^27.0.5",
     "lint-staged": "^11.0.0",
-    "prettier": "^2.3.1"
+    "prettier": "^2.4.1"
   }
 }

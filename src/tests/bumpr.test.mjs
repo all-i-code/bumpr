@@ -1,24 +1,30 @@
+import {jest} from '@jest/globals' // eslint-disable-line import/no-extraneous-dependencies
+
 jest.mock('node-fetch')
 jest.mock('replace-in-file')
-jest.mock('../node-wrappers')
-jest.mock('../logger')
-jest.mock('../utils')
+jest.mock('../node-wrappers.mjs')
+jest.mock('../logger.mjs')
+jest.mock('../utils.mjs')
 
-const cp = require('child_process')
-const {set} = require('lodash')
-const fetch = require('node-fetch')
-const moment = require('moment-timezone')
-const path = require('path')
-const Promise = require('promise')
-const replace = require('replace-in-file')
+// Need to mock out imports, so jest calls need to go above them (@job13er 2021-09-21)
+/* eslint-disable import/first */
+import cp from 'child_process'
+import set from 'lodash/set'
+import fetch from 'node-fetch'
+import moment from 'moment-timezone'
+import path from 'path'
+import util from 'util'
+import Promise from 'promise'
+import replace from 'replace-in-file'
 
-const pkgJson = require('../../package.json')
-const Bumpr = require('../bumpr')
-const {Logger} = require('../logger')
-const {createReadStream, exec, readdir, statSync, writeFile} = require('../node-wrappers')
-const utils = require('../utils')
+import {name as pkgName} from '../../package.mjs'
+import Bumpr from '../bumpr.mjs'
+import Logger from '../logger.mjs'
+import {createReadStream, exec, readdir, statSync, writeFile} from '../node-wrappers.mjs'
+import {getChangelogForPr, getScopeForPr, maybePostCommentOnError, readJsonFile} from '../utils.mjs'
+/* eslint-enable import/first */
 
-const realExec = Promise.denodeify(cp.exec)
+const realExec = util.promisify(cp.exec)
 
 function getVersionCmd(filename) {
   return `node -e "console.log(require('./${filename}').version)"`
@@ -309,13 +315,13 @@ describe('Bumpr', () => {
     })
 
     afterEach(() => {
-      utils.readJsonFile.mockReset()
+      readJsonFile.mockReset()
     })
 
     describe('when file not found', () => {
       let rejection
       beforeEach(() => {
-        utils.readJsonFile.mockImplementation(() => {
+        readJsonFile.mockImplementation(() => {
           throw new FileNotFoundError()
         })
 
@@ -332,7 +338,7 @@ describe('Bumpr', () => {
     describe('when some other error is thrown when reading file', () => {
       let rejection
       beforeEach(() => {
-        utils.readJsonFile.mockImplementation(() => {
+        readJsonFile.mockImplementation(() => {
           throw new Error('oh snap!')
         })
 
@@ -349,7 +355,7 @@ describe('Bumpr', () => {
     describe('when key is not found', () => {
       let rejection
       beforeEach(() => {
-        utils.readJsonFile.mockReturnValue({foo: 'bar'})
+        readJsonFile.mockReturnValue({foo: 'bar'})
         return bumpr.log('fizz').catch(err => {
           rejection = err
         })
@@ -363,7 +369,7 @@ describe('Bumpr', () => {
     describe('when key is found', () => {
       let resolution
       beforeEach(() => {
-        utils.readJsonFile.mockReturnValue({foo: 'bar'})
+        readJsonFile.mockReturnValue({foo: 'bar'})
         return bumpr.log('foo').then(value => {
           resolution = value
         })
@@ -531,11 +537,11 @@ describe('Bumpr', () => {
       jest.spyOn(bumpr, 'maybeCreateTag').mockReturnValue(Promise.resolve(info))
       jest.spyOn(bumpr, 'maybePushChanges').mockReturnValue(Promise.resolve(info))
       jest.spyOn(bumpr, 'maybeCreateRelease').mockReturnValue(Promise.resolve('released'))
-      jest.spyOn(utils, 'readJsonFile').mockReturnValue({version: '1.2.3'})
+      readJsonFile.mockReturnValue({version: '1.2.3'})
     })
 
     afterEach(() => {
-      utils.readJsonFile.mockRestore()
+      readJsonFile.mockRestore()
       bumpr.maybeCreateTag.mockRestore()
       bumpr.maybePushChanges.mockRestore()
     })
@@ -707,14 +713,14 @@ describe('Bumpr', () => {
           }
 
           jest.spyOn(bumpr, 'getLastPr').mockReturnValue(Promise.resolve(pr))
-          utils.getChangelogForPr.mockReturnValue('my-changelog')
-          utils.getScopeForPr.mockReturnValue(scope)
+          getChangelogForPr.mockReturnValue('my-changelog')
+          getScopeForPr.mockReturnValue(scope)
         })
 
         afterEach(() => {
           bumpr.getLastPr.mockRestore()
-          utils.getChangelogForPr.mockReset()
-          utils.getScopeForPr.mockReset()
+          getChangelogForPr.mockReset()
+          getScopeForPr.mockReset()
         })
 
         describe('when maxScope is enabled', () => {
@@ -735,11 +741,11 @@ describe('Bumpr', () => {
             })
 
             it('should gets the scope for the given pr', () => {
-              expect(utils.getScopeForPr).toHaveBeenCalledWith(pr, 'minor')
+              expect(getScopeForPr).toHaveBeenCalledWith(pr, 'minor')
             })
 
             it('should get the changelog for the given pr', () => {
-              expect(utils.getChangelogForPr).toHaveBeenCalledWith(pr, [])
+              expect(getChangelogForPr).toHaveBeenCalledWith(pr, [])
             })
 
             it('should resolve with the info', () => {
@@ -769,11 +775,11 @@ describe('Bumpr', () => {
             })
 
             it('should gets the scope for the given pr', () => {
-              expect(utils.getScopeForPr).toHaveBeenCalledWith(pr, 'minor')
+              expect(getScopeForPr).toHaveBeenCalledWith(pr, 'minor')
             })
 
             it('should not get the changelog for the given pr', () => {
-              expect(utils.getChangelogForPr).toHaveBeenCalledTimes(0)
+              expect(getChangelogForPr).toHaveBeenCalledTimes(0)
             })
 
             it('should resolve with the info', () => {
@@ -804,7 +810,7 @@ describe('Bumpr', () => {
             })
 
             it('should gets the scope for the given pr', () => {
-              expect(utils.getScopeForPr).toHaveBeenCalledWith(pr, 'major')
+              expect(getScopeForPr).toHaveBeenCalledWith(pr, 'major')
             })
           })
 
@@ -818,7 +824,7 @@ describe('Bumpr', () => {
             /* eslint-enable arrow-body-style */
 
             it('should gets the scope for the given pr', () => {
-              expect(utils.getScopeForPr).toHaveBeenCalledWith(pr, 'major')
+              expect(getScopeForPr).toHaveBeenCalledWith(pr, 'major')
             })
           })
         })
@@ -833,14 +839,14 @@ describe('Bumpr', () => {
         bumpr.vcs = {bar: 'baz'}
 
         jest.spyOn(bumpr, 'getLastPr').mockReturnValue(Promise.resolve('the-pr'))
-        utils.getScopeForPr.mockReturnValue('none')
-        utils.getChangelogForPr.mockReturnValue('my-changelog')
+        getScopeForPr.mockReturnValue('none')
+        getChangelogForPr.mockReturnValue('my-changelog')
       })
 
       afterEach(() => {
         bumpr.getLastPr.mockRestore()
-        utils.getScopeForPr.mockReset()
-        utils.getChangelogForPr.mockReset()
+        getScopeForPr.mockReset()
+        getChangelogForPr.mockReset()
       })
 
       describe('and changelog feature is enabled', () => {
@@ -856,11 +862,11 @@ describe('Bumpr', () => {
         })
 
         it('should gets the scope for the given pr', () => {
-          expect(utils.getScopeForPr).toHaveBeenCalledWith('the-pr', 'major')
+          expect(getScopeForPr).toHaveBeenCalledWith('the-pr', 'major')
         })
 
         it('should not get the changelog for the given pr', () => {
-          expect(utils.getChangelogForPr).toHaveBeenCalledTimes(0)
+          expect(getChangelogForPr).toHaveBeenCalledTimes(0)
         })
 
         it('should resolve with the info', () => {
@@ -881,11 +887,11 @@ describe('Bumpr', () => {
         })
 
         it('should gets the scope for the given pr', () => {
-          expect(utils.getScopeForPr).toHaveBeenCalledWith('the-pr', 'major')
+          expect(getScopeForPr).toHaveBeenCalledWith('the-pr', 'major')
         })
 
         it('should not get the changelog for the given pr', () => {
-          expect(utils.getChangelogForPr).toHaveBeenCalledTimes(0)
+          expect(getChangelogForPr).toHaveBeenCalledTimes(0)
         })
 
         it('should resolve with the info', () => {
@@ -911,9 +917,9 @@ describe('Bumpr', () => {
       bumpr.vcs = {
         getPr: jest.fn().mockReturnValue(Promise.resolve('the-pr'))
       }
-      utils.getChangelogForPr.mockReturnValue('the-changelog')
-      utils.getScopeForPr.mockReturnValue('patch')
-      utils.maybePostCommentOnError
+      getChangelogForPr.mockReturnValue('the-changelog')
+      getScopeForPr.mockReturnValue('patch')
+      maybePostCommentOnError
         .mockReturnValueOnce({
           pr: 'the-pr',
           scope: 'the-scope'
@@ -925,9 +931,9 @@ describe('Bumpr', () => {
     })
 
     afterEach(() => {
-      utils.getScopeForPr.mockReset()
-      utils.getChangelogForPr.mockReset()
-      utils.maybePostCommentOnError.mockReset()
+      getScopeForPr.mockReset()
+      getChangelogForPr.mockReset()
+      maybePostCommentOnError.mockReset()
     })
 
     describe('when optional features are disabled', () => {
@@ -943,15 +949,15 @@ describe('Bumpr', () => {
       })
 
       it('should call maybePostCommentOnError() once', () => {
-        expect(utils.maybePostCommentOnError).toHaveBeenCalledTimes(1)
+        expect(maybePostCommentOnError).toHaveBeenCalledTimes(1)
       })
 
       it('should not look up the scope of the PR', () => {
-        expect(utils.getScopeForPr).toHaveBeenCalledTimes(0)
+        expect(getScopeForPr).toHaveBeenCalledTimes(0)
       })
 
       it('should not look up the changelog of the PR', () => {
-        expect(utils.getChangelogForPr).toHaveBeenCalledTimes(0)
+        expect(getChangelogForPr).toHaveBeenCalledTimes(0)
       })
 
       it('should resolve with the info', () => {
@@ -965,7 +971,7 @@ describe('Bumpr', () => {
         let args
 
         beforeEach(() => {
-          ;[args] = utils.maybePostCommentOnError.mock.calls
+          ;[args] = maybePostCommentOnError.mock.calls
         })
 
         it('should pass in the config', () => {
@@ -984,7 +990,7 @@ describe('Bumpr', () => {
           })
 
           it('should get the scope', () => {
-            expect(utils.getScopeForPr).toHaveBeenCalledWith('the-pr', 'major')
+            expect(getScopeForPr).toHaveBeenCalledWith('the-pr', 'major')
           })
 
           it('should return the pr and scope', () => {
@@ -1011,15 +1017,15 @@ describe('Bumpr', () => {
       })
 
       it('should call maybePostCommentOnError() once', () => {
-        expect(utils.maybePostCommentOnError).toHaveBeenCalledTimes(1)
+        expect(maybePostCommentOnError).toHaveBeenCalledTimes(1)
       })
 
       it('should not look up the scope of the PR', () => {
-        expect(utils.getScopeForPr).toHaveBeenCalledTimes(0)
+        expect(getScopeForPr).toHaveBeenCalledTimes(0)
       })
 
       it('should not look up the changelog of the PR', () => {
-        expect(utils.getChangelogForPr).toHaveBeenCalledTimes(0)
+        expect(getChangelogForPr).toHaveBeenCalledTimes(0)
       })
 
       it('should resolve with the info', () => {
@@ -1033,7 +1039,7 @@ describe('Bumpr', () => {
         let args
 
         beforeEach(() => {
-          ;[args] = utils.maybePostCommentOnError.mock.calls
+          ;[args] = maybePostCommentOnError.mock.calls
         })
 
         it('should pass in the config', () => {
@@ -1052,7 +1058,7 @@ describe('Bumpr', () => {
           })
 
           it('should get the scope', () => {
-            expect(utils.getScopeForPr).toHaveBeenCalledWith('the-pr', 'minor')
+            expect(getScopeForPr).toHaveBeenCalledWith('the-pr', 'minor')
           })
 
           it('should return the pr and scope', () => {
@@ -1078,15 +1084,15 @@ describe('Bumpr', () => {
       })
 
       it('should call maybePostCommentOnError() twice', () => {
-        expect(utils.maybePostCommentOnError).toHaveBeenCalledTimes(2)
+        expect(maybePostCommentOnError).toHaveBeenCalledTimes(2)
       })
 
       it('should not look up the scope of the PR', () => {
-        expect(utils.getScopeForPr).toHaveBeenCalledTimes(0)
+        expect(getScopeForPr).toHaveBeenCalledTimes(0)
       })
 
       it('should not look up the changelog of the PR', () => {
-        expect(utils.getChangelogForPr).toHaveBeenCalledTimes(0)
+        expect(getChangelogForPr).toHaveBeenCalledTimes(0)
       })
 
       it('should resolve with the info', () => {
@@ -1100,7 +1106,7 @@ describe('Bumpr', () => {
         let args
 
         beforeEach(() => {
-          ;[args] = utils.maybePostCommentOnError.mock.calls
+          ;[args] = maybePostCommentOnError.mock.calls
         })
 
         it('should pass in the config', () => {
@@ -1119,7 +1125,7 @@ describe('Bumpr', () => {
           })
 
           it('should get the scope', () => {
-            expect(utils.getScopeForPr).toHaveBeenCalledWith('the-pr', 'major')
+            expect(getScopeForPr).toHaveBeenCalledWith('the-pr', 'major')
           })
 
           it('should return the pr and scope', () => {
@@ -1134,7 +1140,7 @@ describe('Bumpr', () => {
       describe('the second call to maybePostCommentOnError()', () => {
         let args
         beforeEach(() => {
-          ;[, args] = utils.maybePostCommentOnError.mock.calls
+          ;[, args] = maybePostCommentOnError.mock.calls
         })
 
         it('should pass in the config', () => {
@@ -1152,7 +1158,7 @@ describe('Bumpr', () => {
           })
 
           it('should get the changelog', () => {
-            expect(utils.getChangelogForPr).toHaveBeenCalledWith('the-pr', [])
+            expect(getChangelogForPr).toHaveBeenCalledWith('the-pr', [])
           })
 
           it('should return the changelog and scope', () => {
@@ -1179,7 +1185,7 @@ describe('Bumpr', () => {
         let args
 
         beforeEach(() => {
-          ;[, args] = utils.maybePostCommentOnError.mock.calls
+          ;[, args] = maybePostCommentOnError.mock.calls
         })
 
         describe('when the wrapped function is called', () => {
@@ -1188,7 +1194,7 @@ describe('Bumpr', () => {
           })
 
           it('should get the changelog and look for required', () => {
-            expect(utils.getChangelogForPr).toHaveBeenCalledWith('the-pr', ['DEV-\\d+'])
+            expect(getChangelogForPr).toHaveBeenCalledWith('the-pr', ['DEV-\\d+'])
           })
         })
       })
@@ -1327,7 +1333,7 @@ describe('Bumpr', () => {
       })
 
       it('should commit with version bump message', () => {
-        const msg = `[ci skip] [${pkgJson.name}] Version bump to 1.2.3`
+        const msg = `[ci skip] [${pkgName}] Version bump to 1.2.3`
         const descr = 'From CI build 12345'
         expect(bumpr.ci.commit).toHaveBeenCalledWith(msg, descr)
       })
@@ -1831,11 +1837,11 @@ describe('Bumpr', () => {
         version: '1.2.3'
       }
       writeFile.mockReturnValue(Promise.resolve())
-      jest.spyOn(utils, 'readJsonFile').mockReturnValue({name: 'the-package'})
+      readJsonFile.mockReturnValue({name: 'the-package'})
     })
 
     afterEach(() => {
-      utils.readJsonFile.mockRestore()
+      readJsonFile.mockRestore()
     })
 
     describe('when feature is disabled', () => {
@@ -1846,7 +1852,7 @@ describe('Bumpr', () => {
       })
 
       it('should not read in anything', () => {
-        expect(utils.readJsonFile).not.toHaveBeenCalled()
+        expect(readJsonFile).not.toHaveBeenCalled()
       })
 
       it('should log why it is skipping', () => {

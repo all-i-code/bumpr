@@ -1,6 +1,6 @@
-const CiBase = require('./base')
+import CiBase from './base.mjs'
 
-exports.ensureCiBaseMethodIsUsed = function ensureCiBaseMethodIsUsed(ctx, methodName) {
+export default function ensureCiBaseMethodIsUsed(ctx, methodName) {
   describe(`.${methodName}()`, () => {
     let result
 

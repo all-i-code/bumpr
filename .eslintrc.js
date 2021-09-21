@@ -11,6 +11,10 @@ module.exports = {
     jest: false
   },
 
+  parserOptions: {
+    ecmaVersion: 2020,
+  },
+
   rules: {
     'arrow-parens': 'off', // conflicts with prettier
     'comma-dangle': ['error', 'never'], // conflicts with prettier

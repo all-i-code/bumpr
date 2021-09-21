@@ -1,9 +1,7 @@
-const chalk = require('chalk')
+import chalk from 'chalk'
 
-class MissingKeyError extends Error {
+export default class MissingKeyError extends Error {
   constructor(key, logFile) {
     super(`no ${chalk.yellowBright(key)} key found in ${chalk.magentaBright(logFile)}`)
   }
 }
-
-module.exports = MissingKeyError

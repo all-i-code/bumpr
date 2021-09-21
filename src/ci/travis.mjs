@@ -1,8 +1,8 @@
-require('../typedefs')
+import '../typedefs.mjs'
 
-const {Logger} = require('../logger')
-const {exec} = require('../node-wrappers')
-const CiBase = require('./base')
+import Logger from '../logger.mjs'
+import {exec} from '../node-wrappers.mjs'
+import CiBase from './base.mjs'
 
 /**
  * CI interface for public Travis (travis-ci.org/travis-ci.com)
@@ -10,7 +10,7 @@ const CiBase = require('./base')
  * @class
  * @implements {Ci}
  */
-class Travis extends CiBase {
+export default class Travis extends CiBase {
   /**
    * Push local changes to GitHub
    * @returns {Promise} a promise resolved with the result of the push
@@ -32,5 +32,3 @@ class Travis extends CiBase {
     return super.setupGitEnv().then(() => exec(`git checkout -b ci-${branch}`))
   }
 }
-
-module.exports = Travis

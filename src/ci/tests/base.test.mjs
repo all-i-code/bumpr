@@ -1,9 +1,14 @@
+import {jest} from '@jest/globals' // eslint-disable-line import/no-extraneous-dependencies
+
 jest.mock('../../node-wrappers')
 jest.mock('../../logger')
 
-const {Logger} = require('../../logger')
-const {exec} = require('../../node-wrappers')
-const CiBase = require('../base')
+// Need to mock out imports, so jest calls need to go above them (@job13er 2021-09-21)
+/* eslint-disable import/first */
+import Logger from '../../logger.mjs'
+import {exec} from '../../node-wrappers.mjs'
+import CiBase from '../base.mjs'
+/* eslint-enable import/first */
 
 describe('CI / Base', () => {
   let base

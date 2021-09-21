@@ -1,21 +1,27 @@
-require('./typedefs')
+import './typedefs.mjs'
 
-const {cloneDeep, get} = require('lodash')
-const mime = require('mime-types')
-const moment = require('moment-timezone')
-const fetch = require('node-fetch')
-const path = require('path')
-const Promise = require('promise')
-const replace = require('replace-in-file')
-const versiony = require('versiony')
+import cloneDeep from 'lodash/cloneDeep'
+import get from 'lodash/get'
+import mime from 'mime-types'
+import moment from 'moment-timezone'
+import fetch from 'node-fetch'
+import path from 'path'
+import Promise from 'promise'
+import replace from 'replace-in-file'
+import versiony from 'versiony'
 
-const {name} = require('../package.json')
-const {createReadStream, exec, readdir, statSync, writeFile} = require('./node-wrappers')
+import {name} from '../package.json'
+import {createReadStream, exec, readdir, statSync, writeFile} from './node-wrappers.mjs'
 
-const MissingKeyError = require('./errors/missing-key')
-const NoLogFileError = require('./errors/no-log-file')
-const {Logger} = require('./logger')
-const utils = require('./utils')
+import MissingKeyError from './errors/missing-key.mjs'
+import NoLogFileError from './errors/no-log-file.mjs'
+import Logger from './logger.mjs'
+import {
+  getChangelogForPr,
+  getScopeForPr,
+  maybePostCommentOnError,
+  readJsonFile
+} from './utils.mjs'
 
 /**
  * Perform the patch bump, either using .patch() or .preRelease() (the latter if there's a pre-release tag)
@@ -165,7 +171,7 @@ class Bumpr {
     const fakeInfo = {
       modifiedFiles: ['package.json'], // not really, but if we don't put something in here tag won't be pushed
       scope: 'patch', // must be anything but 'none' so that tag is created
-      version: utils.readJsonFile('package.json').version // current version
+      version: readJsonFile('package.json').version // current version
     }
 
     return this.ci
@@ -201,7 +207,7 @@ class Bumpr {
       Logger.log(`Reading log file from ${logFile}`)
       return Promise.resolve({
         file: logFile,
-        log: utils.readJsonFile(logFile)
+        log: readJsonFile(logFile)
       })
     } catch (err) {
       const rejection = err.code === 'ENOENT' ? new NoLogFileError(logFile) : err
@@ -236,13 +242,13 @@ class Bumpr {
       if (this.config.isEnabled('maxScope')) {
         maxScope = this.config.features.maxScope.value
       }
-      const scope = utils.getScopeForPr(pr, maxScope)
+      const scope = getScopeForPr(pr, maxScope)
       const getChangelog = this.config.isEnabled('changelog') && scope !== 'none'
 
       return {
         author: pr.author,
         authorUrl: pr.authorUrl,
-        changelog: getChangelog ? utils.getChangelogForPr(pr, []) : '',
+        changelog: getChangelog ? getChangelogForPr(pr, []) : '',
         modifiedFiles: [],
         number: pr.number,
         scope,
@@ -260,12 +266,12 @@ class Bumpr {
       .getPr(this.config.computed.ci.prNumber)
       .then(pr => {
         let scope
-        return utils.maybePostCommentOnError(this.config, this.vcs, () => {
+        return maybePostCommentOnError(this.config, this.vcs, () => {
           let maxScope = 'major'
           if (this.config.isEnabled('maxScope')) {
             maxScope = this.config.features.maxScope.value
           }
-          scope = utils.getScopeForPr(pr, maxScope)
+          scope = getScopeForPr(pr, maxScope)
           return {pr, scope}
         })
       })
@@ -275,8 +281,8 @@ class Bumpr {
         const getChangelog = this.config.isEnabled('changelog') && scope !== 'none'
         let changelog = ''
         if (getChangelog) {
-          return utils.maybePostCommentOnError(this.config, this.vcs, () => {
-            changelog = utils.getChangelogForPr(pr, get(this.config, 'features.changelog.required', []))
+          return maybePostCommentOnError(this.config, this.vcs, () => {
+            changelog = getChangelogForPr(pr, get(this.config, 'features.changelog.required', []))
             return {changelog, number: pr.number, scope, url: pr.url}
           })
         }
@@ -508,7 +514,7 @@ class Bumpr {
     }
     const {number, url, user} = pr
     const {slackUrl} = this.config.computed
-    const pkg = utils.readJsonFile('package.json')
+    const pkg = readJsonFile('package.json')
     const pkgStr = `${pkg.name}@${version}`
     const message = `Published \`${pkgStr}\` (${scope}) from <${url}|PR #${number}> by <${user.url}|${user.login}>`
 
@@ -525,4 +531,4 @@ class Bumpr {
 Bumpr.MissingKeyError = MissingKeyError
 Bumpr.NoLogFileError = NoLogFileError
 
-module.exports = Bumpr
+export default Bumpr

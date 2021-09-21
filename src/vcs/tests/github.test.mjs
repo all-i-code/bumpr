@@ -1,15 +1,16 @@
-jest.mock('node-fetch')
-jest.mock('../../node-wrappers')
-jest.mock('../../logger')
+import {jest} from '@jest/globals' // eslint-disable-line import/no-extraneous-dependencies
 
-const {readFileSync} = require('fs')
-const fetch = require('node-fetch')
-const path = require('path')
+import {readFileSync} from 'fs'
+import fetch from 'node-fetch'
+import path from 'path'
 
-const {exec} = require('../../node-wrappers')
-const GitHub = require('../github')
+import {exec} from '../../node-wrappers.mjs'
+import GitHub from '../github.mjs'
 
 jest.mock('fs')
+jest.mock('node-fetch')
+jest.mock('../../node-wrappers.mjs')
+jest.mock('../../logger.mjs')
 
 describe('VCS / GitHub /', () => {
   let config

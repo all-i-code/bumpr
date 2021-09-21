@@ -1,8 +1,8 @@
 /* eslint-disable class-methods-use-this */
-require('../typedefs')
+import '../typedefs.mjs'
 
-const {Logger} = require('../logger')
-const {exec} = require('../node-wrappers')
+import Logger from '../logger.mjs'
+import {exec} from '../node-wrappers.mjs'
 
 /**
  * Base CI implementation to provide basic git functionality
@@ -10,7 +10,7 @@ const {exec} = require('../node-wrappers')
  * @class
  * @implements {Ci}
  */
-class CiBase {
+export default class CiBase {
   /**
    * @param {Config} config - the configuration object
    * @param {Vcs} vcs - the vcs system being used
@@ -75,5 +75,3 @@ class CiBase {
     return exec(`git tag ${name} -a -m "${message}"`)
   }
 }
-
-module.exports = CiBase

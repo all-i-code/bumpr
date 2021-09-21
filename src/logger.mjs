@@ -1,8 +1,8 @@
-const {name} = require('../package.json')
+import {name} from '../package.mjs'
 
 /* eslint-disable no-console */
 
-exports.Logger = {
+export default {
   /**
    * Simple wrapper around console.log() to make it easy to mock it out in tests
    * @param {String} msg - the message to log

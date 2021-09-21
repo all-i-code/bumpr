@@ -1,17 +1,20 @@
-jest.mock('../logger')
-jest.mock('../utils')
-jest.mock('../bumpr')
-jest.mock('../ci/circle')
-jest.mock('../ci/travis')
-jest.mock('../vcs/github')
+jest.mock('../logger.mjs')
+jest.mock('../utils.mjs')
+jest.mock('../bumpr.mjs')
+jest.mock('../ci/circle.mjs')
+jest.mock('../ci/travis.mjs')
+jest.mock('../vcs/github.mjs')
 
-const chalk = require('chalk')
-const Bumpr = require('../bumpr')
-const Circle = require('../ci/circle')
-const Travis = require('../ci/travis')
-const {createBumpr} = require('../cli')
-const utils = require('../utils')
-const GitHub = require('../vcs/github')
+// Need to mock out imports, so jest calls need to go above them (@job13er 2021-09-21)
+/* eslint-disable import/first */
+import chalk from 'chalk'
+import Bumpr from '../bumpr.mjs'
+import Circle from '../ci/circle.mjs'
+import Travis from '../ci/travis.mjs'
+import createBumpr from '../cli.mjs'
+import {getConfig} from '../utils.mjs'
+import GitHub from '../vcs/github.mjs'
+/* eslint-enable import/first */
 
 function itShouldCreateBumprWith(cfg, CiBase, VcsBase) {
   describe('Bumpr instantiation', () => {
@@ -46,12 +49,12 @@ describe('createBumpr()', () => {
 
   afterEach(() => {
     Bumpr.mockReset()
-    utils.getConfig.mockReset()
+    getConfig.mockReset()
   })
 
   describe('When travis/github are configured', () => {
     beforeEach(() => {
-      utils.getConfig.mockReturnValue(Promise.resolve(cfg))
+      getConfig.mockReturnValue(Promise.resolve(cfg))
       return createBumpr().then(b => {
         bumpr = b
       })
@@ -70,7 +73,7 @@ describe('createBumpr()', () => {
       vcs: {provider: 'github'}
     }
     beforeEach(() => {
-      utils.getConfig.mockReturnValue(Promise.resolve(circleCfg))
+      getConfig.mockReturnValue(Promise.resolve(circleCfg))
       return createBumpr().then(b => {
         bumpr = b
       })
@@ -87,7 +90,7 @@ describe('createBumpr()', () => {
     let err
     beforeEach(() => {
       bumpr = null
-      utils.getConfig.mockReturnValue(
+      getConfig.mockReturnValue(
         Promise.resolve({
           ci: {provider: 'fizz-bang'},
           vcs: {provider: 'github'}
@@ -107,7 +110,7 @@ describe('createBumpr()', () => {
   describe('with invalid vcs provider', () => {
     let err
     beforeEach(() => {
-      utils.getConfig.mockReturnValue(
+      getConfig.mockReturnValue(
         Promise.resolve({
           ci: {provider: 'travis'},
           vcs: {provider: 'fizz-bang'}
