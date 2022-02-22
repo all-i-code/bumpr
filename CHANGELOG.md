@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.12.0] - 2022-02-22 ([PR 55](https://github.com/all-i-code/bumpr/pull/55))
+### Added
+- new `bumpr info` command to write out a log file from a merged PR
+
+
 ## [2.11.1] - 2021-06-25 ([PR 51](https://github.com/all-i-code/bumpr/pull/51))
 ### Changed
 - Dependencies to latest available version
