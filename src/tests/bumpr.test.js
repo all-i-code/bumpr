@@ -278,6 +278,145 @@ describe('Bumpr', () => {
     })
   })
 
+  describe('.info()', () => {
+    let result
+    let info
+    let error
+
+    beforeEach(() => {
+      result = null
+      error = null
+      bumpr.config.foo = 'bar'
+      bumpr.vcs = {foo: 'bar'}
+      bumpr.ci = {push() {}}
+      info = {scope: 'minor', changelog: '', version: '1.2.0'}
+      jest.spyOn(bumpr, 'getMergedPrInfo').mockReturnValue(Promise.resolve(info))
+      jest.spyOn(bumpr, 'maybeBumpVersion').mockReturnValue(Promise.resolve(info))
+      jest.spyOn(bumpr, 'maybeCommitChanges').mockReturnValue(Promise.resolve(info))
+      jest.spyOn(bumpr, 'maybeCreateTag').mockReturnValue(Promise.resolve(info))
+      jest.spyOn(bumpr, 'maybeUpdateChangelog').mockReturnValue(Promise.resolve(info))
+      jest.spyOn(bumpr, 'maybePushChanges').mockReturnValue(Promise.resolve(info))
+      jest.spyOn(bumpr, 'maybeCreateRelease').mockReturnValue(Promise.resolve(info))
+      jest.spyOn(bumpr, 'maybeLogChanges').mockReturnValue(Promise.resolve('logged'))
+    })
+
+    afterEach(() => {
+      bumpr.getMergedPrInfo.mockRestore()
+      bumpr.maybeBumpVersion.mockRestore()
+      bumpr.maybeCommitChanges.mockRestore()
+      bumpr.maybeCreateTag.mockRestore()
+      bumpr.maybeUpdateChangelog.mockRestore()
+      bumpr.maybePushChanges.mockRestore()
+      bumpr.maybeCreateRelease.mockRestore()
+      bumpr.maybeLogChanges.mockRestore()
+    })
+
+    describe('when a merge build', () => {
+      beforeEach(done => {
+        bumpr
+          .info({numExtraCommits: 1})
+          .then(res => {
+            result = res
+          })
+          .catch(err => {
+            error = err
+          })
+          .finally(() => {
+            done()
+          })
+      })
+
+      it('should get the merged pr info', () => {
+        expect(bumpr.getMergedPrInfo).toHaveBeenCalledWith(1)
+      })
+
+      it('should not maybe bump version', () => {
+        expect(bumpr.maybeBumpVersion).toHaveBeenCalledTimes(0)
+      })
+
+      it('should not maybe update changelog', () => {
+        expect(bumpr.maybeUpdateChangelog).toHaveBeenCalledTimes(0)
+      })
+
+      it('should not maybe commit changes', () => {
+        expect(bumpr.maybeCommitChanges).toHaveBeenCalledTimes(0)
+      })
+
+      it('should not maybe create a tag', () => {
+        expect(bumpr.maybeCreateTag).toHaveBeenCalledTimes(0)
+      })
+
+      it('should not maybe push commit', () => {
+        expect(bumpr.maybePushChanges).toHaveBeenCalledTimes(0)
+      })
+
+      it('should maybe log the changes', () => {
+        expect(bumpr.maybeLogChanges).toHaveBeenCalledWith(info)
+      })
+
+      it('should resolve with the result of the maybeLogChanges() call', () => {
+        expect(result).toBe('logged')
+      })
+
+      it('should not reject', () => {
+        expect(error).toBe(null)
+      })
+    })
+
+    describe('when not a merge build', () => {
+      beforeEach(done => {
+        set(bumpr.config, 'computed.ci.isPr', true)
+        bumpr
+          .info({numExtraCommits: 0})
+          .then(res => {
+            result = res
+          })
+          .catch(err => {
+            error = err
+          })
+          .finally(() => {
+            done()
+          })
+      })
+
+      it('should log that non merge builds are skipped', () => {
+        expect(Logger.log).toHaveBeenCalledWith('Not a merge build, skipping info')
+      })
+
+      it('should not lookup merged PR info', () => {
+        expect(bumpr.getMergedPrInfo).toHaveBeenCalledTimes(0)
+      })
+
+      it('should not maybe bump version', () => {
+        expect(bumpr.maybeBumpVersion).toHaveBeenCalledTimes(0)
+      })
+
+      it('should not maybe update changelog', () => {
+        expect(bumpr.maybeUpdateChangelog).toHaveBeenCalledTimes(0)
+      })
+
+      it('should not maybe commit changes', () => {
+        expect(bumpr.maybeCommitChanges).toHaveBeenCalledTimes(0)
+      })
+
+      it('should not maybe create a tag', () => {
+        expect(bumpr.maybeCreateTag).toHaveBeenCalledTimes(0)
+      })
+
+      it('should not maybe push commit', () => {
+        expect(bumpr.maybePushChanges).toHaveBeenCalledTimes(0)
+      })
+
+      it('should not maybe create a release', () => {
+        expect(bumpr.maybeCreateRelease).toHaveBeenCalledTimes(0)
+      })
+
+      it('should not reject', () => {
+        expect(error).toBe(null)
+      })
+    })
+  })
+
   describe('.isPr()', () => {
     let ret
     describe('when not a PR build', () => {

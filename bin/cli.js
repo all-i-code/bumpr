@@ -37,6 +37,14 @@ program
   })
 
 program
+  .command('info')
+  .option('-n, --num-extra-commits <num>', 'Number of extra commits made after PR merge commit', 0)
+  .description('collect info from merged PR and write it to log (used for debugging)')
+  .action(cmd => {
+    withBumpr(bumpr => bumpr.info(cmd))
+  })
+
+program
   .command('is-pr')
   .description('check if current build is a PR build')
   .action(() => {
