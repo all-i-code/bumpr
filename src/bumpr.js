@@ -94,6 +94,22 @@ class Bumpr {
   }
 
   /**
+   * Get info based on the last merged PR's version-bump comment and log it
+   * @param {Object} options the cli options
+   * @param {Number} options.numExtraCommits - the number of commits to skip when looking for merge commit
+   * @returns {Promise} a promise resolved with the results of the push
+   */
+  info({numExtraCommits}) {
+    if (get(this.config, 'computed.ci.isPr')) {
+      Logger.log('Not a merge build, skipping info')
+      return Promise.resolve()
+    }
+
+    return this.getMergedPrInfo(numExtraCommits)
+      .then(info => this.maybeLogChanges(info))
+  }
+
+  /**
    * Check if a build is happening in a PR
    */
   isPr() {
