@@ -22,7 +22,7 @@ const DEPENDABOT_IDENTIFIER = '<summary>Dependabot commands and options</summary
  * @param {Object} leaves - the simple key-value mapping of object path -> value
  */
 function walkObject(prefix, object, leaves) {
-  Object.keys(object).forEach(key => {
+  Object.keys(object).forEach((key) => {
     const value = object[key]
     const fullPrefix = prefix ? `${prefix}.${key}` : key
     if (isObject(value) && !isArray(value)) {
@@ -104,7 +104,7 @@ function processEnv(config) {
   }
 
   config.computed.ci.isPr = config.computed.ci.prNumber !== 'false'
-  config.computed.ci.branch = getEnv(config.ci.env.branch, 'master')
+  config.computed.ci.branch = getEnv(config.ci.env.branch, get(config.vcs.repository, 'defaultBranch', 'main'))
 
   // Grab slack URL from env (if feature enabled)
   if (config.features.slack.enabled) {
@@ -116,7 +116,7 @@ function processEnv(config) {
   // Grab the VCS stuff from the env
   config.computed.vcs.auth = {
     readToken: getEnv(config.vcs.env.readToken),
-    writeToken: getEnv(config.vcs.env.writeToken)
+    writeToken: getEnv(config.vcs.env.writeToken),
   }
   /* eslint-enable no-param-reassign */
 }
@@ -129,7 +129,7 @@ const utils = {
   getConfig() {
     return cosmiconfig('bumpr')
       .search()
-      .then(result => {
+      .then((result) => {
         let config = {}
         if (result && result.config) {
           config = result.config // eslint-disable-line prefer-destructuring
@@ -144,13 +144,13 @@ const utils = {
               branch: 'TRAVIS_BRANCH',
               buildNumber: 'TRAVIS_BUILD_NUMBER',
               prNumber: 'TRAVIS_PULL_REQUEST',
-              prUrl: ''
+              prUrl: '',
             },
             gitUser: {
               email: 'bumpr@domain.com',
-              name: 'Bumpr'
+              name: 'Bumpr',
             },
-            provider: 'travis'
+            provider: 'travis',
           },
           // This is where we put everything we calculate/compute based on other settings (@job13er 2017-06-16)
           computed: {
@@ -158,60 +158,60 @@ const utils = {
               buildNumber: '',
               branch: '',
               isPr: false,
-              prNumber: ''
+              prNumber: '',
             },
             vcs: {
               auth: {
                 readToken: '',
-                writeToken: ''
-              }
-            }
+                writeToken: '',
+              },
+            },
           },
           features: {
             changelog: {
               enabled: false,
-              file: 'CHANGELOG.md'
+              file: 'CHANGELOG.md',
             },
             comments: {
-              enabled: false
+              enabled: false,
             },
             maxScope: {
               enabled: false,
-              value: 'major'
+              value: 'major',
             },
             logging: {
               enabled: false,
-              file: '.bumpr-log.json'
+              file: '.bumpr-log.json',
             },
             release: {
               enabled: false,
-              artifacts: ''
+              artifacts: '',
             },
             slack: {
               enabled: false,
               env: {
-                url: 'SLACK_URL'
+                url: 'SLACK_URL',
               },
-              channels: []
+              channels: [],
             },
             timezone: {
               enabled: false,
-              zone: 'Etc/UTC'
-            }
+              zone: 'Etc/UTC',
+            },
           },
           files: ['package.json'],
           vcs: {
             domain: 'github.com',
             env: {
               readToken: 'GITHUB_READ_ONLY_TOKEN',
-              writeToken: 'GITHUB_TOKEN'
+              writeToken: 'GITHUB_TOKEN',
             },
-            provider: 'github'
-          }
+            provider: 'github',
+          },
         }
 
         walkObject('', defaults, leaves)
-        Object.keys(leaves).forEach(key => {
+        Object.keys(leaves).forEach((key) => {
           const value = leaves[key]
           if (get(config, key) === undefined) {
             set(config, key, value)
@@ -249,7 +249,7 @@ const utils = {
       none: 1,
       patch: 2,
       minor: 3,
-      major: 4
+      major: 4,
     }
 
     const scopeWeight = scopeWeights[scope]
@@ -280,7 +280,7 @@ const utils = {
         scope: 'patch',
         maxScope,
         prNumber: pr.number,
-        prUrl: pr.url
+        prUrl: pr.url,
       })
     }
 
@@ -313,7 +313,7 @@ const utils = {
       scope: scope.toLowerCase(),
       maxScope,
       prNumber: pr.number,
-      prUrl: pr.url
+      prUrl: pr.url,
     })
   },
 
@@ -340,13 +340,14 @@ const utils = {
 
     if (changelog.trim() === '') {
       const link = 'https://github.com/all-i-code/bumpr#changelog'
-      const msg = 'No CHANGELOG content found in PR description.\n'
-        + 'Please add a `## CHANGELOG` section to your PR description with some content describing your change.\n'
-        + `See ${link} for details.`
+      const msg =
+        'No CHANGELOG content found in PR description.\n' +
+        'Please add a `## CHANGELOG` section to your PR description with some content describing your change.\n' +
+        `See ${link} for details.`
       throw new Error(msg)
     }
 
-    required.forEach(pattern => {
+    required.forEach((pattern) => {
       if (!new RegExp(pattern).test(changelog)) {
         throw new Error(`Changelog does not match pattern: ${pattern}`)
       }
@@ -366,7 +367,7 @@ const utils = {
   maybePostComment(config, vcs, msg, isError) {
     if (!process.env.SKIP_COMMENTS && config.computed.ci.isPr && config.isEnabled('comments')) {
       const comment = isError ? `## ERROR\n${msg}` : msg
-      return vcs.postComment(config.computed.ci.prNumber, comment).catch(err => {
+      return vcs.postComment(config.computed.ci.prNumber, comment).catch((err) => {
         const newMessage = `Received error: ${err.message} while trying to post PR comment: ${comment}`
         throw new Error(newMessage)
       })
@@ -393,7 +394,7 @@ const utils = {
           .then(() => {
             throw e
           })
-          .catch(err => {
+          .catch((err) => {
             if (err !== e) {
               const msg = `Received error: ${err.message} while trying to post PR comment about error: ${e.message}`
               throw new Error(msg)
@@ -416,7 +417,7 @@ const utils = {
   readJsonFile(filename) {
     const fullPath = path.join(process.cwd(), filename)
     return JSON.parse(fs.readFileSync(fullPath, {encoding: 'utf8'}))
-  }
+  },
 }
 
 module.exports = utils

@@ -16,9 +16,9 @@ describe('CI / Travis', () => {
     config = {
       computed: {
         ci: {
-          branch: 'my-branch'
-        }
-      }
+          branch: 'my-branch',
+        },
+      },
     }
     travis = new Travis(config, {id: 'vcs'})
     ctx.ci = travis
@@ -47,7 +47,7 @@ describe('CI / Travis', () => {
       jest.spyOn(travis.vcs, 'addRemoteForPush').mockReturnValue(Promise.resolve('ci-origin'))
       exec.mockReturnValue(Promise.resolve('pushed'))
 
-      return travis.push().then(res => {
+      return travis.push().then((res) => {
         result = res
       })
     })
@@ -60,7 +60,7 @@ describe('CI / Travis', () => {
       expect(travis.vcs.addRemoteForPush).toHaveBeenCalledTimes(1)
     })
 
-    it('should log that it is about to push my-master to the new remote', () => {
+    it('should log that it is about to push ci-my-branch to the new remote', () => {
       expect(Logger.log).toHaveBeenCalledWith('Pushing ci-my-branch to ci-origin')
     })
 
@@ -80,7 +80,7 @@ describe('CI / Travis', () => {
       jest.spyOn(CiBase.prototype, 'setupGitEnv').mockReturnValue(Promise.resolve())
       exec.mockReturnValue(Promise.resolve('checked-out'))
 
-      return travis.setupGitEnv().then(res => {
+      return travis.setupGitEnv().then((res) => {
         result = res
       })
     })
