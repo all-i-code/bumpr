@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.13.0] - 2022-04-19 ([PR 57](https://github.com/all-i-code/bumpr/pull/57))
+### Changed
+- Default branch name when there's no CI branch env variable (from `master` to `config.repository.defaultBranch` or `main`). 
+### Security
+- Updated dependencies to resolve `dependabot` issues
+
 ## [2.12.0] - 2022-02-22 ([PR 55](https://github.com/all-i-code/bumpr/pull/55))
 ### Added
 - new `bumpr info` command to write out a log file from a merged PR
