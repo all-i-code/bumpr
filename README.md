@@ -1,4 +1,4 @@
-[ci-img]: https://travis-ci.com/all-i-code/bumpr.svg?branch=master "Travis CI Build Status"
+[ci-img]: https://travis-ci.com/all-i-code/bumpr.svg?branch=main "Travis CI Build Status"
 [ci-url]: https://travis-ci.com/all-i-code/bumpr
 
 [npm-img]: https://img.shields.io/npm/v/bumpr.svg "NPM Version"
@@ -496,6 +496,9 @@ ssh keys which have proper permissions and will not use any token.
 
 #### `vcs.repository`
 Holds info about the name and organization of the repository.
+
+##### `vcs.repository.defaultBranch`
+The name of the default branch of the repository (default is `main`)
 
 ##### `vcs.repository.name`
 The name of the repository

@@ -13,9 +13,9 @@ describe('CI / Base', () => {
     config = {
       computed: {
         ci: {
-          branch: 'my-branch'
-        }
-      }
+          branch: 'my-branch',
+        },
+      },
     }
     base = new CiBase(config, {id: 'vcs'})
   })
@@ -33,7 +33,7 @@ describe('CI / Base', () => {
 
     beforeEach(() => {
       exec.mockReturnValue(Promise.resolve('added'))
-      return base.add(['foo', 'bar', 'baz']).then(res => {
+      return base.add(['foo', 'bar', 'baz']).then((res) => {
         result = res
       })
     })
@@ -52,7 +52,7 @@ describe('CI / Base', () => {
 
     beforeEach(() => {
       exec.mockReturnValue(Promise.resolve('committed'))
-      return base.commit('my summary message', 'my detail message').then(res => {
+      return base.commit('my summary message', 'my detail message').then((res) => {
         result = res
       })
     })
@@ -71,10 +71,10 @@ describe('CI / Base', () => {
 
     beforeEach(() => {
       base.vcs = {
-        addRemoteForPush: jest.fn().mockReturnValue(Promise.resolve('my-origin'))
+        addRemoteForPush: jest.fn().mockReturnValue(Promise.resolve('my-origin')),
       }
       exec.mockReturnValue(Promise.resolve('pushed'))
-      return base.push().then(res => {
+      return base.push().then((res) => {
         result = res
       })
     })
@@ -87,7 +87,7 @@ describe('CI / Base', () => {
       expect(Logger.log).toHaveBeenCalledWith('Pushing my-branch to my-origin')
     })
 
-    it('should push origin to master with --tags', () => {
+    it('should push origin to my-branch with --tags', () => {
       expect(exec).toHaveBeenCalledWith('git push my-origin my-branch --tags')
     })
 
@@ -104,13 +104,13 @@ describe('CI / Base', () => {
         ci: {
           gitUser: {
             email: 'ci-user@domain.com',
-            name: 'ci-user'
-          }
-        }
+            name: 'ci-user',
+          },
+        },
       }
 
       exec.mockReturnValue(Promise.resolve('executed'))
-      return base.setupGitEnv().then(res => {
+      return base.setupGitEnv().then((res) => {
         result = res
       })
     })
@@ -133,7 +133,7 @@ describe('CI / Base', () => {
 
     beforeEach(() => {
       exec.mockReturnValue(Promise.resolve('tagged'))
-      return base.tag('v1.2.3', 'Super-cool tag description').then(res => {
+      return base.tag('v1.2.3', 'Super-cool tag description').then((res) => {
         result = res
       })
     })
