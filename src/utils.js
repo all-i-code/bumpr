@@ -104,7 +104,7 @@ function processEnv(config) {
   }
 
   config.computed.ci.isPr = config.computed.ci.prNumber !== 'false'
-  config.computed.ci.branch = getEnv(config.ci.env.branch, config.vcs.repository.mainBranch)
+  config.computed.ci.branch = getEnv(config.ci.env.branch, get(config.vcs.repository, 'defaultBranch', 'main'))
 
   // Grab slack URL from env (if feature enabled)
   if (config.features.slack.enabled) {
@@ -207,11 +207,6 @@ const utils = {
               writeToken: 'GITHUB_TOKEN',
             },
             provider: 'github',
-            repository: {
-              mainBranch: 'main',
-              name: '',
-              owner: '',
-            },
           },
         }
 
