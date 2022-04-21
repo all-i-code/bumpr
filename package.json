@@ -43,10 +43,9 @@
     "lodash": "^4.17.21",
     "mime-types": "^2.1.22",
     "moment-timezone": "^0.5.21",
-    "nlf": "^2.1.1",
     "node-fetch": "^2.6.1",
     "promise": "^8.1.0",
-    "replace-in-file": "^3.4.0",
+    "replace-in-file": "^6.3.2",
     "versiony": "^2.0.1"
   },
   "devDependencies": {
