@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.13.1] - 2022-04-21 ([PR 59](https://github.com/all-i-code/bumpr/pull/59))
+### Security
+- Removed unused dependency, `nlf` to stop requiring old, compromised version of `minimist`
+
 ## [2.13.0] - 2022-04-19 ([PR 57](https://github.com/all-i-code/bumpr/pull/57))
 ### Changed
 - Default branch name when there's no CI branch env variable (from `master` to `config.repository.defaultBranch` or `main`). 
