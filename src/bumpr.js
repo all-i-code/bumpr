@@ -169,15 +169,14 @@ class Bumpr {
 
         // eslint-disable-next-line no-template-curly-in-string
         return writeFile('.npmrc', '//registry.npmjs.org/:_authToken=${NPM_TOKEN}')
-          .then(() =>
-            getPackages().then((packages) =>
-              Promise.all(
-                packages.map((pkg) =>
-                  exec('npm publish .', {
-                    cwd: pkg === '.' ? pkg : path.join('packages', pkg),
-                    maxBuffer: 1024 * 1024,
-                  })
-                )
+          .then(() => getPackages())
+          .then((packages) =>
+            Promise.all(
+              packages.map((pkg) =>
+                exec('npm publish .', {
+                  cwd: pkg === '.' ? pkg : path.join('packages', pkg),
+                  maxBuffer: 1024 * 1024,
+                })
               )
             )
           )
