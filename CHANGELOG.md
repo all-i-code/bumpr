@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.13.2] - 2022-06-02 ([PR 61](https://github.com/all-i-code/bumpr/pull/61))
+### Fixed
+- Importing of Node packages
+
+
+
 ## [2.13.1] - 2022-04-21 ([PR 59](https://github.com/all-i-code/bumpr/pull/59))
 ### Security
 - Removed unused dependency, `nlf` to stop requiring old, compromised version of `minimist`
