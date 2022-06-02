@@ -25,6 +25,8 @@ const utils = require('./utils')
 function getPackages() {
   if (existsSync('packages') && statSync('packages').isDirectory()) {
     return readdir('packages', {withFileTypes: true}).then((entries) =>
+      // prettier formats it this way (@job13er 2022-06-02)
+      // eslint-disable-next-line implicit-arrow-linebreak
       entries.filter((e) => e.isDirectory()).map((e) => e.name)
     )
   }
@@ -171,8 +173,12 @@ class Bumpr {
         return writeFile('.npmrc', '//registry.npmjs.org/:_authToken=${NPM_TOKEN}')
           .then(() => getPackages())
           .then((packages) =>
+            // prettier formats it this way (@job13er 2022-06-02)
+            // eslint-disable-next-line implicit-arrow-linebreak
             Promise.all(
               packages.map((pkg) =>
+                // prettier formats it this way (@job13er 2022-06-02)
+                // eslint-disable-next-line implicit-arrow-linebreak
                 exec('npm publish .', {
                   cwd: pkg === '.' ? pkg : path.join('packages', pkg),
                   maxBuffer: 1024 * 1024,
