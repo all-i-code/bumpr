@@ -1,10 +1,3 @@
-jest.mock('fs/promises', () => ({
-  createReadStream: jest.fn(),
-  existsSync: jest.fn(),
-  readdir: jest.fn(),
-  statSync: jest.fn(),
-  writeFile: jest.fn(),
-}))
 jest.mock('node-fetch')
 jest.mock('replace-in-file')
 jest.mock('../node-wrappers')
@@ -12,7 +5,6 @@ jest.mock('../logger')
 jest.mock('../utils')
 
 const cp = require('child_process')
-const {createReadStream, existsSync, readdir, statSync, writeFile} = require('fs/promises')
 const {set} = require('lodash')
 const fetch = require('node-fetch')
 const moment = require('moment-timezone')
@@ -23,7 +15,7 @@ const util = require('util')
 const pkgJson = require('../../package.json')
 const Bumpr = require('../bumpr')
 const {Logger} = require('../logger')
-const {exec} = require('../node-wrappers')
+const {createReadStream, exec, existsSync, readdir, statSync, writeFile} = require('../node-wrappers')
 const utils = require('../utils')
 
 const realExec = util.promisify(cp.exec)

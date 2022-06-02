@@ -1,6 +1,5 @@
 require('./typedefs')
 
-const {createReadStream, existsSync, readdir, statSync, writeFile} = require('fs/promises')
 const {cloneDeep, get} = require('lodash')
 const mime = require('mime-types')
 const moment = require('moment-timezone')
@@ -11,8 +10,7 @@ const replace = require('replace-in-file')
 const versiony = require('versiony')
 
 const {name} = require('../package.json')
-const {exec} = require('./node-wrappers')
-
+const {createReadStream, exec, existsSync, readdir, statSync, writeFile} = require('./node-wrappers')
 const MissingKeyError = require('./errors/missing-key')
 const NoLogFileError = require('./errors/no-log-file')
 const {Logger} = require('./logger')
