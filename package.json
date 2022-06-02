@@ -10,7 +10,7 @@
     "url": "git@github.com:all-i-code/bumpr.git"
   },
   "engines": {
-    "node": ">= 9.0"
+    "node": ">= 16.0.0"
   },
   "keywords": [
     "github",

@@ -27,7 +27,7 @@ class CiBase {
    * @returns {Promise} - a promise resolved with result of git commands
    */
   add(files) {
-    return exec(`git add ${files.join(' ')}`)
+    return exec(`git add ${files.join(' ')}`).then(({stdout}) => stdout)
   }
 
   /**
@@ -38,7 +38,7 @@ class CiBase {
    * @returns {Promise} - a promise resolved with result of git commands
    */
   commit(summary, message) {
-    return exec(`git commit -m "${summary}" -m "${message}"`)
+    return exec(`git commit -m "${summary}" -m "${message}"`).then(({stdout}) => stdout)
   }
 
   /**
@@ -46,10 +46,10 @@ class CiBase {
    * @returns {Promise} a promise resolved with the result of the push
    */
   push() {
-    return this.vcs.addRemoteForPush().then(remoteName => {
+    return this.vcs.addRemoteForPush().then((remoteName) => {
       const {branch} = this.config.computed.ci
       Logger.log(`Pushing ${branch} to ${remoteName}`)
-      return exec(`git push ${remoteName} ${branch} --tags`)
+      return exec(`git push ${remoteName} ${branch} --tags`).then(({stdout}) => stdout)
     })
   }
 
@@ -59,9 +59,9 @@ class CiBase {
    */
   setupGitEnv() {
     const user = this.config.ci.gitUser
-    return exec(`git config --global user.email "${user.email}"`).then(
-      () => exec(`git config --global user.name "${user.name}"`)
-    )
+    return exec(`git config --global user.email "${user.email}"`)
+      .then(() => exec(`git config --global user.name "${user.name}"`))
+      .then(({stdout}) => stdout)
   }
 
   /**
@@ -72,7 +72,7 @@ class CiBase {
    * @returns {Promise} - a promise resolved with result of git commands
    */
   tag(name, message) {
-    return exec(`git tag ${name} -a -m "${message}"`)
+    return exec(`git tag ${name} -a -m "${message}"`).then(({stdout}) => stdout)
   }
 }
 

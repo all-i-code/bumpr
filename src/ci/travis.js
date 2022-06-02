@@ -17,9 +17,9 @@ class Travis extends CiBase {
    */
   push() {
     const {branch} = this.config.computed.ci
-    return this.vcs.addRemoteForPush().then(remoteName => {
+    return this.vcs.addRemoteForPush().then((remoteName) => {
       Logger.log(`Pushing ci-${branch} to ${remoteName}`)
-      return exec(`git push ${remoteName} ci-${branch}:refs/heads/${branch} --tags`)
+      return exec(`git push ${remoteName} ci-${branch}:refs/heads/${branch} --tags`).then(({stdout}) => stdout)
     })
   }
 
@@ -29,7 +29,10 @@ class Travis extends CiBase {
    */
   setupGitEnv() {
     const {branch} = this.config.computed.ci
-    return super.setupGitEnv().then(() => exec(`git checkout -b ci-${branch}`))
+    return super
+      .setupGitEnv()
+      .then(() => exec(`git checkout -b ci-${branch}`))
+      .then(({stdout}) => stdout)
   }
 }
 

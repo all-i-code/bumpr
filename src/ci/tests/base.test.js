@@ -32,7 +32,7 @@ describe('CI / Base', () => {
     let result
 
     beforeEach(() => {
-      exec.mockReturnValue(Promise.resolve('added'))
+      exec.mockReturnValue(Promise.resolve({stdout: 'added'}))
       return base.add(['foo', 'bar', 'baz']).then((res) => {
         result = res
       })
@@ -51,7 +51,7 @@ describe('CI / Base', () => {
     let result
 
     beforeEach(() => {
-      exec.mockReturnValue(Promise.resolve('committed'))
+      exec.mockReturnValue(Promise.resolve({stdout: 'committed'}))
       return base.commit('my summary message', 'my detail message').then((res) => {
         result = res
       })
@@ -73,7 +73,7 @@ describe('CI / Base', () => {
       base.vcs = {
         addRemoteForPush: jest.fn().mockReturnValue(Promise.resolve('my-origin')),
       }
-      exec.mockReturnValue(Promise.resolve('pushed'))
+      exec.mockReturnValue(Promise.resolve({stdout: 'pushed'}))
       return base.push().then((res) => {
         result = res
       })
@@ -109,7 +109,7 @@ describe('CI / Base', () => {
         },
       }
 
-      exec.mockReturnValue(Promise.resolve('executed'))
+      exec.mockReturnValue(Promise.resolve({stdout: 'executed'}))
       return base.setupGitEnv().then((res) => {
         result = res
       })
@@ -132,7 +132,7 @@ describe('CI / Base', () => {
     let result
 
     beforeEach(() => {
-      exec.mockReturnValue(Promise.resolve('tagged'))
+      exec.mockReturnValue(Promise.resolve({stdout: 'tagged'}))
       return base.tag('v1.2.3', 'Super-cool tag description').then((res) => {
         result = res
       })
