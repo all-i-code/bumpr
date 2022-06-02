@@ -1,3 +1,10 @@
+jest.mock('fs/promises', () => ({
+  createReadStream: jest.fn(),
+  existsSync: jest.fn(),
+  readdir: jest.fn(),
+  statSync: jest.fn(),
+  writeFile: jest.fn(),
+}))
 jest.mock('node-fetch')
 jest.mock('replace-in-file')
 jest.mock('../node-wrappers')
@@ -5,20 +12,21 @@ jest.mock('../logger')
 jest.mock('../utils')
 
 const cp = require('child_process')
+const {createReadStream, existsSync, readdir, statSync, writeFile} = require('fs/promises')
 const {set} = require('lodash')
 const fetch = require('node-fetch')
 const moment = require('moment-timezone')
 const path = require('path')
 const Promise = require('promise')
 const replace = require('replace-in-file')
-
+const util = require('util')
 const pkgJson = require('../../package.json')
 const Bumpr = require('../bumpr')
 const {Logger} = require('../logger')
-const {createReadStream, exec, readdir, statSync, writeFile} = require('../node-wrappers')
+const {exec} = require('../node-wrappers')
 const utils = require('../utils')
 
-const realExec = Promise.denodeify(cp.exec)
+const realExec = util.promisify(cp.exec)
 
 function getVersionCmd(filename) {
   return `node -e "console.log(require('./${filename}').version)"`
@@ -31,30 +39,58 @@ class FileNotFoundError extends Error {
   }
 }
 
+function setupPkgs({exists, isDir, pkgs}) {
+  existsSync.mockReturnValueOnce(exists)
+  if (exists) {
+    const stat = {isDirectory: jest.fn().mockReturnValue(Boolean(isDir))}
+    statSync.mockReturnValueOnce(stat)
+  }
+
+  if (pkgs) {
+    readdir.mockReturnValueOnce(
+      Promise.resolve(pkgs.map(({dir, name}) => ({isDirectory: jest.fn().mockReturnValue(dir), name})))
+    )
+  }
+}
+
 /**
  * Helper for performing repetative tasks in setting up _maybeBumpVersion tests
  *
- * @param {Object} ctx - the context object so the function can pass some info back to the tests for validation
+ * @param {Function} bumprFn - function to return the bumpr instance
  * @param {String} filename - the name of the file to test with
  * @param {String} scope - the scope to bump
  * @param {String} expectedVersion - the expected version after the bump
  */
-function itShouldBumpVersion(ctx, filename, scope, expectedVersion) {
-  describe(`a ${scope}`, () => {
+function itShouldBumpVersion(bumprFn, filename, scope, expectedVersion, dirs) {
+  const suffix = dirs ? ' (with packages)' : ''
+  describe(`a ${scope}${suffix}`, () => {
     let info
     let newVersion
+    let bumpr
+
     beforeEach(() => {
-      const {bumpr} = ctx
+      bumpr = bumprFn()
       bumpr.config.files = [filename]
-      info = bumpr.maybeBumpVersion({scope, modifiedFiles: []})
 
-      return realExec(getVersionCmd(filename)).then(stdout => {
-        newVersion = stdout.replace('\n', '')
-      })
-    })
+      if (dirs) {
+        setupPkgs({
+          exists: true,
+          isDir: true,
+          pkgs: dirs.map((name) => ({dir: true, name})),
+        })
+      } else {
+        setupPkgs({exists: false})
+      }
 
-    it('should create the correct version', () => {
-      expect(newVersion).toBe(expectedVersion)
+      return bumpr
+        .maybeBumpVersion({scope, modifiedFiles: []})
+        .then((i) => {
+          info = i
+        })
+        .then(() => realExec(getVersionCmd(filename)))
+        .then(({stdout}) => {
+          newVersion = stdout.replace('\n', '')
+        })
     })
 
     if (scope === 'none') {
@@ -65,6 +101,14 @@ function itShouldBumpVersion(ctx, filename, scope, expectedVersion) {
       it(`should not add "${filename}" to the list of modified files`, () => {
         expect(info.modifiedFiles).not.toContain(filename)
       })
+
+      if (dirs) {
+        dirs.forEach((dir) => {
+          it(`should not add "packages/${dir}/${filename}" to the list of modified files`, () => {
+            expect(info.modifiedFiles).not.toContain(path.join('packages', dir, filename))
+          })
+        })
+      }
     } else {
       it('should return the correct version', () => {
         expect(info.version).toBe(expectedVersion)
@@ -73,6 +117,18 @@ function itShouldBumpVersion(ctx, filename, scope, expectedVersion) {
       it(`should add "${filename}" to the list of modified files`, () => {
         expect(info.modifiedFiles).toContain(filename)
       })
+
+      it('should update version in file', () => {
+        expect(newVersion).toBe(expectedVersion)
+      })
+
+      if (dirs) {
+        dirs.forEach((dir) => {
+          it(`should add "packages/${dir}/${filename}" to the list of modified files`, () => {
+            expect(info.modifiedFiles).toContain(path.join('packages', dir, filename))
+          })
+        })
+      }
     }
   })
 }
@@ -84,9 +140,9 @@ describe('Bumpr', () => {
     bumpr = new Bumpr({
       ci: [],
       config: {
-        isEnabled: jest.fn(() => ({}))
+        isEnabled: jest.fn(() => ({})),
       },
-      vcs: {}
+      vcs: {},
     })
   })
 
@@ -94,6 +150,7 @@ describe('Bumpr', () => {
     Logger.log.mockReset()
     createReadStream.mockReset()
     exec.mockReset()
+    existsSync.mockReset()
     readdir.mockReset()
     statSync.mockReset()
     writeFile.mockReset()
@@ -173,13 +230,13 @@ describe('Bumpr', () => {
     })
 
     describe('when a merge build', () => {
-      beforeEach(done => {
+      beforeEach((done) => {
         bumpr
           .bump({numExtraCommits: 1})
-          .then(res => {
+          .then((res) => {
             result = res
           })
-          .catch(err => {
+          .catch((err) => {
             error = err
           })
           .finally(() => {
@@ -225,14 +282,14 @@ describe('Bumpr', () => {
     })
 
     describe('when not a merge build', () => {
-      beforeEach(done => {
+      beforeEach((done) => {
         set(bumpr.config, 'computed.ci.isPr', true)
         bumpr
           .bump({numExtraCommits: 0})
-          .then(res => {
+          .then((res) => {
             result = res
           })
-          .catch(err => {
+          .catch((err) => {
             error = err
           })
           .finally(() => {
@@ -312,13 +369,13 @@ describe('Bumpr', () => {
     })
 
     describe('when a merge build', () => {
-      beforeEach(done => {
+      beforeEach((done) => {
         bumpr
           .info({numExtraCommits: 1})
-          .then(res => {
+          .then((res) => {
             result = res
           })
-          .catch(err => {
+          .catch((err) => {
             error = err
           })
           .finally(() => {
@@ -364,14 +421,14 @@ describe('Bumpr', () => {
     })
 
     describe('when not a merge build', () => {
-      beforeEach(done => {
+      beforeEach((done) => {
         set(bumpr.config, 'computed.ci.isPr', true)
         bumpr
           .info({numExtraCommits: 0})
-          .then(res => {
+          .then((res) => {
             result = res
           })
-          .catch(err => {
+          .catch((err) => {
             error = err
           })
           .finally(() => {
@@ -458,7 +515,7 @@ describe('Bumpr', () => {
           throw new FileNotFoundError()
         })
 
-        return bumpr.log('foo').catch(err => {
+        return bumpr.log('foo').catch((err) => {
           rejection = err
         })
       })
@@ -475,7 +532,7 @@ describe('Bumpr', () => {
           throw new Error('oh snap!')
         })
 
-        return bumpr.log('foo').catch(err => {
+        return bumpr.log('foo').catch((err) => {
           rejection = err
         })
       })
@@ -489,7 +546,7 @@ describe('Bumpr', () => {
       let rejection
       beforeEach(() => {
         utils.readJsonFile.mockReturnValue({foo: 'bar'})
-        return bumpr.log('fizz').catch(err => {
+        return bumpr.log('fizz').catch((err) => {
           rejection = err
         })
       })
@@ -503,7 +560,7 @@ describe('Bumpr', () => {
       let resolution
       beforeEach(() => {
         utils.readJsonFile.mockReturnValue({foo: 'bar'})
-        return bumpr.log('foo').then(value => {
+        return bumpr.log('foo').then((value) => {
           resolution = value
         })
       })
@@ -570,7 +627,7 @@ describe('Bumpr', () => {
       let rejection
       beforeEach(() => {
         jest.spyOn(bumpr, 'getLog').mockReturnValue(Promise.reject(new Error('oh snap!')))
-        return bumpr.publish().catch(err => {
+        return bumpr.publish().catch((err) => {
           rejection = err
         })
       })
@@ -608,20 +665,29 @@ describe('Bumpr', () => {
       })
     })
 
-    describe('when scope is not "none"', () => {
+    describe('when scope is not "none" (and no packages file or directory)', () => {
       let result
       beforeEach(() => {
         const log = {scope: 'minor'}
         jest.spyOn(bumpr, 'getLog').mockReturnValue(Promise.resolve({log}))
+        setupPkgs({exists: false})
         writeFile.mockReturnValue(Promise.resolve())
         exec.mockReturnValue(Promise.resolve())
-        return bumpr.publish().then(r => {
+        return bumpr.publish().then((r) => {
           result = r
         })
       })
 
       afterEach(() => {
         bumpr.getLog.mockReset()
+      })
+
+      it('should check for packages', () => {
+        expect(existsSync).toHaveBeenCalledWith('packages')
+      })
+
+      it('should not get stats for packages', () => {
+        expect(statSync).not.toHaveBeenCalled()
       })
 
       it('should log publishing', () => {
@@ -634,7 +700,123 @@ describe('Bumpr', () => {
       })
 
       it('should publish', () => {
-        expect(exec).toHaveBeenCalledWith('npm publish .', {maxBuffer: 1024 * 1024})
+        expect(exec).toHaveBeenCalledWith('npm publish .', {cwd: '.', maxBuffer: 1024 * 1024})
+      })
+
+      it('should maybe send a slack message', () => {
+        expect(bumpr.maybeSendSlackMessage).toHaveBeenCalledWith({scope: 'minor'})
+      })
+
+      it('should resolve with the result of maybe sending the slack message', () => {
+        expect(result).toEqual('done')
+      })
+    })
+
+    describe('when scope is not "none" (and packages exists but is not a directory)', () => {
+      let result
+      beforeEach(() => {
+        const log = {scope: 'minor'}
+        jest.spyOn(bumpr, 'getLog').mockReturnValue(Promise.resolve({log}))
+        setupPkgs({exists: true, isDir: false})
+        writeFile.mockReturnValue(Promise.resolve())
+        exec.mockReturnValue(Promise.resolve())
+        return bumpr.publish().then((r) => {
+          result = r
+        })
+      })
+
+      afterEach(() => {
+        bumpr.getLog.mockReset()
+      })
+
+      it('should check for packages', () => {
+        expect(existsSync).toHaveBeenCalledWith('packages')
+      })
+
+      it('should get stats for packages', () => {
+        expect(statSync).toHaveBeenCalledWith('packages')
+      })
+
+      it('should log publishing', () => {
+        expect(Logger.log).toHaveBeenCalledWith('Publishing to npm')
+      })
+
+      it('should write out the .npmrc file', () => {
+        // eslint-disable-next-line no-template-curly-in-string
+        expect(writeFile).toHaveBeenCalledWith('.npmrc', '//registry.npmjs.org/:_authToken=${NPM_TOKEN}')
+      })
+
+      it('should publish', () => {
+        expect(exec).toHaveBeenCalledWith('npm publish .', {cwd: '.', maxBuffer: 1024 * 1024})
+      })
+
+      it('should maybe send a slack message', () => {
+        expect(bumpr.maybeSendSlackMessage).toHaveBeenCalledWith({scope: 'minor'})
+      })
+
+      it('should resolve with the result of maybe sending the slack message', () => {
+        expect(result).toEqual('done')
+      })
+    })
+
+    describe('when scope is not "none" (and packages exists as a directory)', () => {
+      let result
+      beforeEach(() => {
+        const log = {scope: 'minor'}
+        jest.spyOn(bumpr, 'getLog').mockReturnValue(Promise.resolve({log}))
+        setupPkgs({
+          exists: true,
+          isDir: true,
+          pkgs: [
+            {dir: true, name: 'pkg1'},
+            {dir: false, name: 'file1'},
+            {dir: false, name: 'file2'},
+            {dir: true, name: 'pkg2'},
+            {dir: false, name: 'file3'},
+          ],
+        })
+        writeFile.mockReturnValue(Promise.resolve())
+        exec.mockReturnValue(Promise.resolve())
+        return bumpr.publish().then((r) => {
+          result = r
+        })
+      })
+
+      afterEach(() => {
+        bumpr.getLog.mockReset()
+      })
+
+      it('should check for packages', () => {
+        expect(existsSync).toHaveBeenCalledWith('packages')
+      })
+
+      it('should get stats for packages', () => {
+        expect(statSync).toHaveBeenCalledWith('packages')
+      })
+
+      it('should log publishing', () => {
+        expect(Logger.log).toHaveBeenCalledWith('Publishing to npm')
+      })
+
+      it('should write out the .npmrc file', () => {
+        // eslint-disable-next-line no-template-curly-in-string
+        expect(writeFile).toHaveBeenCalledWith('.npmrc', '//registry.npmjs.org/:_authToken=${NPM_TOKEN}')
+      })
+
+      it('should publish first package', () => {
+        expect(exec).toHaveBeenCalledWith('npm publish .', {cwd: 'packages/pkg1', maxBuffer: 1024 * 1024})
+      })
+
+      it('should publish second package', () => {
+        expect(exec).toHaveBeenCalledWith('npm publish .', {cwd: 'packages/pkg2', maxBuffer: 1024 * 1024})
+      })
+
+      it('should not publish file', () => {
+        expect(exec).not.toHaveBeenCalledWith('npm publish .', {cwd: 'packages/file1', maxBuffer: 1024 * 1024})
+      })
+
+      it('should not publish root', () => {
+        expect(exec).not.toHaveBeenCalledWith('npm publish .', {cwd: '.', maxBuffer: 1024 * 1024})
       })
 
       it('should maybe send a slack message', () => {
@@ -659,12 +841,12 @@ describe('Bumpr', () => {
       bumpr.vcs = {foo: 'bar'}
       bumpr.ci = {
         push() {},
-        setupGitEnv: jest.fn().mockReturnValue(Promise.resolve())
+        setupGitEnv: jest.fn().mockReturnValue(Promise.resolve()),
       }
       info = {
         modifiedFiles: ['package.json'], // not really, but if we don't put something in here tag won't be pushed
         scope: 'patch', // must be anything but 'none' so that tag is created
-        version: '1.2.3'
+        version: '1.2.3',
       }
 
       jest.spyOn(bumpr, 'maybeCreateTag').mockReturnValue(Promise.resolve(info))
@@ -680,13 +862,13 @@ describe('Bumpr', () => {
     })
 
     describe('when a merge build', () => {
-      beforeEach(done => {
+      beforeEach((done) => {
         bumpr
           .tag()
-          .then(res => {
+          .then((res) => {
             result = res
           })
-          .catch(err => {
+          .catch((err) => {
             error = err
           })
           .finally(() => {
@@ -720,14 +902,14 @@ describe('Bumpr', () => {
     })
 
     describe('when not a merge build', () => {
-      beforeEach(done => {
+      beforeEach((done) => {
         set(bumpr.config, 'computed.ci.isPr', true)
         bumpr
           .tag()
-          .then(res => {
+          .then((res) => {
             result = res
           })
-          .catch(err => {
+          .catch((err) => {
             error = err
           })
           .finally(() => {
@@ -769,20 +951,20 @@ describe('Bumpr', () => {
         resolver.reject = reject
       })
       bumpr.vcs = {
-        getMergedPrBySha: jest.fn().mockReturnValue(resolver.promise)
+        getMergedPrBySha: jest.fn().mockReturnValue(resolver.promise),
       }
 
       // actual results of git rev-list HEAD --max-count=1 on bumpr repo
       const gitRevList = '\n7fcea24fae604a47cdb3436b49ecc18882aa5e31\n'
 
-      exec.mockReturnValue(Promise.resolve(gitRevList))
+      exec.mockReturnValue(Promise.resolve({stdout: gitRevList}))
       promise = bumpr
         .getLastPr(1)
-        .then(pr => {
+        .then((pr) => {
           resolution = pr
           return pr
         })
-        .catch(err => {
+        .catch((err) => {
           rejection = err
           throw err
         })
@@ -808,7 +990,7 @@ describe('Bumpr', () => {
     })
 
     describe('when getMergedPrBySha() fails', () => {
-      beforeEach(done => {
+      beforeEach((done) => {
         resolver.reject('the-error')
         promise.catch(() => {
           done()
@@ -822,7 +1004,7 @@ describe('Bumpr', () => {
   })
 
   describe('.getMergedPrInfo()', () => {
-    ;['major', 'minor', 'patch'].forEach(scope => {
+    ;['major', 'minor', 'patch'].forEach((scope) => {
       describe(`when scope is ${scope}`, () => {
         let result
         let pr
@@ -831,18 +1013,18 @@ describe('Bumpr', () => {
           bumpr.config = {
             features: {
               maxScope: {
-                value: 'minor'
-              }
+                value: 'minor',
+              },
             },
             foo: 'bar',
-            isEnabled: jest.fn()
+            isEnabled: jest.fn(),
           }
           bumpr.vcs = {bar: 'baz'}
           pr = {
             author: 'bot',
             authorUrl: 'bot-profile',
             number: '1',
-            url: '/pulls/1'
+            url: '/pulls/1',
           }
 
           jest.spyOn(bumpr, 'getLastPr').mockReturnValue(Promise.resolve(pr))
@@ -858,13 +1040,13 @@ describe('Bumpr', () => {
 
         describe('when maxScope is enabled', () => {
           beforeEach(() => {
-            bumpr.config.isEnabled.mockImplementation(name => name === 'maxScope')
+            bumpr.config.isEnabled.mockImplementation((name) => name === 'maxScope')
           })
 
           describe('when changelog feature is enabled', () => {
             beforeEach(() => {
-              bumpr.config.isEnabled.mockImplementation(name => ['changelog', 'maxScope'].includes(name))
-              return bumpr.getMergedPrInfo(1).then(res => {
+              bumpr.config.isEnabled.mockImplementation((name) => ['changelog', 'maxScope'].includes(name))
+              return bumpr.getMergedPrInfo(1).then((res) => {
                 result = res
               })
             })
@@ -889,7 +1071,7 @@ describe('Bumpr', () => {
                 modifiedFiles: [],
                 number: '1',
                 scope,
-                url: '/pulls/1'
+                url: '/pulls/1',
               })
             })
           })
@@ -897,7 +1079,7 @@ describe('Bumpr', () => {
           describe('when changelog feature is not enabled', () => {
             /* eslint-disable arrow-body-style */
             beforeEach(() => {
-              return bumpr.getMergedPrInfo(2).then(res => {
+              return bumpr.getMergedPrInfo(2).then((res) => {
                 result = res
               })
             })
@@ -923,7 +1105,7 @@ describe('Bumpr', () => {
                 modifiedFiles: [],
                 number: '1',
                 scope,
-                url: '/pulls/1'
+                url: '/pulls/1',
               })
             })
           })
@@ -936,8 +1118,8 @@ describe('Bumpr', () => {
 
           describe('when changelog feature is enabled', () => {
             beforeEach(() => {
-              bumpr.config.isEnabled.mockImplementation(name => name === 'changelog')
-              return bumpr.getMergedPrInfo(0).then(res => {
+              bumpr.config.isEnabled.mockImplementation((name) => name === 'changelog')
+              return bumpr.getMergedPrInfo(0).then((res) => {
                 result = res
               })
             })
@@ -950,7 +1132,7 @@ describe('Bumpr', () => {
           describe('when changelog feature is not enabled', () => {
             /* eslint-disable arrow-body-style */
             beforeEach(() => {
-              return bumpr.getMergedPrInfo(0).then(res => {
+              return bumpr.getMergedPrInfo(0).then((res) => {
                 result = res
               })
             })
@@ -984,8 +1166,8 @@ describe('Bumpr', () => {
 
       describe('and changelog feature is enabled', () => {
         beforeEach(() => {
-          bumpr.config.isEnabled.mockImplementation(name => name === 'changelog')
-          return bumpr.getMergedPrInfo(3).then(res => {
+          bumpr.config.isEnabled.mockImplementation((name) => name === 'changelog')
+          return bumpr.getMergedPrInfo(3).then((res) => {
             result = res
           })
         })
@@ -1010,7 +1192,7 @@ describe('Bumpr', () => {
       describe('and changelog feature is not enabled', () => {
         beforeEach(() => {
           bumpr.config.isEnabled.mockReturnValue(false)
-          return bumpr.getMergedPrInfo(0).then(res => {
+          return bumpr.getMergedPrInfo(0).then((res) => {
             result = res
           })
         })
@@ -1042,24 +1224,24 @@ describe('Bumpr', () => {
         foo: 'bar',
         computed: {
           ci: {
-            prNumber: '123'
-          }
+            prNumber: '123',
+          },
         },
-        isEnabled: jest.fn()
+        isEnabled: jest.fn(),
       }
       bumpr.vcs = {
-        getPr: jest.fn().mockReturnValue(Promise.resolve('the-pr'))
+        getPr: jest.fn().mockReturnValue(Promise.resolve('the-pr')),
       }
       utils.getChangelogForPr.mockReturnValue('the-changelog')
       utils.getScopeForPr.mockReturnValue('patch')
       utils.maybePostCommentOnError
         .mockReturnValueOnce({
           pr: 'the-pr',
-          scope: 'the-scope'
+          scope: 'the-scope',
         })
         .mockReturnValueOnce({
           changelog: 'the-changelog',
-          scope: 'the-scope'
+          scope: 'the-scope',
         })
     })
 
@@ -1072,7 +1254,7 @@ describe('Bumpr', () => {
     describe('when optional features are disabled', () => {
       beforeEach(() => {
         bumpr.config.isEnabled.mockReturnValue(false)
-        return bumpr.getOpenPrInfo().then(res => {
+        return bumpr.getOpenPrInfo().then((res) => {
           result = res
         })
       })
@@ -1096,7 +1278,7 @@ describe('Bumpr', () => {
       it('should resolve with the info', () => {
         expect(result).toEqual({
           changelog: '',
-          scope: 'the-scope'
+          scope: 'the-scope',
         })
       })
 
@@ -1129,7 +1311,7 @@ describe('Bumpr', () => {
           it('should return the pr and scope', () => {
             expect(ret).toEqual({
               pr: 'the-pr',
-              scope: 'patch'
+              scope: 'patch',
             })
           })
         })
@@ -1138,9 +1320,9 @@ describe('Bumpr', () => {
 
     describe('when maxScope is enabled', () => {
       beforeEach(() => {
-        bumpr.config.isEnabled.mockImplementation(name => name === 'maxScope')
+        bumpr.config.isEnabled.mockImplementation((name) => name === 'maxScope')
         set(bumpr.config, 'features.maxScope.value', 'minor')
-        return bumpr.getOpenPrInfo().then(res => {
+        return bumpr.getOpenPrInfo().then((res) => {
           result = res
         })
       })
@@ -1164,7 +1346,7 @@ describe('Bumpr', () => {
       it('should resolve with the info', () => {
         expect(result).toEqual({
           changelog: '',
-          scope: 'the-scope'
+          scope: 'the-scope',
         })
       })
 
@@ -1197,7 +1379,7 @@ describe('Bumpr', () => {
           it('should return the pr and scope', () => {
             expect(ret).toEqual({
               pr: 'the-pr',
-              scope: 'patch'
+              scope: 'patch',
             })
           })
         })
@@ -1206,8 +1388,8 @@ describe('Bumpr', () => {
 
     describe('when changelog is enabled', () => {
       beforeEach(() => {
-        bumpr.config.isEnabled.mockImplementation(name => name === 'changelog')
-        return bumpr.getOpenPrInfo().then(res => {
+        bumpr.config.isEnabled.mockImplementation((name) => name === 'changelog')
+        return bumpr.getOpenPrInfo().then((res) => {
           result = res
         })
       })
@@ -1231,7 +1413,7 @@ describe('Bumpr', () => {
       it('should resolve with the info', () => {
         expect(result).toEqual({
           changelog: 'the-changelog',
-          scope: 'the-scope'
+          scope: 'the-scope',
         })
       })
 
@@ -1264,7 +1446,7 @@ describe('Bumpr', () => {
           it('should return the pr and scope', () => {
             expect(ret).toEqual({
               pr: 'the-pr',
-              scope: 'patch'
+              scope: 'patch',
             })
           })
         })
@@ -1297,7 +1479,7 @@ describe('Bumpr', () => {
           it('should return the changelog and scope', () => {
             expect(ret).toEqual({
               changelog: 'the-changelog',
-              scope: 'the-scope'
+              scope: 'the-scope',
             })
           })
         })
@@ -1306,10 +1488,10 @@ describe('Bumpr', () => {
 
     describe('when changelog is enabled and required set', () => {
       beforeEach(() => {
-        bumpr.config.isEnabled.mockImplementation(name => name === 'changelog')
+        bumpr.config.isEnabled.mockImplementation((name) => name === 'changelog')
         bumpr.config.features = {changelog: {enabled: true, required: ['DEV-\\d+']}}
 
-        return bumpr.getOpenPrInfo().then(res => {
+        return bumpr.getOpenPrInfo().then((res) => {
           result = res
         })
       })
@@ -1335,39 +1517,43 @@ describe('Bumpr', () => {
   })
 
   describe('.maybeBumpVersion()', () => {
-    const ctx = {}
-
     beforeEach(() => {
-      ctx.bumpr = bumpr
-
       const original = path.join(__dirname, '_package.json')
       const otherOriginal = path.join(__dirname, '_package-with-pre-release.json')
-      return realExec(`cp ${original} _package.json`).then(
-        () => realExec(`cp ${otherOriginal} _package-with-pre-release.json`)
-      )
+      const originalPkgs = path.join(__dirname, 'packages')
+      return realExec(`cp ${original} _package.json`)
+        .then(() => realExec(`cp ${otherOriginal} _package-with-pre-release.json`))
+        .then(() => realExec(`cp -r ${originalPkgs} packages`))
     })
 
-    afterEach(() => realExec('rm -f _package.json _package-with-pre-release.json'))
+    afterEach(() => realExec('rm -rf _package.json _package-with-pre-release.json packages'))
 
-    itShouldBumpVersion(ctx, '_package.json', 'none', '1.2.3')
-    itShouldBumpVersion(ctx, '_package.json', 'patch', '1.2.4')
-    itShouldBumpVersion(ctx, '_package.json', 'minor', '1.3.0')
-    itShouldBumpVersion(ctx, '_package.json', 'major', '2.0.0')
+    itShouldBumpVersion(() => bumpr, '_package.json', 'none', '1.2.3')
+    itShouldBumpVersion(() => bumpr, '_package.json', 'patch', '1.2.4')
+    itShouldBumpVersion(() => bumpr, '_package.json', 'minor', '1.3.0')
+    itShouldBumpVersion(() => bumpr, '_package.json', 'major', '2.0.0')
 
-    itShouldBumpVersion(ctx, '_package-with-pre-release.json', 'none', '1.2.3-alpha.4')
-    itShouldBumpVersion(ctx, '_package-with-pre-release.json', 'patch', '1.2.3-alpha.5')
+    itShouldBumpVersion(() => bumpr, '_package.json', 'none', '1.2.3', ['pkg1, pkg2'])
+    itShouldBumpVersion(() => bumpr, '_package.json', 'patch', '1.2.4', ['pkg1', 'pkg2'])
+    itShouldBumpVersion(() => bumpr, '_package.json', 'minor', '1.3.0', ['pkg1', 'pkg2'])
+    itShouldBumpVersion(() => bumpr, '_package.json', 'major', '2.0.0', ['pkg1', 'pkg2'])
+
+    itShouldBumpVersion(() => bumpr, '_package-with-pre-release.json', 'none', '1.2.3-alpha.4')
+    itShouldBumpVersion(() => bumpr, '_package-with-pre-release.json', 'patch', '1.2.3-alpha.5')
 
     describe('an invalid scope', () => {
       let info
+      let err
       beforeEach(() => {
         bumpr.config.files = ['_package.json']
         info = {scope: 'foo'}
+        return bumpr.maybeBumpVersion(info).catch((e) => {
+          err = e
+        })
       })
 
       it('should throw an Error', () => {
-        expect(() => {
-          bumpr.maybeBumpVersion(info)
-        }).toThrow('Invalid scope [foo]')
+        expect(err.toString()).toBe('Error: Invalid scope [foo]')
       })
     })
   })
@@ -1382,27 +1568,27 @@ describe('Bumpr', () => {
         changelog: 'stuff changed',
         modifiedFiles: [],
         scope: 'patch',
-        version: '1.2.3'
+        version: '1.2.3',
       }
       set(bumpr.config, 'computed.ci.buildNumber', '12345')
 
       bumpr.ci = {
         add: jest.fn().mockReturnValue(Promise.resolve()),
         commit: jest.fn().mockReturnValue(Promise.resolve()),
-        setupGitEnv: jest.fn().mockReturnValue(Promise.resolve())
+        setupGitEnv: jest.fn().mockReturnValue(Promise.resolve()),
       }
     })
 
     describe('when no files were modified', () => {
-      beforeEach(done => {
+      beforeEach((done) => {
         result = null
         error = null
         bumpr
           .maybeCommitChanges(info)
-          .then(r => {
+          .then((r) => {
             result = r
           })
-          .catch(e => {
+          .catch((e) => {
             error = e
           })
           .finally(() => {
@@ -1436,16 +1622,16 @@ describe('Bumpr', () => {
     })
 
     describe('when files were modified', () => {
-      beforeEach(done => {
+      beforeEach((done) => {
         info.modifiedFiles = ['fizz', 'bang']
         result = null
         error = null
         bumpr
           .maybeCommitChanges(info)
-          .then(r => {
+          .then((r) => {
             result = r
           })
-          .catch(e => {
+          .catch((e) => {
             error = e
           })
           .finally(() => {
@@ -1487,19 +1673,19 @@ describe('Bumpr', () => {
 
     beforeEach(() => {
       info = {
-        version: '1.2.3'
+        version: '1.2.3',
       }
       set(bumpr.config, 'computed.ci.buildNumber', '12345')
       bumpr.vcs = {
         createRelease: jest.fn().mockReturnValue(Promise.resolve({upload_url: 'upload-url{?name,label}'})),
-        uploadReleaseAsset: jest.fn().mockReturnValue(Promise.resolve('uploaded'))
+        uploadReleaseAsset: jest.fn().mockReturnValue(Promise.resolve('uploaded')),
       }
     })
 
     describe('when feature is not enabled', () => {
       beforeEach(() => {
         bumpr.config.isEnabled.mockReturnValue(false)
-        return bumpr.maybeCreateRelease(info).then(res => {
+        return bumpr.maybeCreateRelease(info).then((res) => {
           result = res
         })
       })
@@ -1516,8 +1702,8 @@ describe('Bumpr', () => {
     describe('when scope is "none"', () => {
       beforeEach(() => {
         info.scope = 'none'
-        bumpr.config.isEnabled.mockImplementation(name => name === 'release')
-        return bumpr.maybeCreateRelease(info).then(res => {
+        bumpr.config.isEnabled.mockImplementation((name) => name === 'release')
+        return bumpr.maybeCreateRelease(info).then((res) => {
           result = res
         })
       })
@@ -1534,12 +1720,12 @@ describe('Bumpr', () => {
     describe('when scope is not "none", but no artifacts exist', () => {
       let dateString
       beforeEach(() => {
-        bumpr.config.isEnabled.mockImplementation(name => name === 'release')
+        bumpr.config.isEnabled.mockImplementation((name) => name === 'release')
         bumpr.config.features = {release: {enabled: true}}
         info.scope = 'patch'
         info.changelog = 'the-changelog'
         dateString = bumpr.getDateString()
-        return bumpr.maybeCreateRelease(info).then(res => {
+        return bumpr.maybeCreateRelease(info).then((res) => {
           result = res
         })
       })
@@ -1560,7 +1746,7 @@ describe('Bumpr', () => {
     describe('when scope is not "none", with artifacts', () => {
       let dateString
       beforeEach(() => {
-        bumpr.config.isEnabled.mockImplementation(name => name === 'release')
+        bumpr.config.isEnabled.mockImplementation((name) => name === 'release')
         bumpr.config.features = {release: {enabled: true, artifacts: 'artifacts-dir'}}
         info.scope = 'patch'
         info.changelog = 'the-changelog'
@@ -1576,7 +1762,7 @@ describe('Bumpr', () => {
         createReadStream.mockReturnValueOnce('stream3')
         createReadStream.mockReturnValueOnce('stream4')
 
-        return bumpr.maybeCreateRelease(info).then(res => {
+        return bumpr.maybeCreateRelease(info).then((res) => {
           result = res
         })
       })
@@ -1598,7 +1784,7 @@ describe('Bumpr', () => {
           ['artifacts-dir/file1.txt'],
           ['artifacts-dir/file2.zip'],
           ['artifacts-dir/file3.png'],
-          ['artifacts-dir/file4.foo']
+          ['artifacts-dir/file4.foo'],
         ])
       })
 
@@ -1607,7 +1793,7 @@ describe('Bumpr', () => {
           ['upload-url?name=file1.txt', 'text/plain; charset=utf-8', 123, 'stream1'],
           ['upload-url?name=file2.zip', 'application/zip', 321, 'stream2'],
           ['upload-url?name=file3.png', 'image/png', 999, 'stream3'],
-          ['upload-url?name=file4.foo', 'application/octet-stream', 8888, 'stream4']
+          ['upload-url?name=file4.foo', 'application/octet-stream', 8888, 'stream4'],
         ])
       })
 
@@ -1623,11 +1809,11 @@ describe('Bumpr', () => {
 
     beforeEach(() => {
       info = {
-        version: '1.2.3'
+        version: '1.2.3',
       }
       set(bumpr.config, 'computed.ci.buildNumber', '12345')
       bumpr.ci = {
-        tag: jest.fn().mockReturnValue(Promise.resolve('tagged'))
+        tag: jest.fn().mockReturnValue(Promise.resolve('tagged')),
       }
       exec.mockReturnValue(Promise.resolve())
     })
@@ -1635,7 +1821,7 @@ describe('Bumpr', () => {
     describe('when scope is not "none"', () => {
       /* eslint-disable arrow-body-style */
       beforeEach(() => {
-        return bumpr.maybeCreateTag(info).then(res => {
+        return bumpr.maybeCreateTag(info).then((res) => {
           result = res
         })
       })
@@ -1653,7 +1839,7 @@ describe('Bumpr', () => {
     describe('when scope is "none"', () => {
       beforeEach(() => {
         info.scope = 'none'
-        return bumpr.maybeCreateTag(info).then(res => {
+        return bumpr.maybeCreateTag(info).then((res) => {
           result = res
         })
       })
@@ -1679,7 +1865,7 @@ describe('Bumpr', () => {
         number: 123,
         scope: 'patch',
         url: 'https://github.com/org/repo/pulls/123',
-        version: '1.2.3'
+        version: '1.2.3',
       }
       set(bumpr.config, 'features.changelog.file', 'the-changelog-file')
       replace.mockReturnValue(Promise.resolve('return-value'))
@@ -1689,7 +1875,7 @@ describe('Bumpr', () => {
       beforeEach(() => {
         bumpr.config.isEnabled.mockReturnValue(false)
 
-        return bumpr.maybeUpdateChangelog(info).then(resp => {
+        return bumpr.maybeUpdateChangelog(info).then((resp) => {
           result = resp
         })
       })
@@ -1716,9 +1902,9 @@ describe('Bumpr', () => {
       beforeEach(() => {
         info.scope = 'none'
         delete info.version
-        bumpr.config.isEnabled.mockImplementation(name => name === 'changelog')
+        bumpr.config.isEnabled.mockImplementation((name) => name === 'changelog')
 
-        return bumpr.maybeUpdateChangelog(info).then(resp => {
+        return bumpr.maybeUpdateChangelog(info).then((resp) => {
           result = resp
         })
       })
@@ -1744,9 +1930,9 @@ describe('Bumpr', () => {
     describe('when feature is enabled and scope is not "none" (no timzeone set)', () => {
       beforeEach(() => {
         info.scope = 'patch'
-        bumpr.config.isEnabled.mockImplementation(name => name === 'changelog')
+        bumpr.config.isEnabled.mockImplementation((name) => name === 'changelog')
 
-        return bumpr.maybeUpdateChangelog(info).then(resp => {
+        return bumpr.maybeUpdateChangelog(info).then((resp) => {
           result = resp
         })
       })
@@ -1756,15 +1942,13 @@ describe('Bumpr', () => {
       })
 
       it('should update the changelog', () => {
-        const dateString = moment()
-          .tz('Etc/UTC')
-          .format('YYYY-MM-DD')
+        const dateString = moment().tz('Etc/UTC').format('YYYY-MM-DD')
         const prLink = '[PR 123](https://github.com/org/repo/pulls/123)'
         const data = `<!-- bumpr -->\n\n## [${info.version}] - ${dateString} (${prLink})\n${info.changelog}`
         expect(replace).toHaveBeenCalledWith({
           files: 'the-changelog-file',
           from: /<!-- bumpr -->/,
-          to: data
+          to: data,
         })
       })
 
@@ -1780,10 +1964,10 @@ describe('Bumpr', () => {
     describe('when feature is enabled and scope is not "none" (with timezone set)', () => {
       beforeEach(() => {
         info.scope = 'patch'
-        bumpr.config.isEnabled.mockImplementation(name => ['changelog', 'timezone'].includes(name))
+        bumpr.config.isEnabled.mockImplementation((name) => ['changelog', 'timezone'].includes(name))
         set(bumpr.config, 'features.timezone.zone', 'America/Denver')
 
-        return bumpr.maybeUpdateChangelog(info).then(resp => {
+        return bumpr.maybeUpdateChangelog(info).then((resp) => {
           result = resp
         })
       })
@@ -1793,15 +1977,13 @@ describe('Bumpr', () => {
       })
 
       it('should update the changelog', () => {
-        const dateString = moment()
-          .tz('America/Denver')
-          .format('YYYY-MM-DD')
+        const dateString = moment().tz('America/Denver').format('YYYY-MM-DD')
         const prLink = '[PR 123](https://github.com/org/repo/pulls/123)'
         const data = `<!-- bumpr -->\n\n## [${info.version}] - ${dateString} (${prLink})\n${info.changelog}`
         expect(replace).toHaveBeenCalledWith({
           files: 'the-changelog-file',
           from: /<!-- bumpr -->/,
-          to: data
+          to: data,
         })
       })
 
@@ -1822,18 +2004,18 @@ describe('Bumpr', () => {
     beforeEach(() => {
       info = {
         modifiedFiles: [],
-        scope: 'none'
+        scope: 'none',
       }
 
       bumpr.ci = {
-        push: jest.fn().mockReturnValue(Promise.resolve('pushed'))
+        push: jest.fn().mockReturnValue(Promise.resolve('pushed')),
       }
     })
 
     describe('when nothing changed', () => {
       /* eslint-disable arrow-body-style */
       beforeEach(() => {
-        return bumpr.maybePushChanges(info).then(r => {
+        return bumpr.maybePushChanges(info).then((r) => {
           result = r
         })
       })
@@ -1855,7 +2037,7 @@ describe('Bumpr', () => {
     describe('when something changed', () => {
       beforeEach(() => {
         info.modifiedFiles = ['package.json']
-        return bumpr.maybePushChanges(info).then(r => {
+        return bumpr.maybePushChanges(info).then((r) => {
           result = r
         })
       })
@@ -1887,7 +2069,7 @@ describe('Bumpr', () => {
         number: '1',
         scope: 'patch',
         url: '/pulls/1',
-        version: '1.2.3'
+        version: '1.2.3',
       }
       set(bumpr.config, 'features.logging.file', 'the-log-file')
       writeFile.mockReturnValue(Promise.resolve())
@@ -1897,7 +2079,7 @@ describe('Bumpr', () => {
       beforeEach(() => {
         bumpr.config.isEnabled.mockReturnValue(false)
 
-        return bumpr.maybeLogChanges(info).then(resp => {
+        return bumpr.maybeLogChanges(info).then((resp) => {
           result = resp
         })
       })
@@ -1918,9 +2100,9 @@ describe('Bumpr', () => {
 
     describe('when feature is enabled', () => {
       beforeEach(() => {
-        bumpr.config.isEnabled.mockImplementation(name => name === 'logging')
+        bumpr.config.isEnabled.mockImplementation((name) => name === 'logging')
 
-        return bumpr.maybeLogChanges(info).then(resp => {
+        return bumpr.maybeLogChanges(info).then((resp) => {
           result = resp
         })
       })
@@ -1937,11 +2119,11 @@ describe('Bumpr', () => {
             url: '/pulls/1',
             user: {
               login: 'bot',
-              url: 'bot-profile'
-            }
+              url: 'bot-profile',
+            },
           },
           scope: 'patch',
-          version: '1.2.3'
+          version: '1.2.3',
         }
         expect(writeFile).toHaveBeenCalledWith('the-log-file', JSON.stringify(logInfo, null, 2))
       })
@@ -1963,11 +2145,11 @@ describe('Bumpr', () => {
           url: 'the-pr-url',
           user: {
             login: 'bot',
-            url: 'bot-profile'
-          }
+            url: 'bot-profile',
+          },
         },
         scope: 'patch',
-        version: '1.2.3'
+        version: '1.2.3',
       }
       writeFile.mockReturnValue(Promise.resolve())
       jest.spyOn(utils, 'readJsonFile').mockReturnValue({name: 'the-package'})
@@ -2001,7 +2183,7 @@ describe('Bumpr', () => {
       beforeEach(() => {
         set(bumpr.config, 'computed.slackUrl', 'the-slack-url')
         set(bumpr.config, 'features.slack.channels', [])
-        bumpr.config.isEnabled.mockImplementation(name => name === 'slack')
+        bumpr.config.isEnabled.mockImplementation((name) => name === 'slack')
         fetch.mockReturnValue(Promise.resolve())
         return bumpr.maybeSendSlackMessage(info)
       })
@@ -2015,8 +2197,8 @@ describe('Bumpr', () => {
           headers: {'Content-Type': 'application/json'},
           method: 'POST',
           body: JSON.stringify({
-            text: 'Published `the-package@1.2.3` (patch) from <the-pr-url|PR #5> by <bot-profile|bot>'
-          })
+            text: 'Published `the-package@1.2.3` (patch) from <the-pr-url|PR #5> by <bot-profile|bot>',
+          }),
         })
       })
     })
@@ -2025,7 +2207,7 @@ describe('Bumpr', () => {
       beforeEach(() => {
         set(bumpr.config, 'computed.slackUrl', 'the-slack-url')
         set(bumpr.config, 'features.slack.channels', ['#foo', '#bar', '#baz'])
-        bumpr.config.isEnabled.mockImplementation(name => name === 'slack')
+        bumpr.config.isEnabled.mockImplementation((name) => name === 'slack')
         fetch.mockReturnValue(Promise.resolve())
         return bumpr.maybeSendSlackMessage(info)
       })
@@ -2040,8 +2222,8 @@ describe('Bumpr', () => {
           method: 'POST',
           body: JSON.stringify({
             channel: '#foo',
-            text: 'Published `the-package@1.2.3` (patch) from <the-pr-url|PR #5> by <bot-profile|bot>'
-          })
+            text: 'Published `the-package@1.2.3` (patch) from <the-pr-url|PR #5> by <bot-profile|bot>',
+          }),
         })
       })
 
@@ -2051,8 +2233,8 @@ describe('Bumpr', () => {
           method: 'POST',
           body: JSON.stringify({
             channel: '#bar',
-            text: 'Published `the-package@1.2.3` (patch) from <the-pr-url|PR #5> by <bot-profile|bot>'
-          })
+            text: 'Published `the-package@1.2.3` (patch) from <the-pr-url|PR #5> by <bot-profile|bot>',
+          }),
         })
       })
 
@@ -2062,8 +2244,8 @@ describe('Bumpr', () => {
           method: 'POST',
           body: JSON.stringify({
             channel: '#baz',
-            text: 'Published `the-package@1.2.3` (patch) from <the-pr-url|PR #5> by <bot-profile|bot>'
-          })
+            text: 'Published `the-package@1.2.3` (patch) from <the-pr-url|PR #5> by <bot-profile|bot>',
+          }),
         })
       })
     })

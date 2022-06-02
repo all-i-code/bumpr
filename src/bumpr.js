@@ -1,5 +1,6 @@
 require('./typedefs')
 
+const {createReadStream, existsSync, readdir, statSync, writeFile} = require('fs/promises')
 const {cloneDeep, get} = require('lodash')
 const mime = require('mime-types')
 const moment = require('moment-timezone')
@@ -10,12 +11,28 @@ const replace = require('replace-in-file')
 const versiony = require('versiony')
 
 const {name} = require('../package.json')
-const {createReadStream, exec, readdir, statSync, writeFile} = require('./node-wrappers')
+const {exec} = require('./node-wrappers')
 
 const MissingKeyError = require('./errors/missing-key')
 const NoLogFileError = require('./errors/no-log-file')
 const {Logger} = require('./logger')
 const utils = require('./utils')
+
+/**
+ * Get the array of package names in this workspace project (or an empty array if not using workspaces)
+ * @returns {Promise} a promise - resolved with an array of package names or rejected on error
+ */
+function getPackages() {
+  if (existsSync('packages') && statSync('packages').isDirectory()) {
+    return readdir('packages', {withFileTypes: true}).then((entries) =>
+      // prettier formats it this way (@job13er 2022-06-02)
+      // eslint-disable-next-line implicit-arrow-linebreak
+      entries.filter((e) => e.isDirectory()).map((e) => e.name)
+    )
+  }
+
+  return Promise.resolve(['.'])
+}
 
 /**
  * Perform the patch bump, either using .patch() or .preRelease() (the latter if there's a pre-release tag)
@@ -33,7 +50,7 @@ function postBody(url, body) {
   return fetch(url, {
     headers: {'Content-Type': 'application/json'},
     method: 'POST',
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
   })
 }
 
@@ -69,13 +86,13 @@ class Bumpr {
     }
 
     return this.getMergedPrInfo(numExtraCommits)
-      .then(info => this.maybeBumpVersion(info))
-      .then(info => this.maybeUpdateChangelog(info))
-      .then(info => this.maybeCommitChanges(info))
-      .then(info => this.maybeCreateTag(info))
-      .then(info => this.maybePushChanges(info))
-      .then(info => this.maybeCreateRelease(info))
-      .then(info => this.maybeLogChanges(info))
+      .then((info) => this.maybeBumpVersion(info))
+      .then((info) => this.maybeUpdateChangelog(info))
+      .then((info) => this.maybeCommitChanges(info))
+      .then((info) => this.maybeCreateTag(info))
+      .then((info) => this.maybePushChanges(info))
+      .then((info) => this.maybeCreateRelease(info))
+      .then((info) => this.maybeLogChanges(info))
   }
 
   /**
@@ -88,7 +105,7 @@ class Bumpr {
       return Promise.resolve()
     }
 
-    return this.getOpenPrInfo().then(info => {
+    return this.getOpenPrInfo().then((info) => {
       Logger.log(`Found a ${info.scope} bump for the current PR`)
     })
   }
@@ -105,8 +122,7 @@ class Bumpr {
       return Promise.resolve()
     }
 
-    return this.getMergedPrInfo(numExtraCommits)
-      .then(info => this.maybeLogChanges(info))
+    return this.getMergedPrInfo(numExtraCommits).then((info) => this.maybeLogChanges(info))
   }
 
   /**
@@ -155,10 +171,24 @@ class Bumpr {
 
         // eslint-disable-next-line no-template-curly-in-string
         return writeFile('.npmrc', '//registry.npmjs.org/:_authToken=${NPM_TOKEN}')
-          .then(() => exec('npm publish .', {maxBuffer: 1024 * 1024}))
+          .then(() => getPackages())
+          .then((packages) =>
+            // prettier formats it this way (@job13er 2022-06-02)
+            // eslint-disable-next-line implicit-arrow-linebreak
+            Promise.all(
+              packages.map((pkg) =>
+                // prettier formats it this way (@job13er 2022-06-02)
+                // eslint-disable-next-line implicit-arrow-linebreak
+                exec('npm publish .', {
+                  cwd: pkg === '.' ? pkg : path.join('packages', pkg),
+                  maxBuffer: 1024 * 1024,
+                })
+              )
+            )
+          )
           .then(() => this.maybeSendSlackMessage(log))
       })
-      .catch(err => {
+      .catch((err) => {
         if (err instanceof NoLogFileError) {
           Logger.log('Skipping publish because no log file found.', true)
         } else {
@@ -181,14 +211,14 @@ class Bumpr {
     const fakeInfo = {
       modifiedFiles: ['package.json'], // not really, but if we don't put something in here tag won't be pushed
       scope: 'patch', // must be anything but 'none' so that tag is created
-      version: utils.readJsonFile('package.json').version // current version
+      version: utils.readJsonFile('package.json').version, // current version
     }
 
     return this.ci
       .setupGitEnv()
       .then(() => this.maybeCreateTag(fakeInfo))
-      .then(info => this.maybePushChanges(info))
-      .then(info => this.maybeCreateRelease(info))
+      .then((info) => this.maybePushChanges(info))
+      .then((info) => this.maybeCreateRelease(info))
   }
 
   /**
@@ -201,9 +231,7 @@ class Bumpr {
       timezone = this.config.features.timezone.zone
     }
 
-    return moment()
-      .tz(timezone)
-      .format('YYYY-MM-DD')
+    return moment().tz(timezone).format('YYYY-MM-DD')
   }
 
   /**
@@ -217,7 +245,7 @@ class Bumpr {
       Logger.log(`Reading log file from ${logFile}`)
       return Promise.resolve({
         file: logFile,
-        log: utils.readJsonFile(logFile)
+        log: utils.readJsonFile(logFile),
       })
     } catch (err) {
       const rejection = err.code === 'ENOENT' ? new NoLogFileError(logFile) : err
@@ -233,7 +261,7 @@ class Bumpr {
    */
   getLastPr(numExtraCommits) {
     Logger.log(`Getting last PR: numExtraCommits = ${numExtraCommits}`)
-    return exec(`git rev-list HEAD --max-count=1 --skip=${numExtraCommits}`).then(stdout => {
+    return exec(`git rev-list HEAD --max-count=1 --skip=${numExtraCommits}`).then(({stdout}) => {
       const sha = stdout.trim()
       Logger.log(`Fetching PR for sha [${sha}]`)
       return this.vcs.getMergedPrBySha(sha)
@@ -247,7 +275,7 @@ class Bumpr {
    */
   getMergedPrInfo(numExtraCommits) {
     Logger.log(`Getting merged PR info: numExtraCommits = ${numExtraCommits}`)
-    return this.getLastPr(numExtraCommits).then(pr => {
+    return this.getLastPr(numExtraCommits).then((pr) => {
       let maxScope = 'major'
       if (this.config.isEnabled('maxScope')) {
         maxScope = this.config.features.maxScope.value
@@ -262,7 +290,7 @@ class Bumpr {
         modifiedFiles: [],
         number: pr.number,
         scope,
-        url: pr.url
+        url: pr.url,
       }
     })
   }
@@ -274,7 +302,7 @@ class Bumpr {
   getOpenPrInfo() {
     return this.vcs
       .getPr(this.config.computed.ci.prNumber)
-      .then(pr => {
+      .then((pr) => {
         let scope
         return utils.maybePostCommentOnError(this.config, this.vcs, () => {
           let maxScope = 'major'
@@ -285,7 +313,7 @@ class Bumpr {
           return {pr, scope}
         })
       })
-      .then(data => {
+      .then((data) => {
         const {pr, scope} = data
 
         const getChangelog = this.config.isEnabled('changelog') && scope !== 'none'
@@ -306,41 +334,51 @@ class Bumpr {
    * NOTE: it is assumed that all files include the same version and so applying the same scope will
    * result in the same new version for all files
    * @param {PrInfo} info - the pr info
-   * @returns {PrInfo} the updated pr info object
+   * @returns {Proimse} a promise resolved with the updated pr info object
    */
   maybeBumpVersion(info) {
     const newInfo = cloneDeep(info)
     if (newInfo.scope === 'none') {
-      return newInfo
+      return Promise.resolve(newInfo)
     }
 
-    const {files} = this.config
+    return getPackages().then((pkgs) => {
+      const {files} = this.config
 
-    files.forEach(filename => {
-      const v = versiony.from(filename)
-      switch (newInfo.scope) {
-        case 'patch':
-          performPatch(v)
-          break
-
-        case 'minor':
-          v.newMinor()
-          break
-
-        case 'major':
-          v.newMajor()
-          break
-
-        default:
-          throw new Error(`Invalid scope [${newInfo.scope}]`)
+      // We always want to bump the top-level version as well (@job13er 2022-06-02)
+      if (!pkgs.includes('.')) {
+        pkgs.push('.')
       }
 
-      const versionInfo = v.to(filename).end({quiet: true})
-      newInfo.version = versionInfo.version // eslint-disable-line no-param-reassign
-      newInfo.modifiedFiles.push(filename)
-    })
+      pkgs.forEach((pkg) => {
+        files.forEach((filename) => {
+          const fullPath = pkg === '.' ? filename : path.join('packages', pkg, filename)
+          const v = versiony.from(fullPath)
+          switch (newInfo.scope) {
+            case 'patch':
+              performPatch(v)
+              break
 
-    return newInfo
+            case 'minor':
+              v.newMinor()
+              break
+
+            case 'major':
+              v.newMajor()
+              break
+
+            default:
+              throw new Error(`Invalid scope [${newInfo.scope}]`)
+          }
+
+          const versionInfo = v.to(fullPath).end({quiet: true})
+          newInfo.version = versionInfo.version // eslint-disable-line no-param-reassign
+          newInfo.modifiedFiles.push(fullPath)
+        })
+      })
+
+      return newInfo
+    })
   }
 
   /**
@@ -392,11 +430,11 @@ class Bumpr {
 
     return this.vcs
       .createRelease(tagName, releaseName, description)
-      .then(json => {
+      .then((json) => {
         const {artifacts} = this.config.features.release
         if (artifacts) {
           const urlBase = json.upload_url.replace('{?name,label}', '')
-          return readdir(artifacts).then(files => ({files, urlBase}))
+          return readdir(artifacts).then((files) => ({files, urlBase}))
         }
 
         return {files: [], urlBase: ''}
@@ -405,7 +443,7 @@ class Bumpr {
         const {artifacts} = this.config.features.release
         const promises = []
 
-        files.forEach(filename => {
+        files.forEach((filename) => {
           const url = `${urlBase}?name=${filename}`
           const fullPath = path.join(artifacts, filename)
           const {size} = statSync(fullPath)
@@ -453,11 +491,11 @@ class Bumpr {
         url,
         user: {
           login: author,
-          url: authorUrl
-        }
+          url: authorUrl,
+        },
       },
       scope,
-      version
+      version,
     }
 
     const filename = this.config.features.logging.file
@@ -488,7 +526,7 @@ class Bumpr {
     const options = {
       files: filename,
       from: /<!-- bumpr -->/,
-      to: data
+      to: data,
     }
 
     return replace(options).then(() => {
@@ -534,7 +572,7 @@ class Bumpr {
       return postBody(slackUrl, {text: message})
     }
 
-    return Promise.all(channels.map(channel => postBody(slackUrl, {channel, text: message})))
+    return Promise.all(channels.map((channel) => postBody(slackUrl, {channel, text: message})))
   }
 }
 

@@ -45,7 +45,7 @@ describe('CI / Travis', () => {
     beforeEach(() => {
       travis.vcs = {addRemoteForPush() {}}
       jest.spyOn(travis.vcs, 'addRemoteForPush').mockReturnValue(Promise.resolve('ci-origin'))
-      exec.mockReturnValue(Promise.resolve('pushed'))
+      exec.mockReturnValue(Promise.resolve({stdout: 'pushed'}))
 
       return travis.push().then((res) => {
         result = res
@@ -78,7 +78,7 @@ describe('CI / Travis', () => {
 
     beforeEach(() => {
       jest.spyOn(CiBase.prototype, 'setupGitEnv').mockReturnValue(Promise.resolve())
-      exec.mockReturnValue(Promise.resolve('checked-out'))
+      exec.mockReturnValue(Promise.resolve({stdout: 'checked-out'}))
 
       return travis.setupGitEnv().then((res) => {
         result = res
