@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.13.3] - 2022-08-31 ([PR 63](https://github.com/all-i-code/bumpr/pull/63))
+### Security
+- Update `moment-timezone`
+
 ## [2.13.2] - 2022-06-02 ([PR 61](https://github.com/all-i-code/bumpr/pull/61))
 ### Fixed
 - Importing of Node packages
