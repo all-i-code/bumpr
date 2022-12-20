@@ -194,6 +194,9 @@ const utils = {
               },
               channels: [],
             },
+            tag: {
+              enabled: true,
+            },
             timezone: {
               enabled: false,
               zone: 'Etc/UTC',
