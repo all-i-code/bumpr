@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.14.1] - 2022-12-20 ([PR 65](https://github.com/all-i-code/bumpr/pull/65))
+### Fixed
+- Remote setup for allowing push to github
+
+
 ## [2.14.0] - 2022-12-20 ([PR 64](https://github.com/all-i-code/bumpr/pull/64))
 ### Added
 - The ability to disable tag creation in config
