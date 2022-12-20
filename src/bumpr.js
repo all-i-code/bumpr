@@ -197,24 +197,41 @@ class Bumpr {
 
   /**
    * Create a git tag for the current version (without any bumping)
+   * @param {Object} options the cli options
    * @returns {Promise} a promise resolved with the value or rejected on error
    */
-  tag() {
+  tag({infoFile}) {
     if (get(this.config, 'computed.ci.isPr')) {
-      Logger.log('Not a merge build, skipping bump')
+      Logger.log('Not a merge build, skipping tag')
       return Promise.resolve()
     }
 
+    // Reading package.json before infoFile makes testing easier (@job13er 2022-12-20)
+    const currentVersion = utils.readJsonFile('package.json').version
+
     // Since we may not have a PR, we'll construct a fake 'info' object
-    const fakeInfo = {
-      modifiedFiles: ['package.json'], // not really, but if we don't put something in here tag won't be pushed
+    let prInfo = {
+      author: '',
+      authorUrl: '',
+      changelog: '',
+      number: -1,
       scope: 'patch', // must be anything but 'none' so that tag is created
-      version: utils.readJsonFile('package.json').version, // current version
+      url: '',
+    }
+
+    if (infoFile) {
+      prInfo = utils.readJsonFile(infoFile)
+    }
+
+    const initialInfo = {
+      ...prInfo,
+      modifiedFiles: ['CHANGELOG.md', 'package.json'], // not really, but if empty, no tag is created
+      version: currentVersion,
     }
 
     return this.ci
       .setupGitEnv()
-      .then(() => this.maybeCreateTag(fakeInfo))
+      .then(() => this.maybeCreateTag(initialInfo))
       .then((info) => this.maybePushChanges(info))
       .then((info) => this.maybeCreateRelease(info))
   }
@@ -460,6 +477,11 @@ class Bumpr {
    * @returns {Promise} - a promise resolved with the results of the git commands
    */
   maybeCreateTag(info) {
+    if (!this.config.isEnabled('tag')) {
+      Logger.log('Skipping tag creation because of config option.')
+      return Promise.resolve(info)
+    }
+
     if (info.scope === 'none') {
       Logger.log('Skipping tag creation because of "none" scope.')
       return Promise.resolve(info)

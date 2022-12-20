@@ -836,15 +836,20 @@ describe('Bumpr', () => {
         setupGitEnv: jest.fn().mockReturnValue(Promise.resolve()),
       }
       info = {
-        modifiedFiles: ['package.json'], // not really, but if we don't put something in here tag won't be pushed
-        scope: 'patch', // must be anything but 'none' so that tag is created
+        author: '',
+        authorUrl: '',
+        changelog: '',
+        number: -1,
+        modifiedFiles: ['CHANGELOG.md', 'package.json'],
+        scope: 'patch',
+        url: '',
         version: '1.2.3',
       }
 
       jest.spyOn(bumpr, 'maybeCreateTag').mockReturnValue(Promise.resolve(info))
       jest.spyOn(bumpr, 'maybePushChanges').mockReturnValue(Promise.resolve(info))
       jest.spyOn(bumpr, 'maybeCreateRelease').mockReturnValue(Promise.resolve('released'))
-      jest.spyOn(utils, 'readJsonFile').mockReturnValue({version: '1.2.3'})
+      jest.spyOn(utils, 'readJsonFile').mockReturnValueOnce({version: '1.2.3'})
     })
 
     afterEach(() => {
@@ -854,42 +859,111 @@ describe('Bumpr', () => {
     })
 
     describe('when a merge build', () => {
-      beforeEach((done) => {
-        bumpr
-          .tag()
-          .then((res) => {
-            result = res
-          })
-          .catch((err) => {
-            error = err
-          })
-          .finally(() => {
-            done()
-          })
+      describe('when no infoFile given', () => {
+        beforeEach((done) => {
+          bumpr
+            .tag({infoFile: ''})
+            .then((res) => {
+              result = res
+            })
+            .catch((err) => {
+              error = err
+            })
+            .finally(() => {
+              done()
+            })
+        })
+
+        it('should setup git env', () => {
+          expect(bumpr.ci.setupGitEnv).toHaveBeenCalled()
+        })
+
+        it('should maybe create the tag', () => {
+          expect(bumpr.maybeCreateTag).toHaveBeenCalledWith(info)
+        })
+
+        it('should maybe push the changes', () => {
+          expect(bumpr.maybePushChanges).toHaveBeenCalledWith(info)
+        })
+
+        it('should maybe create a release', () => {
+          expect(bumpr.maybeCreateRelease).toHaveBeenCalledWith(info)
+        })
+
+        it('should resolve with the result of the maybeCreateRelease() call', () => {
+          expect(result).toBe('released')
+        })
+
+        it('should not reject', () => {
+          expect(error).toBe(null)
+        })
       })
 
-      it('should setup git env', () => {
-        expect(bumpr.ci.setupGitEnv).toHaveBeenCalled()
-      })
+      describe('when infoFile given', () => {
+        let prInfo
+        beforeEach((done) => {
+          prInfo = {
+            author: 'job13er',
+            authorUrl: 'https://github.com/job13er',
+            changelog: 'some-changelog',
+            number: 13,
+            scope: 'minor',
+            url: 'https://github.com/all-i-code/bumpr/pulls/13',
+          }
 
-      it('should maybe create the tag', () => {
-        expect(bumpr.maybeCreateTag).toHaveBeenCalledWith(info)
-      })
+          utils.readJsonFile.mockReturnValueOnce(prInfo)
 
-      it('should maybe push the changes', () => {
-        expect(bumpr.maybePushChanges).toHaveBeenCalledWith(info)
-      })
+          info = {
+            ...info,
+            ...prInfo,
+          }
 
-      it('should maybe create a release', () => {
-        expect(bumpr.maybeCreateRelease).toHaveBeenCalledWith(info)
-      })
+          // We need to mock returning the correct, updated info (@job13er 2022-12-20)
+          bumpr.maybeCreateTag.mockRestore()
+          bumpr.maybePushChanges.mockRestore()
+          jest.spyOn(bumpr, 'maybeCreateTag').mockReturnValue(Promise.resolve(info))
+          jest.spyOn(bumpr, 'maybePushChanges').mockReturnValue(Promise.resolve(info))
 
-      it('should resolve with the result of the maybeCreateRelease() call', () => {
-        expect(result).toBe('released')
-      })
+          bumpr
+            .tag({infoFile: 'some-file'})
+            .then((res) => {
+              result = res
+            })
+            .catch((err) => {
+              error = err
+            })
+            .finally(() => {
+              done()
+            })
+        })
 
-      it('should not reject', () => {
-        expect(error).toBe(null)
+        it('should read info file', () => {
+          expect(utils.readJsonFile).lastCalledWith('some-file')
+        })
+
+        it('should setup git env', () => {
+          expect(bumpr.ci.setupGitEnv).toHaveBeenCalled()
+        })
+
+        it('should maybe create the tag', () => {
+          expect(bumpr.maybeCreateTag).toHaveBeenCalledWith(info)
+        })
+
+        it('should maybe push the changes', () => {
+          expect(bumpr.maybePushChanges).toHaveBeenCalledWith(info)
+        })
+
+        it('should maybe create a release', () => {
+          expect(bumpr.maybeCreateRelease).toHaveBeenCalledWith(info)
+        })
+
+        it('should resolve with the result of the maybeCreateRelease() call', () => {
+          expect(result).toBe('released')
+        })
+
+        it('should not reject', () => {
+          expect(error).toBe(null)
+        })
       })
     })
 
@@ -897,7 +971,7 @@ describe('Bumpr', () => {
       beforeEach((done) => {
         set(bumpr.config, 'computed.ci.isPr', true)
         bumpr
-          .tag()
+          .tag({infoFile: ''})
           .then((res) => {
             result = res
           })
@@ -910,7 +984,7 @@ describe('Bumpr', () => {
       })
 
       it('should log that non merge builds are skipped', () => {
-        expect(Logger.log).toHaveBeenCalledWith('Not a merge build, skipping bump')
+        expect(Logger.log).toHaveBeenCalledWith('Not a merge build, skipping tag')
       })
 
       it('should not setup git env', () => {
@@ -1799,49 +1873,120 @@ describe('Bumpr', () => {
     let result
     let info
 
-    beforeEach(() => {
-      info = {
-        version: '1.2.3',
-      }
-      set(bumpr.config, 'computed.ci.buildNumber', '12345')
-      bumpr.ci = {
-        tag: jest.fn().mockReturnValue(Promise.resolve('tagged')),
-      }
-      exec.mockReturnValue(Promise.resolve())
-    })
-
-    describe('when scope is not "none"', () => {
-      /* eslint-disable arrow-body-style */
+    describe('when feature is enabled (default)', () => {
       beforeEach(() => {
-        return bumpr.maybeCreateTag(info).then((res) => {
-          result = res
+        bumpr.config.isEnabled.mockReturnValue(true)
+
+        info = {
+          version: '1.2.3',
+        }
+        set(bumpr.config, 'computed.ci.buildNumber', '12345')
+        bumpr.ci = {
+          tag: jest.fn().mockReturnValue(Promise.resolve('tagged')),
+        }
+        exec.mockReturnValue(Promise.resolve())
+      })
+
+      describe('when scope is not "none"', () => {
+        /* eslint-disable arrow-body-style */
+        beforeEach(() => {
+          return bumpr.maybeCreateTag(info).then((res) => {
+            result = res
+          })
+        })
+        /* eslint-enable arrow-body-style */
+
+        it('should check tag feature', () => {
+          expect(bumpr.config.isEnabled).lastCalledWith('tag')
+        })
+
+        it('should create a tag', () => {
+          expect(bumpr.ci.tag).toHaveBeenCalledWith('v1.2.3', 'Generated tag from CI build 12345')
+        })
+
+        it('should resolve with the result of the tag', () => {
+          expect(result).toBe(info)
         })
       })
-      /* eslint-enable arrow-body-style */
 
-      it('should create a tag', () => {
-        expect(bumpr.ci.tag).toHaveBeenCalledWith('v1.2.3', 'Generated tag from CI build 12345')
-      })
+      describe('when scope is "none"', () => {
+        beforeEach(() => {
+          info.scope = 'none'
+          return bumpr.maybeCreateTag(info).then((res) => {
+            result = res
+          })
+        })
 
-      it('should resolve with the result of the tag', () => {
-        expect(result).toBe(info)
+        it('should check tag feature', () => {
+          expect(bumpr.config.isEnabled).lastCalledWith('tag')
+        })
+
+        it('should not create a tag', () => {
+          expect(bumpr.ci.tag).toHaveBeenCalledTimes(0)
+        })
+
+        it('should resolve with the result of the tag', () => {
+          expect(result).toBe(info)
+        })
       })
     })
 
-    describe('when scope is "none"', () => {
+    describe('when feature is disabled', () => {
       beforeEach(() => {
-        info.scope = 'none'
-        return bumpr.maybeCreateTag(info).then((res) => {
-          result = res
+        bumpr.config.isEnabled.mockReturnValue(false)
+
+        info = {
+          version: '1.2.3',
+        }
+        set(bumpr.config, 'computed.ci.buildNumber', '12345')
+        set(bumpr.config, 'features.tag.enabled', false)
+
+        bumpr.ci = {
+          tag: jest.fn(),
+        }
+      })
+
+      describe('when scope is not "none"', () => {
+        /* eslint-disable arrow-body-style */
+        beforeEach(() => {
+          return bumpr.maybeCreateTag(info).then((res) => {
+            result = res
+          })
+        })
+        /* eslint-enable arrow-body-style */
+
+        it('should check tag feature', () => {
+          expect(bumpr.config.isEnabled).lastCalledWith('tag')
+        })
+
+        it('should not create a tag', () => {
+          expect(bumpr.ci.tag).not.toHaveBeenCalled()
+        })
+
+        it('should resolve with the result of the tag', () => {
+          expect(result).toBe(info)
         })
       })
 
-      it('should not create a tag', () => {
-        expect(bumpr.ci.tag).toHaveBeenCalledTimes(0)
-      })
+      describe('when scope is "none"', () => {
+        beforeEach(() => {
+          info.scope = 'none'
+          return bumpr.maybeCreateTag(info).then((res) => {
+            result = res
+          })
+        })
 
-      it('should resolve with the result of the tag', () => {
-        expect(result).toBe(info)
+        it('should check tag feature', () => {
+          expect(bumpr.config.isEnabled).lastCalledWith('tag')
+        })
+
+        it('should not create a tag', () => {
+          expect(bumpr.ci.tag).not.toHaveBeenCalled()
+        })
+
+        it('should resolve with the result of the tag', () => {
+          expect(result).toBe(info)
+        })
       })
     })
   })

@@ -199,6 +199,9 @@ The following defaults will be used if omitted in `.bumperrc.js`:
         },
         channels: []
       },
+      tag: {
+        enabled: true,
+      },
       timezone: {
         enabled: false,
         zone: 'Etc/UTC'
@@ -404,6 +407,15 @@ Set this value to `true` to enable the creation of the log file during a `bump`.
 The name of the file to create after a `bump`, the contents of the file will be `json` regardless of the name of
 the file given here.
 
+#### `features.release`
+Create a VCS release after creating a git tag.
+
+##### `features.release.enabled`
+Set this value to `true` to enable creating a release in your VCS after creating a tag.
+
+##### `features.release.artifacts`
+Directory name of any assets you want included in the VCS release that is created.
+
 #### `features.slack`
 Send a message in slack detailing the change that `bumpr` just published. The message will be sent after the `publish`
 command completes.
@@ -424,6 +436,13 @@ The name of the environment variable that holds the URL for your slack webhook.
 An array of channels. The message will be sent to each one individually, using the `channel` property in the slack
 message JSON body. If no channels are given, only a single message will be sent, with no `channel` property, and so
 the default channel for the webhook will be used.
+
+#### `features.tag`
+Create a git tag when bumping versions. By default, `bumpr` will create a git tag when bumping versions. This
+can conflict with some other tools, like `lerna`, and so we allow you to disable this functionality.
+
+##### `features.tag.enabled`
+Set this value to `false` to disable creating a git tag.
 
 #### `features.timezone`
 Report dates in changelog based on a given timezone. By default, `bumpr` uses the UTC timezone to figure out what
