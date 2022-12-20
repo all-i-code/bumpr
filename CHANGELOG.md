@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.14.0] - 2022-12-20 ([PR 64](https://github.com/all-i-code/bumpr/pull/64))
+### Added
+- The ability to disable tag creation in config
+- The ability to pass PR info into `bumpr tag` command with the `--info-file` option
+
 ## [2.13.3] - 2022-08-31 ([PR 63](https://github.com/all-i-code/bumpr/pull/63))
 ### Security
 - Update `moment-timezone`
@@ -28,7 +33,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [2.13.0] - 2022-04-19 ([PR 57](https://github.com/all-i-code/bumpr/pull/57))
 ### Changed
-- Default branch name when there's no CI branch env variable (from `master` to `config.repository.defaultBranch` or `main`). 
+- Default branch name when there's no CI branch env variable (from `master` to `config.repository.defaultBranch` or `main`).
 ### Security
 - Updated dependencies to resolve `dependabot` issues
 
