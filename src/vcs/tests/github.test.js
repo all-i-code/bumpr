@@ -20,21 +20,21 @@ describe('VCS / GitHub /', () => {
       ci: {
         gitUser: {
           email: 'travis-ci-ciena@gmail.com',
-          name: 'travis-ci'
+          name: 'travis-ci',
         },
-        provider: 'travis'
+        provider: 'travis',
       },
       computed: {
         ci: {
-          branch: 'my-branch'
+          branch: 'my-branch',
         },
         vcs: {
           auth: {
             readToken: 'my-ro-gh-token',
-            writeToken: 'my-gh-token'
-          }
-        }
-      }
+            writeToken: 'my-gh-token',
+          },
+        },
+      },
     }
   })
 
@@ -44,8 +44,8 @@ describe('VCS / GitHub /', () => {
         provider: 'github',
         repository: {
           name: 'my-repo',
-          owner: 'me'
-        }
+          owner: 'me',
+        },
       }
 
       github = new GitHub(config)
@@ -60,13 +60,13 @@ describe('VCS / GitHub /', () => {
 
       beforeEach(() => {
         exec.mockReturnValue(Promise.resolve())
-        return github.addRemoteForPush().then(name => {
+        return github.addRemoteForPush().then((name) => {
           remoteName = name
         })
       })
 
       it('should makes the proper git remote command', () => {
-        const url = 'https://my-gh-token@github.com/me/my-repo'
+        const url = 'https://bumpr:my-gh-token@github.com/me/my-repo'
         expect(exec).toHaveBeenCalledWith(`git remote add ci-origin ${url}`)
       })
 
@@ -94,11 +94,11 @@ describe('VCS / GitHub /', () => {
         rejection = null
         promise = github
           .createRelease('tag1', 'Release 1', 'Some description')
-          .then(resp => {
+          .then((resp) => {
             resolution = resp
             return resolution
           })
-          .catch(err => {
+          .catch((err) => {
             rejection = err
             throw err
           })
@@ -110,12 +110,12 @@ describe('VCS / GitHub /', () => {
           body: JSON.stringify({
             body: 'Some description',
             name: 'Release 1',
-            tag_name: 'tag1'
+            tag_name: 'tag1',
           }),
           headers: {
             Authorization: 'token my-gh-token',
-            'Content-Type': 'application/json'
-          }
+            'Content-Type': 'application/json',
+          },
         })
       })
 
@@ -123,17 +123,17 @@ describe('VCS / GitHub /', () => {
         let resp
         let release
 
-        beforeEach(done => {
+        beforeEach((done) => {
           release = {
             id: 1,
             name: 'Release 1',
-            body: 'Some description'
+            body: 'Some description',
           }
 
           resp = {
             json: jest.fn().mockReturnValue(Promise.resolve(release)),
             ok: true,
-            status: 200
+            status: 200,
           }
 
           promise.then(() => {
@@ -152,15 +152,15 @@ describe('VCS / GitHub /', () => {
         let err
         let resp
 
-        beforeEach(done => {
+        beforeEach((done) => {
           err = {
-            message: 'Uh oh'
+            message: 'Uh oh',
           }
 
           resp = {
             json: jest.fn().mockReturnValue(Promise.resolve(err)),
             ok: false,
-            status: 400
+            status: 400,
           }
 
           promise.catch(() => {
@@ -180,7 +180,7 @@ describe('VCS / GitHub /', () => {
       })
 
       describe('when fetch errors', () => {
-        beforeEach(done => {
+        beforeEach((done) => {
           promise.catch(() => {
             done()
           })
@@ -213,11 +213,11 @@ describe('VCS / GitHub /', () => {
         rejection = null
         promise = github
           .getMergedPrBySha('sha-2')
-          .then(resp => {
+          .then((resp) => {
             resolution = resp
             return resolution
           })
-          .catch(err => {
+          .catch((err) => {
             rejection = err
             throw err
           })
@@ -228,8 +228,8 @@ describe('VCS / GitHub /', () => {
           'https://api.github.com/repos/me/my-repo/pulls?state=closed&sort=updated&direction=desc',
           {
             headers: {
-              Authorization: 'token my-ro-gh-token'
-            }
+              Authorization: 'token my-ro-gh-token',
+            },
           }
         )
       })
@@ -237,44 +237,44 @@ describe('VCS / GitHub /', () => {
       describe('when fetch resolves with success (and matching PR found)', () => {
         let resp
 
-        beforeEach(done => {
+        beforeEach((done) => {
           const prs = [
             {
               number: 5,
               body: '#minor#\r\n## Changelog\r\n### Added\r\n- Some kinda cool stuff',
               user: {
                 login: 'bot1',
-                html_url: 'profile-of-bot1'
+                html_url: 'profile-of-bot1',
               },
               html_url: 'link-to-pr-5',
-              merge_commit_sha: 'sha-1'
+              merge_commit_sha: 'sha-1',
             },
             {
               number: 4,
               body: '#minor#\r\n## Changelog\r\n### Added\r\n- Some really cool stuff',
               user: {
                 login: 'bot2',
-                html_url: 'profile-of-bot2'
+                html_url: 'profile-of-bot2',
               },
               html_url: 'link-to-pr-4',
-              merge_commit_sha: 'sha-2'
+              merge_commit_sha: 'sha-2',
             },
             {
               number: 3,
               body: '#minor#\r\n## Changelog\r\n### Added\r\n- Some super cool stuff',
               user: {
                 login: 'bot3',
-                html_url: 'profile-of-bot3'
+                html_url: 'profile-of-bot3',
               },
               html_url: 'link-to-pr-3',
-              merge_commit_sha: 'sha-3'
-            }
+              merge_commit_sha: 'sha-3',
+            },
           ]
 
           resp = {
             json: jest.fn().mockReturnValue(Promise.resolve(prs)),
             ok: true,
-            status: 200
+            status: 200,
           }
 
           promise.then(() => {
@@ -290,7 +290,7 @@ describe('VCS / GitHub /', () => {
             authorUrl: 'profile-of-bot2',
             description: '#minor#\n## Changelog\n### Added\n- Some really cool stuff',
             number: 4,
-            url: 'link-to-pr-4'
+            url: 'link-to-pr-4',
           })
         })
       })
@@ -298,26 +298,26 @@ describe('VCS / GitHub /', () => {
       describe('when fetch resolves with success (and no matching PR found)', () => {
         let resp
 
-        beforeEach(done => {
+        beforeEach((done) => {
           const prs = [
             {
               number: 5,
               body: '#minor#\r\n## Changelog\r\n### Added\r\n- Some kinda cool stuff',
               html_url: 'link-to-pr-5',
-              merge_commit_sha: 'sha-1'
+              merge_commit_sha: 'sha-1',
             },
             {
               number: 3,
               body: '#minor#\r\n## Changelog\r\n### Added\r\n- Some super cool stuff',
               html_url: 'link-to-pr-3',
-              merge_commit_sha: 'sha-3'
-            }
+              merge_commit_sha: 'sha-3',
+            },
           ]
 
           resp = {
             json: jest.fn().mockReturnValue(Promise.resolve(prs)),
             ok: true,
-            status: 200
+            status: 200,
           }
 
           promise.catch(() => {
@@ -336,15 +336,15 @@ describe('VCS / GitHub /', () => {
         let err
         let resp
 
-        beforeEach(done => {
+        beforeEach((done) => {
           err = {
-            message: 'Uh oh'
+            message: 'Uh oh',
           }
 
           resp = {
             json: jest.fn().mockReturnValue(Promise.resolve(err)),
             ok: false,
-            status: 400
+            status: 400,
           }
 
           promise.catch(() => {
@@ -364,7 +364,7 @@ describe('VCS / GitHub /', () => {
       })
 
       describe('when fetch errors', () => {
-        beforeEach(done => {
+        beforeEach((done) => {
           promise.catch(() => {
             done()
           })
@@ -384,9 +384,7 @@ describe('VCS / GitHub /', () => {
         })
 
         it('should call fetch with proper params', () => {
-          expect(
-            fetch
-          ).toHaveBeenCalledWith(
+          expect(fetch).toHaveBeenCalledWith(
             'https://api.github.com/repos/me/my-repo/pulls?state=closed&sort=updated&direction=desc',
             {headers: {}}
           )
@@ -413,11 +411,11 @@ describe('VCS / GitHub /', () => {
         rejection = null
         promise = github
           .getPr('5')
-          .then(resp => {
+          .then((resp) => {
             resolution = resp
             return resolution
           })
-          .catch(err => {
+          .catch((err) => {
             rejection = err
             throw err
           })
@@ -426,32 +424,32 @@ describe('VCS / GitHub /', () => {
       it('should call fetch with proper params', () => {
         expect(fetch).toHaveBeenCalledWith('https://api.github.com/repos/me/my-repo/pulls/5', {
           headers: {
-            Authorization: 'token my-ro-gh-token'
-          }
+            Authorization: 'token my-ro-gh-token',
+          },
         })
       })
 
       describe('when fetch resolves with success', () => {
         let resp
 
-        beforeEach(done => {
+        beforeEach((done) => {
           const pr = {
             number: 5,
             user: {
               login: 'bot',
-              html_url: 'bot-profile'
+              html_url: 'bot-profile',
             },
             body: '#minor#\r\n## Changelog\r\n### Added\r\n- Some really cool stuff',
             html_url: 'my-link-to-myself',
             head: {
-              sha: 'sha-1'
-            }
+              sha: 'sha-1',
+            },
           }
 
           resp = {
             json: jest.fn().mockReturnValue(Promise.resolve(pr)),
             ok: true,
-            status: 200
+            status: 200,
           }
 
           promise.then(() => {
@@ -467,7 +465,7 @@ describe('VCS / GitHub /', () => {
             authorUrl: 'bot-profile',
             description: '#minor#\n## Changelog\n### Added\n- Some really cool stuff',
             number: 5,
-            url: 'my-link-to-myself'
+            url: 'my-link-to-myself',
           })
         })
       })
@@ -476,15 +474,15 @@ describe('VCS / GitHub /', () => {
         let err
         let resp
 
-        beforeEach(done => {
+        beforeEach((done) => {
           err = {
-            message: 'Uh oh'
+            message: 'Uh oh',
           }
 
           resp = {
             json: jest.fn().mockReturnValue(Promise.resolve(err)),
             ok: false,
-            status: 400
+            status: 400,
           }
 
           promise.catch(() => {
@@ -504,7 +502,7 @@ describe('VCS / GitHub /', () => {
       })
 
       describe('when fetch errors', () => {
-        beforeEach(done => {
+        beforeEach((done) => {
           promise.catch(() => {
             done()
           })
@@ -548,11 +546,11 @@ describe('VCS / GitHub /', () => {
         rejection = null
         promise = github
           .postComment('5', 'Missing PR scope!')
-          .then(resp => {
+          .then((resp) => {
             resolution = resp
             return resolution
           })
-          .catch(err => {
+          .catch((err) => {
             rejection = err
             throw err
           })
@@ -563,12 +561,12 @@ describe('VCS / GitHub /', () => {
         expect(fetch).toHaveBeenCalledWith(url, {
           method: 'POST',
           body: JSON.stringify({body: 'Missing PR scope!'}),
-          headers: {'Content-Type': 'application/json'}
+          headers: {'Content-Type': 'application/json'},
         })
       })
 
       describe('when fetch resolves with success', () => {
-        beforeEach(done => {
+        beforeEach((done) => {
           promise.then(() => {
             done()
           })
@@ -584,14 +582,14 @@ describe('VCS / GitHub /', () => {
         let err
         let resp
 
-        beforeEach(done => {
+        beforeEach((done) => {
           err = {message: 'Uh oh'}
           resp = {
             ok: false,
             status: 400,
             json() {
               return Promise.resolve(err)
-            }
+            },
           }
           promise.catch(() => {
             done()
@@ -609,7 +607,7 @@ describe('VCS / GitHub /', () => {
       })
 
       describe('when fetch rejects', () => {
-        beforeEach(done => {
+        beforeEach((done) => {
           promise.catch(() => {
             done()
           })
@@ -645,11 +643,11 @@ describe('VCS / GitHub /', () => {
         rejection = null
         promise = github
           .uploadReleaseAsset('upload-url', 'application/zip', 123, 'mock-stream')
-          .then(resp => {
+          .then((resp) => {
             resolution = resp
             return resolution
           })
-          .catch(err => {
+          .catch((err) => {
             rejection = err
             throw err
           })
@@ -662,8 +660,8 @@ describe('VCS / GitHub /', () => {
           headers: {
             Authorization: 'token my-gh-token',
             'Content-Type': 'application/zip',
-            'Content-Length': 123
-          }
+            'Content-Length': 123,
+          },
         })
       })
 
@@ -671,17 +669,17 @@ describe('VCS / GitHub /', () => {
         let resp
         let release
 
-        beforeEach(done => {
+        beforeEach((done) => {
           release = {
             id: 1,
             name: 'Release 1',
-            body: 'Some description'
+            body: 'Some description',
           }
 
           resp = {
             json: jest.fn().mockReturnValue(Promise.resolve(release)),
             ok: true,
-            status: 200
+            status: 200,
           }
 
           promise.then(() => {
@@ -700,15 +698,15 @@ describe('VCS / GitHub /', () => {
         let err
         let resp
 
-        beforeEach(done => {
+        beforeEach((done) => {
           err = {
-            message: 'Uh oh'
+            message: 'Uh oh',
           }
 
           resp = {
             json: jest.fn().mockReturnValue(Promise.resolve(err)),
             ok: false,
-            status: 400
+            status: 400,
           }
 
           promise.catch(() => {
@@ -728,7 +726,7 @@ describe('VCS / GitHub /', () => {
       })
 
       describe('when fetch errors', () => {
-        beforeEach(done => {
+        beforeEach((done) => {
           promise.catch(() => {
             done()
           })
@@ -750,7 +748,7 @@ describe('VCS / GitHub /', () => {
           beforeEach(() => {
             readFileSync.mockReturnValue(
               JSON.stringify({
-                repository: 'git@github.com:all-i-code/bumpr.git'
+                repository: 'git@github.com:all-i-code/bumpr.git',
               })
             )
 
@@ -760,7 +758,7 @@ describe('VCS / GitHub /', () => {
           it('should set vcs config as expected', () => {
             expect(github.config.vcs.repository).toEqual({
               name: 'bumpr',
-              owner: 'all-i-code'
+              owner: 'all-i-code',
             })
           })
         })
@@ -770,8 +768,8 @@ describe('VCS / GitHub /', () => {
             readFileSync.mockReturnValue(
               JSON.stringify({
                 repository: {
-                  url: 'git@github.com:all-i-code/bumpr.git'
-                }
+                  url: 'git@github.com:all-i-code/bumpr.git',
+                },
               })
             )
 
@@ -781,7 +779,7 @@ describe('VCS / GitHub /', () => {
           it('should set vcs config as expected', () => {
             expect(github.config.vcs.repository).toEqual({
               name: 'bumpr',
-              owner: 'all-i-code'
+              owner: 'all-i-code',
             })
           })
         })
@@ -791,8 +789,8 @@ describe('VCS / GitHub /', () => {
             readFileSync.mockReturnValue(
               JSON.stringify({
                 repository: {
-                  url: 'git+ssh://git@github.com/all-i-code/bumpr.git'
-                }
+                  url: 'git+ssh://git@github.com/all-i-code/bumpr.git',
+                },
               })
             )
 
@@ -802,7 +800,7 @@ describe('VCS / GitHub /', () => {
           it('should set vcs config as expected', () => {
             expect(github.config.vcs.repository).toEqual({
               name: 'bumpr',
-              owner: 'all-i-code'
+              owner: 'all-i-code',
             })
           })
         })
