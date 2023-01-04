@@ -1739,9 +1739,17 @@ describe('Bumpr', () => {
 
     beforeEach(() => {
       info = {
+        changelog: '',
         version: '1.2.3',
       }
       set(bumpr.config, 'computed.ci.buildNumber', '12345')
+
+      set(bumpr.config, 'features.dateFormat.format', 'YYYY-MM-DD')
+      set(bumpr.config, 'features.tag.name', 'v{version}')
+      set(bumpr.config, 'features.timezone.zone', 'America/Denver')
+      set(bumpr.config, 'features.release.name', '[{version}] - {date}')
+      set(bumpr.config, 'features.release.description', '## Changelog\n{changelog}')
+
       bumpr.vcs = {
         createRelease: jest.fn().mockReturnValue(Promise.resolve({upload_url: 'upload-url{?name,label}'})),
         uploadReleaseAsset: jest.fn().mockReturnValue(Promise.resolve('uploaded')),
@@ -1786,8 +1794,8 @@ describe('Bumpr', () => {
     describe('when scope is not "none", but no artifacts exist', () => {
       let dateString
       beforeEach(() => {
-        bumpr.config.isEnabled.mockImplementation((name) => name === 'release')
-        bumpr.config.features = {release: {enabled: true}}
+        bumpr.config.isEnabled.mockImplementation((name) => ['dateFormat', 'release', 'timezone'].includes(name))
+
         info.scope = 'patch'
         info.changelog = 'the-changelog'
         dateString = bumpr.getDateString()
@@ -1812,8 +1820,9 @@ describe('Bumpr', () => {
     describe('when scope is not "none", with artifacts', () => {
       let dateString
       beforeEach(() => {
-        bumpr.config.isEnabled.mockImplementation((name) => name === 'release')
-        bumpr.config.features = {release: {enabled: true, artifacts: 'artifacts-dir'}}
+        bumpr.config.isEnabled.mockImplementation((name) => ['dateFormat', 'release', 'timezone'].includes(name))
+        set(bumpr.config, 'features.release.artifacts', 'artifacts-dir')
+
         info.scope = 'patch'
         info.changelog = 'the-changelog'
         dateString = bumpr.getDateString()
@@ -1867,17 +1876,55 @@ describe('Bumpr', () => {
         expect(result).toBe(info)
       })
     })
+
+    describe('when scope is not "none", but no artifacts exist (with custom name/description)', () => {
+      let dateString
+      beforeEach(() => {
+        bumpr.config.isEnabled.mockImplementation((name) => ['dateFormat', 'release', 'timezone'].includes(name))
+        set(bumpr.config, 'features.release.name', '{version}:{date}')
+        set(
+          bumpr.config,
+          'features.release.description',
+          '* Pr: {pr.url}\n* Pr-Author: @{pr.user.login}\n* Links: {links}\n\n## Changelog\n{changelog}'
+        )
+
+        info.author = 'job13er'
+        info.url = 'pr-url'
+        info.scope = 'patch'
+        info.changelog = 'the-changelog [link 1](https://dom.com/ticket/123)\n[link 2](https://tracker.com/ticket/321)'
+        dateString = bumpr.getDateString()
+        return bumpr.maybeCreateRelease(info).then((res) => {
+          result = res
+        })
+      })
+
+      it('should create a release', () => {
+        expect(bumpr.vcs.createRelease).toHaveBeenCalledWith(
+          'v1.2.3',
+          `1.2.3:${dateString}`,
+          '* Pr: pr-url\n* Pr-Author: @job13er\n' +
+            '* Links: [link 1](https://dom.com/ticket/123), [link 2](https://tracker.com/ticket/321)\n\n' +
+            `## Changelog\n${info.changelog}`
+        )
+      })
+
+      it('should resolve with the info', () => {
+        expect(result).toBe(info)
+      })
+    })
   })
 
   describe('.maybeCreateTag()', () => {
     let result
     let info
 
-    describe('when feature is enabled (default)', () => {
+    describe('when feature is enabled', () => {
       beforeEach(() => {
-        bumpr.config.isEnabled.mockReturnValue(true)
+        bumpr.config.isEnabled.mockImplementation((feature) => feature === 'tag')
+        set(bumpr.config, 'features.tag.name', 'v{version}')
 
         info = {
+          changelog: '',
           version: '1.2.3',
         }
         set(bumpr.config, 'computed.ci.buildNumber', '12345')
@@ -1897,11 +1944,38 @@ describe('Bumpr', () => {
         /* eslint-enable arrow-body-style */
 
         it('should check tag feature', () => {
-          expect(bumpr.config.isEnabled).lastCalledWith('tag')
+          expect(bumpr.config.isEnabled).toHaveBeenCalledWith('tag')
         })
 
         it('should create a tag', () => {
           expect(bumpr.ci.tag).toHaveBeenCalledWith('v1.2.3', 'Generated tag from CI build 12345')
+        })
+
+        it('should resolve with the result of the tag', () => {
+          expect(result).toBe(info)
+        })
+      })
+
+      describe('when scope is not "none" and custom name is configured', () => {
+        let dateString
+        beforeEach(() => {
+          bumpr.config.isEnabled.mockImplementation((feature) => ['dateFormat', 'tag', 'timezone'].includes(feature))
+          set(bumpr.config, 'features.dateFormat.format', 'MM/DD/YYYY')
+          set(bumpr.config, 'features.tag.name', '{version}:{date}')
+          set(bumpr.config, 'features.timezone.zone', 'America/Los_Angeles')
+          dateString = bumpr.getDateString()
+
+          return bumpr.maybeCreateTag(info).then((res) => {
+            result = res
+          })
+        })
+
+        it('should check tag feature', () => {
+          expect(bumpr.config.isEnabled).toHaveBeenCalledWith('tag')
+        })
+
+        it('should create a tag', () => {
+          expect(bumpr.ci.tag).toHaveBeenCalledWith(`1.2.3:${dateString}`, 'Generated tag from CI build 12345')
         })
 
         it('should resolve with the result of the tag', () => {

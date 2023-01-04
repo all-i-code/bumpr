@@ -184,13 +184,23 @@ The following defaults will be used if omitted in `.bumperrc.js`:
       comments: {
         enabled: false
       },
-      maxScope: {
+      dateFormat: {
         enabled: false,
-        value: 'major'
+        format: 'YYYY-MM-DD',
       },
       logging: {
         enabled: false,
         file: '.bumpr-log.json'
+      },
+      maxScope: {
+        enabled: false,
+        value: 'major'
+      },
+      release: {
+        artifacts: '',
+        description: '## Changelog\n{changelog}',
+        enabled: false,
+        name: '[{version}] - {date}',
       },
       slack: {
         enabled: false,
@@ -201,6 +211,7 @@ The following defaults will be used if omitted in `.bumperrc.js`:
       },
       tag: {
         enabled: true,
+        name: 'v{version}',
       },
       timezone: {
         enabled: false,
@@ -280,6 +291,20 @@ Surprisingly enough, the name of the git user.
 ### `features`
 Holds individual properties for configuring optional features of `bumpr`. None of them are enabled by default.
 
+#### <a name="variables"></a> Variables
+Some features, like `release` and `tag` allow configuring name/descriptions. Those allow some variable substitution.
+The following variables are available:
+
+`changelog` - the changelog pulled out of the source PR of the release
+`date` - the current date (respects the `dateFormat` and `timezone` features)
+`links` - A collection of any markdown links that were present in the `changelog`
+`pr.number` - the number of the source PR of the change
+`pr.url` - the URL of the source PR of the change
+`pr.user.login` - login name of the author of the source PR of the change
+`pr.user.url` - profile URL of the author of the source PR of the change
+`scope` - the semver scope of the source PR of the change
+`version` - the semantic version of the release
+
 #### `features.changelog`
 `bumpr` includes support for managing your `CHANGELOG.md` file for you. When this feature is enabled (by setting
 `config.features.changelog.enabled` to `true`) `bumpr` augments the behavior of some of its commands.
@@ -353,6 +378,16 @@ When that flag is set, `bumpr` will post comments to pull requests in the follow
 ##### `features.comments.enabled`
 Set this value to `true` to enable PR comments (everywhere but Travis CI for PRs from forks)
 
+#### `features.dateFormat`
+Allows you to customize the date format used by `bumpr` whenever a date string is created.
+Currently, `moment` is used to format the date string, so any valid `moment` format string is valid.
+
+##### `features.dateFormat.enabled`
+Set to `true` in order to specify a custom date format, otherwise `YYYY-MM-DD` will be used.
+
+##### `features.dateFormat.format`
+Any `moment` format is valid to use here to customize the date string format that `bumpr` will use.
+
 #### `features.maxScope`
 Make sure not to accept bumps of a higher scope than you want. Ideal for maintenance branches, to prevent a `major`
 bump that would conflict with the main branch. The order from least to greatest of scopes is:
@@ -408,13 +443,21 @@ The name of the file to create after a `bump`, the contents of the file will be 
 the file given here.
 
 #### `features.release`
-Create a VCS release after creating a git tag.
+Create a VCS release after creating a git tag. The `name` and `description` options allow some variable substitution.
 
 ##### `features.release.enabled`
 Set this value to `true` to enable creating a release in your VCS after creating a tag.
 
 ##### `features.release.artifacts`
 Directory name of any assets you want included in the VCS release that is created.
+
+##### `features.release.description`
+The description to use for the VCS release that is created. You can include [variables](#variables) in curly braces.
+The default value is `'## Changelog\n{changelog}'`
+
+##### `features.release.name`
+The name to use for the VCS release that is created. You can include [variables](#variables) in curly braces.
+The default value is `'[{version}] - {date}'`
 
 #### `features.slack`
 Send a message in slack detailing the change that `bumpr` just published. The message will be sent after the `publish`
@@ -442,7 +485,11 @@ Create a git tag when bumping versions. By default, `bumpr` will create a git ta
 can conflict with some other tools, like `lerna`, and so we allow you to disable this functionality.
 
 ##### `features.tag.enabled`
-Set this value to `false` to disable creating a git tag.
+Set this value to `true` to enable creating a git tag.
+
+##### `features.tag.name`
+Customize the name of the tag created. You can use [variables](#variables) in curly braces. The default value is:
+`'v{version}'`
 
 #### `features.timezone`
 Report dates in changelog based on a given timezone. By default, `bumpr` uses the UTC timezone to figure out what

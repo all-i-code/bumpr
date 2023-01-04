@@ -175,17 +175,23 @@ const utils = {
             comments: {
               enabled: false,
             },
-            maxScope: {
+            dateFormat: {
               enabled: false,
-              value: 'major',
+              format: 'YYYY-MM-DD',
             },
             logging: {
               enabled: false,
               file: '.bumpr-log.json',
             },
-            release: {
+            maxScope: {
               enabled: false,
+              value: 'major',
+            },
+            release: {
               artifacts: '',
+              description: '## Changelog\n{changelog}',
+              enabled: false,
+              name: '[{version}] - {date}',
             },
             slack: {
               enabled: false,
@@ -195,7 +201,8 @@ const utils = {
               channels: [],
             },
             tag: {
-              enabled: true,
+              enabled: false,
+              name: 'v{version}',
             },
             timezone: {
               enabled: false,
