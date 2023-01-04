@@ -9,7 +9,7 @@ const Promise = require('promise')
 const replace = require('replace-in-file')
 const versiony = require('versiony')
 
-const {name} = require('../package.json')
+const {name: pkgName} = require('../package.json')
 const {createReadStream, exec, existsSync, readdir, statSync, writeFile} = require('./node-wrappers')
 const MissingKeyError = require('./errors/missing-key')
 const NoLogFileError = require('./errors/no-log-file')
@@ -245,7 +245,7 @@ class Bumpr {
   expandVariables(src, info) {
     const {author, authorUrl, changelog, number, scope, url, version} = info
 
-    const regexMdLinks = /\[([^\[]+)\](\(.*\))/gm
+    const regexMdLinks = /\[([^[]+)\](\(.*\))/gm
     const changelogLinks = changelog.match(regexMdLinks)
 
     const replacements = {
@@ -454,7 +454,7 @@ class Bumpr {
       .then(() => {
         const msg = `Version bump to ${info.version}`
 
-        return this.ci.commit(`[ci skip] [${name}] ${msg}`, `From CI build ${buildNumber}`).then(() => info)
+        return this.ci.commit(`[ci skip] [${pkgName}] ${msg}`, `From CI build ${buildNumber}`).then(() => info)
       })
   }
 
@@ -484,7 +484,6 @@ class Bumpr {
     return this.vcs
       .createRelease(tagName, releaseName, releaseDescription)
       .then((json) => {
-        const {artifacts} = this.config.features.release
         if (artifacts) {
           const urlBase = json.upload_url.replace('{?name,label}', '')
           return readdir(artifacts).then((files) => ({files, urlBase}))
@@ -493,7 +492,6 @@ class Bumpr {
         return {files: [], urlBase: ''}
       })
       .then(({files, urlBase}) => {
-        const {artifacts} = this.config.features.release
         const promises = []
 
         files.forEach((filename) => {
