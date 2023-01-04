@@ -237,7 +237,40 @@ class Bumpr {
   }
 
   /**
+   * Expand variables within a source string, returning the expanded string
+   * @param {String} src - the source string with variable references
+   * @param {PrInfo} info - the info for the PR being bumped
+   * @returns {String} - the expanded string
+   */
+  expandVariables(src, info) {
+    const {author, authorUrl, changelog, number, scope, url, version} = info
+
+    const regexMdLinks = /\[([^\[]+)\](\(.*\))/gm
+    const changelogLinks = changelog.match(regexMdLinks)
+
+    const replacements = {
+      changelog,
+      date: this.getDateString(),
+      links: changelogLinks ? changelogLinks.join(', ') : '',
+      'pr.number': number,
+      'pr.url': url,
+      'pr.user.login': author,
+      'pr.user.url': authorUrl,
+      scope,
+      version,
+    }
+
+    let expanded = src
+    Object.entries(replacements).forEach(([key, value]) => {
+      expanded = expanded.replace(`{${key}}`, value)
+    })
+
+    return expanded
+  }
+
+  /**
    * Get the date string used to identify when this change happened
+   * @param {String} format - the format to use for the date
    * @returns {String}
    */
   getDateString() {
@@ -246,7 +279,12 @@ class Bumpr {
       timezone = this.config.features.timezone.zone
     }
 
-    return moment().tz(timezone).format('YYYY-MM-DD')
+    let format = 'YYYY-MM-DD'
+    if (this.config.isEnabled('dateFormat')) {
+      format = this.config.features.dateFormat.format
+    }
+
+    return moment().tz(timezone).format(format)
   }
 
   /**
@@ -436,15 +474,15 @@ class Bumpr {
       return Promise.resolve(info)
     }
 
-    const dateString = this.getDateString()
-    const tagName = `v${info.version}`
-    const releaseName = `[${info.version}] - ${dateString}`
-    const description = `## Changelog\n${info.changelog}`
+    const {artifacts, description, name} = this.config.features.release
+    const tagName = this.expandVariables(this.config.features.tag.name, info)
+    const releaseName = this.expandVariables(name, info)
+    const releaseDescription = this.expandVariables(description, info)
 
     Logger.log('Creating release')
 
     return this.vcs
-      .createRelease(tagName, releaseName, description)
+      .createRelease(tagName, releaseName, releaseDescription)
       .then((json) => {
         const {artifacts} = this.config.features.release
         if (artifacts) {
@@ -489,7 +527,9 @@ class Bumpr {
 
     Logger.log('Creating tag')
     const {buildNumber} = this.config.computed.ci
-    return this.ci.tag(`v${info.version}`, `Generated tag from CI build ${buildNumber}`).then(() => info)
+
+    const tagName = this.expandVariables(this.config.features.tag.name, info)
+    return this.ci.tag(tagName, `Generated tag from CI build ${buildNumber}`).then(() => info)
   }
 
   /**
