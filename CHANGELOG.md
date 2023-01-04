@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.15.0] - 2023-01-04 ([PR 66](https://github.com/all-i-code/bumpr/pull/66))
+### Added
+- More configuration options for the `release` and `tag` features
+- New `dateFormat` feature to allow customizing date format strings used by `bumpr`
+
+
+
 ## [2.14.1] - 2022-12-20 ([PR 65](https://github.com/all-i-code/bumpr/pull/65))
 ### Fixed
 - Remote setup for allowing push to github
