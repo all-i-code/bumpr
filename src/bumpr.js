@@ -245,7 +245,7 @@ class Bumpr {
   expandVariables(src, info) {
     const {author, authorUrl, changelog, number, scope, url, version} = info
 
-    const regexMdLinks = /\[([^[]+)\](\(.*\))/gm
+    const regexMdLinks = /\[([^[]+)\](\([^\)]*\))/gm
     const changelogLinks = changelog.match(regexMdLinks)
 
     const replacements = {

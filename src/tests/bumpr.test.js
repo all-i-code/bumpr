@@ -1891,7 +1891,8 @@ describe('Bumpr', () => {
         info.author = 'job13er'
         info.url = 'pr-url'
         info.scope = 'patch'
-        info.changelog = 'the-changelog [link 1](https://dom.com/ticket/123)\n[link 2](https://tracker.com/ticket/321)'
+        info.changelog =
+          'the-changelog ([link 1](https://dom.com/ticket/123))\n[link 2](https://tracker.com/ticket/321)'
         dateString = bumpr.getDateString()
         return bumpr.maybeCreateRelease(info).then((res) => {
           result = res
