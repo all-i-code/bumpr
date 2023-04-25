@@ -34,6 +34,34 @@ function walkObject(prefix, object, leaves) {
 }
 
 /**
+ * Given a PR description, find the index of the <!-- END CHANGELOG --> line
+ * @param {String[]} lines - lines in the pr description
+ * @returns {Number} the index of the # CHANGELOG section (or -1)
+ * @throws Error if there is more than one matching line
+ */
+function getChangelogEndIndex(lines) {
+  const validEndComments = [
+    '<!--end changelog-->',
+    '<!-- end changelog-->',
+    '<!--end changelog -->',
+    '<!-- end changelog -->',
+  ]
+
+  let index = -1
+  for (let i = 0; i < lines.length; i += 1) {
+    const processedLine = lines[i].trim().toLowerCase()
+    if (validEndComments.indexOf(processedLine) !== -1) {
+      if (index !== -1) {
+        throw new Error(`Multiple end changelog comments found. Line ${index + 1} and line ${i + 1}.`)
+      }
+      index = i
+    }
+  }
+
+  return index
+}
+
+/**
  * Given a PR description, find the index of the # CHANGELOG section
  * @param {String[]} lines - lines in the pr description
  * @returns {Number} the index of the # CHANGELOG section (or -1)
@@ -343,9 +371,14 @@ const utils = {
 
     const lines = pr.description.split('\n')
     const index = getChangelogSectionIndex(lines)
+    const endIndex = getChangelogEndIndex(lines)
 
     if (index >= 0) {
-      changelog = lines.slice(index + 1).join('\n')
+      if (endIndex > 0) {
+        changelog = lines.slice(index + 1, endIndex).join('\n')
+      } else {
+        changelog = lines.slice(index + 1).join('\n')
+      }
     }
 
     if (changelog.trim() === '') {
