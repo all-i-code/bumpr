@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.15.2] - 2023-04-25 ([PR 71](https://github.com/all-i-code/bumpr/pull/71))
+### Fixed
+- Merge build handling in github actions
+
+
+
+
 ## [2.15.1] - 2023-01-04 ([PR 68](https://github.com/all-i-code/bumpr/pull/68))
 ### Fixed
 - Regex for collecting markdown links to not include second closing paren if link is within parentheses. 
