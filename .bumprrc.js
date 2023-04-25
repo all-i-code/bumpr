@@ -1,17 +1,26 @@
 module.exports = {
+  ci: {
+    env: {
+      branch: 'GITHUB_REF_NAME',
+      buildNumber: 'GITHUB_RUN_NUMBER',
+      prNumber: 'PR_NUM',
+      prUrl: 'PR_URL',
+    },
+    provider: 'github',
+  },
   features: {
     changelog: {
-      enabled: true
+      enabled: true,
     },
     comments: {
-      enabled: true
+      enabled: true,
     },
     logging: {
       enabled: true,
-      file: '.bumpr-log.json'
+      file: '.bumpr-log.json',
     },
     release: {
-      enabled: true
-    }
-  }
+      enabled: true,
+    },
+  },
 }
