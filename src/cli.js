@@ -10,6 +10,7 @@ const GitHub = require('./vcs/github')
 
 // CI implementations
 const Circle = require('./ci/circle')
+const GitHubActions = require('./ci/github')
 const Travis = require('./ci/travis')
 
 /**
@@ -29,6 +30,10 @@ function getCi(config, vcs) {
 
   if (provider === 'circle') {
     return new Circle(config, vcs)
+  }
+
+  if (provider === 'github') {
+    return new GitHubActions(config, vcs)
   }
 
   throw new Error(`Invalid ci provider: ${chalk.red(provider)}`)
@@ -57,7 +62,7 @@ function getVcs(config) {
  * @returns {Promise} a promise resolved when command finishes, or rejected with failure
  */
 exports.createBumpr = function createBumpr() {
-  return utils.getConfig().then(config => {
+  return utils.getConfig().then((config) => {
     const vcs = getVcs(config)
     const ci = getCi(config, vcs)
     return new Bumpr({ci, config, vcs})

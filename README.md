@@ -322,10 +322,10 @@ is necessary to identify where `bumpr` should insert the changelog stanza it gra
   bumpr bump
   ```
 
-This command will now also take all the content below the `## CHANGELOG` line, and insert it wherever the
-`<!-- bumpr -->` line is within your `CHANGELOG.md` file (or whatever you've configured it to be named).
-It will give this new content a heading with the newly bumped version number, along with the date
-(in ISO `yyyy-mm-dd` format, based on UTC timezone)
+This command will now also take all the content below the `## CHANGELOG` line (up to but not including an optional
+`<!-- END CHANGELOG -->` comment) and insert it wherever the `<!-- bumpr -->` line is within your `CHANGELOG.md` file
+(or whatever you've configured it to be named). It will give this new content a heading with the newly bumped version
+number, along with the date (in ISO `yyyy-mm-dd` format, based on UTC timezone)
 
 So, if your project is at version `1.2.3` and you have a PR (#123) description that looks like:
 

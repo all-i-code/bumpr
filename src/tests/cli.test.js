@@ -2,12 +2,14 @@ jest.mock('../logger')
 jest.mock('../utils')
 jest.mock('../bumpr')
 jest.mock('../ci/circle')
+jest.mock('../ci/github')
 jest.mock('../ci/travis')
 jest.mock('../vcs/github')
 
 const chalk = require('chalk')
 const Bumpr = require('../bumpr')
 const Circle = require('../ci/circle')
+const GitHubActions = require('../ci/github')
 const Travis = require('../ci/travis')
 const {createBumpr} = require('../cli')
 const utils = require('../utils')
@@ -39,7 +41,7 @@ function itShouldCreateBumprWith(cfg, CiBase, VcsBase) {
 describe('createBumpr()', () => {
   const cfg = {
     ci: {provider: 'travis'},
-    vcs: {provider: 'github'}
+    vcs: {provider: 'github'},
   }
 
   let bumpr
@@ -52,7 +54,7 @@ describe('createBumpr()', () => {
   describe('When travis/github are configured', () => {
     beforeEach(() => {
       utils.getConfig.mockReturnValue(Promise.resolve(cfg))
-      return createBumpr().then(b => {
+      return createBumpr().then((b) => {
         bumpr = b
       })
     })
@@ -67,11 +69,11 @@ describe('createBumpr()', () => {
   describe('When circle/github are configured', () => {
     const circleCfg = {
       ci: {provider: 'circle'},
-      vcs: {provider: 'github'}
+      vcs: {provider: 'github'},
     }
     beforeEach(() => {
       utils.getConfig.mockReturnValue(Promise.resolve(circleCfg))
-      return createBumpr().then(b => {
+      return createBumpr().then((b) => {
         bumpr = b
       })
     })
@@ -83,6 +85,25 @@ describe('createBumpr()', () => {
     itShouldCreateBumprWith(circleCfg, Circle, GitHub)
   })
 
+  describe('When github/github are configured', () => {
+    const githubCfg = {
+      ci: {provider: 'github'},
+      vcs: {provider: 'github'},
+    }
+    beforeEach(() => {
+      utils.getConfig.mockReturnValue(Promise.resolve(githubCfg))
+      return createBumpr().then((b) => {
+        bumpr = b
+      })
+    })
+
+    it('should return an instance of Bumpr', () => {
+      expect(bumpr).toBeInstanceOf(Bumpr)
+    })
+
+    itShouldCreateBumprWith(githubCfg, GitHubActions, GitHub)
+  })
+
   describe('with invalid ci provider', () => {
     let err
     beforeEach(() => {
@@ -90,11 +111,11 @@ describe('createBumpr()', () => {
       utils.getConfig.mockReturnValue(
         Promise.resolve({
           ci: {provider: 'fizz-bang'},
-          vcs: {provider: 'github'}
+          vcs: {provider: 'github'},
         })
       )
 
-      return createBumpr().catch(e => {
+      return createBumpr().catch((e) => {
         err = e
       })
     })
@@ -110,11 +131,11 @@ describe('createBumpr()', () => {
       utils.getConfig.mockReturnValue(
         Promise.resolve({
           ci: {provider: 'travis'},
-          vcs: {provider: 'fizz-bang'}
+          vcs: {provider: 'fizz-bang'},
         })
       )
 
-      return createBumpr().catch(e => {
+      return createBumpr().catch((e) => {
         err = e
       })
     })

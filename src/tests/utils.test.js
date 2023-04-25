@@ -25,7 +25,7 @@ function mockJsonFileRead(data) {
  * @param {Object} env - the object in which to save the environment variables
  */
 function saveEnv(args, env) {
-  forEach(args, arg => {
+  forEach(args, (arg) => {
     env[arg] = process.env[arg] // eslint-disable-line no-param-reassign
   })
 }
@@ -97,7 +97,7 @@ function verifyGitHubTravisDefaults(ctx, propsToSkip = []) {
       it('should use the proper git user', () => {
         expect(ctx.config.ci.gitUser).toEqual({
           email: 'bumpr@domain.com',
-          name: 'Bumpr'
+          name: 'Bumpr',
         })
       })
     }
@@ -130,7 +130,7 @@ function verifyGitHubTravisDefaults(ctx, propsToSkip = []) {
       it('should have the proper vcs auth', () => {
         expect(ctx.config.computed.vcs.auth).toEqual({
           readToken: '12345',
-          writeToken: '54321'
+          writeToken: '54321',
         })
       })
     }
@@ -152,7 +152,7 @@ describe('utils', () => {
       })
 
       cosmiconfig.mockReturnValue({
-        search: jest.fn().mockReturnValue(resolver.promise)
+        search: jest.fn().mockReturnValue(resolver.promise),
       })
 
       realEnv = {}
@@ -172,7 +172,7 @@ describe('utils', () => {
           TRAVIS_BUILD_NUMBER: '123',
           GITHUB_READ_ONLY_TOKEN: '12345',
           GITHUB_TOKEN: '54321',
-          SLACK_URL: 'slack-webhook-url'
+          SLACK_URL: 'slack-webhook-url',
         }
       })
 
@@ -185,7 +185,7 @@ describe('utils', () => {
 
           resolver.resolve()
 
-          return utils.getConfig().then(config => {
+          return utils.getConfig().then((config) => {
             ctx.config = config
           })
         })
@@ -215,7 +215,7 @@ describe('utils', () => {
 
           resolver.resolve()
 
-          return utils.getConfig().then(config => {
+          return utils.getConfig().then((config) => {
             ctx.config = config
           })
         })
@@ -242,12 +242,12 @@ describe('utils', () => {
           resolver.resolve({
             config: {
               features: {
-                slack: {enabled: true}
-              }
-            }
+                slack: {enabled: true},
+              },
+            },
           })
 
-          return utils.getConfig().then(config => {
+          return utils.getConfig().then((config) => {
             ctx.config = config
           })
         })
@@ -267,19 +267,19 @@ describe('utils', () => {
               ci: {
                 gitUser: {
                   email: 'some.other.user@domain.com',
-                  name: 'Some Other User'
-                }
+                  name: 'Some Other User',
+                },
               },
               features: {
                 changelog: {
                   enabled: true,
-                  file: 'CHANGES.md'
-                }
-              }
-            }
+                  file: 'CHANGES.md',
+                },
+              },
+            },
           })
 
-          return utils.getConfig().then(config => {
+          return utils.getConfig().then((config) => {
             ctx.config = config
           })
         })
@@ -290,14 +290,14 @@ describe('utils', () => {
         it('should use the overwritten git user', () => {
           expect(ctx.config.ci.gitUser).toEqual({
             email: 'some.other.user@domain.com',
-            name: 'Some Other User'
+            name: 'Some Other User',
           })
         })
 
         it('should use the overwritten changelog settings', () => {
           expect(ctx.config.features.changelog).toEqual({
             enabled: true,
-            file: 'CHANGES.md'
+            file: 'CHANGES.md',
           })
         })
       })
@@ -310,7 +310,7 @@ describe('utils', () => {
 
           resolver.resolve()
 
-          return utils.getConfig().then(config => {
+          return utils.getConfig().then((config) => {
             ctx.config = config
           })
         })
@@ -331,7 +331,7 @@ describe('utils', () => {
           CIRCLE_BUILD_NUM: '123',
           GITHUB_READ_ONLY_TOKEN: '12345',
           GITHUB_TOKEN: '54321',
-          SLACK_URL: 'slack-webhook-url'
+          SLACK_URL: 'slack-webhook-url',
         }
 
         circleConfig = {
@@ -341,11 +341,11 @@ describe('utils', () => {
                 branch: 'CIRCLE_BRANCH',
                 buildNumber: 'CIRCLE_BUILD_NUM',
                 prNumber: 'CIRCLE_PR_NUMBER',
-                prUrl: 'CIRCLE_PULL_REQUEST'
+                prUrl: 'CIRCLE_PULL_REQUEST',
               },
-              provider: 'circle'
-            }
-          }
+              provider: 'circle',
+            },
+          },
         }
       })
 
@@ -358,7 +358,7 @@ describe('utils', () => {
 
           resolver.resolve(circleConfig)
 
-          return utils.getConfig().then(config => {
+          return utils.getConfig().then((config) => {
             ctx.config = config
           })
         })
@@ -388,7 +388,7 @@ describe('utils', () => {
 
           resolver.resolve(circleConfig)
 
-          return utils.getConfig().then(config => {
+          return utils.getConfig().then((config) => {
             ctx.config = config
           })
         })
@@ -419,7 +419,7 @@ describe('utils', () => {
 
           resolver.resolve(circleConfig)
 
-          return utils.getConfig().then(config => {
+          return utils.getConfig().then((config) => {
             ctx.config = config
           })
         })
@@ -450,7 +450,7 @@ describe('utils', () => {
 
           resolver.resolve(circleConfig)
 
-          return utils.getConfig().then(config => {
+          return utils.getConfig().then((config) => {
             ctx.config = config
           })
         })
@@ -480,7 +480,7 @@ describe('utils', () => {
 
           resolver.resolve(circleConfig)
 
-          return utils.getConfig().then(config => {
+          return utils.getConfig().then((config) => {
             ctx.config = config
           })
         })
@@ -497,6 +497,140 @@ describe('utils', () => {
         })
       })
     })
+
+    describe('GitHub/GitHub Actions', () => {
+      const ctx = {}
+      let ghConfig
+
+      beforeEach(() => {
+        env = {
+          GITHUB_REF_NAME: 'my-branch',
+          GITHUB_RUN_NUMBER: '123',
+          GITHUB_READ_ONLY_TOKEN: '12345',
+          GITHUB_TOKEN: '54321',
+          SLACK_URL: 'slack-webhook-url',
+        }
+
+        ghConfig = {
+          config: {
+            ci: {
+              env: {
+                branch: 'GITHUB_REF_NAME',
+                buildNumber: 'GITHUB_RUN_NUMBER',
+                prNumber: '',
+                prUrl: '',
+                ref: 'GITHUB_REF',
+              },
+              provider: 'github',
+            },
+          },
+        }
+      })
+
+      describe('when doing a pull request build', () => {
+        beforeEach(() => {
+          env.GITHUB_REF = 'refs/pull/13/merge'
+
+          saveEnv(Object.keys(env), realEnv)
+          setEnv(env)
+
+          resolver.resolve(ghConfig)
+
+          return utils.getConfig().then((config) => {
+            ctx.config = config
+          })
+        })
+
+        it('should configure cosmiconfig properly', () => {
+          expect(cosmiconfig).toHaveBeenCalledWith('bumpr')
+        })
+
+        verifyGitHubTravisDefaults(ctx, ['ci.provider'])
+        verifyFeatureDefaults(ctx)
+
+        it('should set isPr to true', () => {
+          expect(ctx.config.computed.ci.isPr).toBe(true)
+        })
+
+        it('should set prNumber to the PR number', () => {
+          expect(ctx.config.computed.ci.prNumber).toBe('13')
+        })
+      })
+
+      describe('when doing a pull request build (malformed REF)', () => {
+        beforeEach(() => {
+          env.GITHUB_REF = 'some-other-ref'
+
+          saveEnv(Object.keys(env), realEnv)
+          setEnv(env)
+
+          resolver.resolve(ghConfig)
+
+          return utils.getConfig().then((config) => {
+            ctx.config = config
+          })
+        })
+
+        it('should configure cosmiconfig properly', () => {
+          expect(cosmiconfig).toHaveBeenCalledWith('bumpr')
+        })
+
+        verifyGitHubTravisDefaults(ctx, ['ci.provider'])
+        verifyFeatureDefaults(ctx)
+
+        it('should set isPr to true', () => {
+          expect(ctx.config.computed.ci.isPr).toBe(false)
+        })
+
+        it('should set prNumber to the PR number', () => {
+          expect(ctx.config.computed.ci.prNumber).toBe('false')
+        })
+      })
+
+      describe('when doing a merge build', () => {
+        beforeEach(() => {
+          env.GITHUB_REF = 'main'
+
+          saveEnv(Object.keys(env), realEnv)
+          setEnv(env)
+
+          resolver.resolve(ghConfig)
+
+          return utils.getConfig().then((config) => {
+            ctx.config = config
+          })
+        })
+
+        verifyGitHubTravisDefaults(ctx, ['ci.provider'])
+        verifyFeatureDefaults(ctx)
+
+        it('should set isPr to false', () => {
+          expect(ctx.config.computed.ci.isPr).toBe(false)
+        })
+
+        it('should set prNumber to false', () => {
+          expect(ctx.config.computed.ci.prNumber).toBe('false')
+        })
+      })
+
+      describe('when pr env is missing', () => {
+        beforeEach(() => {
+          env.GITHUB_REF = undefined
+          saveEnv(Object.keys(env), realEnv)
+          setEnv(env)
+
+          resolver.resolve(ghConfig)
+
+          return utils.getConfig().then((config) => {
+            ctx.config = config
+          })
+        })
+
+        it('should not consider it a PR', () => {
+          expect(ctx.config.computed.ci.isPr).toBe(false)
+        })
+      })
+    })
   })
 
   describe('.getValidatedScope()', () => {
@@ -504,12 +638,12 @@ describe('utils', () => {
     const prNumber = '12345'
     const scopes = ['patch', 'minor', 'major', 'none']
 
-    forEach(scopes, scope => {
+    forEach(scopes, (scope) => {
       it(`should handle a scope of "${scope}"`, () => {
         const ret = utils.getValidatedScope({
           scope,
           prNumber,
-          prUrl
+          prUrl,
         })
         expect(ret).toBe(scope)
       })
@@ -520,7 +654,7 @@ describe('utils', () => {
         utils.getValidatedScope({
           scope: 'foo-bar',
           prNumber,
-          prUrl
+          prUrl,
         })
       }
 
@@ -531,46 +665,46 @@ describe('utils', () => {
       const maxScopes = {
         none: {
           valid: ['none'],
-          invalid: ['patch', 'minor', 'major']
+          invalid: ['patch', 'minor', 'major'],
         },
         patch: {
           valid: ['none', 'patch'],
-          invalid: ['minor', 'major']
+          invalid: ['minor', 'major'],
         },
         minor: {
           valid: ['none', 'patch', 'minor'],
-          invalid: ['major']
+          invalid: ['major'],
         },
         major: {
           valid: ['none', 'patch', 'minor', 'major'],
-          invalid: []
-        }
+          invalid: [],
+        },
       }
 
-      Object.keys(maxScopes).forEach(maxScope => {
+      Object.keys(maxScopes).forEach((maxScope) => {
         const {invalid, valid} = maxScopes[maxScope]
         describe(`with a maxScope of "${maxScope}"`, () => {
-          valid.forEach(scope => {
+          valid.forEach((scope) => {
             it(`should be fine when scope is "${scope}"`, () => {
               const ret = utils.getValidatedScope({
                 scope,
                 maxScope,
                 prNumber,
-                prUrl
+                prUrl,
               })
 
               expect(ret).toBe(scope)
             })
           })
 
-          invalid.forEach(scope => {
+          invalid.forEach((scope) => {
             it(`should throw an error when scope is "${scope}"`, () => {
               const fn = () => {
                 utils.getValidatedScope({
                   scope,
                   maxScope,
                   prNumber,
-                  prUrl
+                  prUrl,
                 })
               }
               const prStr = `PR #${prNumber} (${prUrl})`
@@ -590,7 +724,7 @@ describe('utils', () => {
       pr = {
         description: '',
         number: '12345',
-        url: 'my-pr-url'
+        url: 'my-pr-url',
       }
     })
 
@@ -711,9 +845,10 @@ You can disable automated security fix PRs for this repo from the [Security Aler
 
   describe('.getChangelogForPr()', () => {
     const link = 'https://github.com/all-i-code/bumpr#changelog'
-    const errorMsg = 'No CHANGELOG content found in PR description.\n'
-      + 'Please add a `## CHANGELOG` section to your PR description with some content describing your change.\n'
-      + `See ${link} for details.`
+    const errorMsg =
+      'No CHANGELOG content found in PR description.\n' +
+      'Please add a `## CHANGELOG` section to your PR description with some content describing your change.\n' +
+      `See ${link} for details.`
 
     let pr
     let changelog
@@ -722,7 +857,7 @@ You can disable automated security fix PRs for this repo from the [Security Aler
         description: '',
         name: '',
         number: '12345',
-        url: 'my-pr-url'
+        url: 'my-pr-url',
       }
     })
 
@@ -815,6 +950,29 @@ You can disable automated security fix PRs for this repo from the [Security Aler
         })
       })
     })
+
+    describe('when end changelog comment is present', () => {
+      beforeEach(() => {
+        pr.description = '##changelog\r\n## Fixes\nFoo, Bar, Baz\n## Features\nFizz\n<!-- END CHANGELOG-->\nHi\nThere'
+        changelog = utils.getChangelogForPr(pr, [])
+      })
+
+      it('should grab the changelog text', () => {
+        expect(changelog).toEqual('## Fixes\nFoo, Bar, Baz\n## Features\nFizz')
+      })
+    })
+
+    describe('when multiple end changelog comments are present', () => {
+      beforeEach(() => {
+        pr.description = '##changelog\r\n## Fixes\nFoo, Bar\n<!-- END CHANGELOG -->\nHi\n<!-- END CHANGELOG-->\nThere'
+      })
+
+      it('should throw an error', () => {
+        expect(() => {
+          utils.getChangelogForPr(pr, [])
+        }).toThrow(Error, 'Multiple end changelog comment found. Line 1 and line 4.')
+      })
+    })
   })
 
   describe('.maybePostComment()', () => {
@@ -829,10 +987,10 @@ You can disable automated security fix PRs for this repo from the [Security Aler
         computed: {
           ci: {
             isPr: true,
-            prNumber: '123'
-          }
+            prNumber: '123',
+          },
         },
-        isEnabled: jest.fn()
+        isEnabled: jest.fn(),
       }
 
       resolver = {}
@@ -842,7 +1000,7 @@ You can disable automated security fix PRs for this repo from the [Security Aler
       })
 
       vcs = {
-        postComment: jest.fn().mockReturnValue(resolver.promise)
+        postComment: jest.fn().mockReturnValue(resolver.promise),
       }
 
       result = null
@@ -850,14 +1008,14 @@ You can disable automated security fix PRs for this repo from the [Security Aler
     })
 
     describe('when feature is not enabled', () => {
-      beforeEach(done => {
+      beforeEach((done) => {
         config.isEnabled.mockReturnValue(false)
         utils
           .maybePostComment(config, vcs, 'fizz-bang')
-          .then(resp => {
+          .then((resp) => {
             result = resp
           })
-          .catch(err => {
+          .catch((err) => {
             error = err
           })
 
@@ -880,16 +1038,16 @@ You can disable automated security fix PRs for this repo from the [Security Aler
     })
 
     describe('when feature is enabled, but isPr is false', () => {
-      beforeEach(done => {
+      beforeEach((done) => {
         config.computed.ci.isPr = false
-        config.isEnabled.mockImplementation(name => name === 'comments')
+        config.isEnabled.mockImplementation((name) => name === 'comments')
 
         utils
           .maybePostComment(config, vcs, 'fizz-bang')
-          .then(resp => {
+          .then((resp) => {
             result = resp
           })
-          .catch(err => {
+          .catch((err) => {
             error = err
           })
 
@@ -914,17 +1072,17 @@ You can disable automated security fix PRs for this repo from the [Security Aler
     describe('when feature is enabled, and isPr is true, but SKIP_COMMENTS is in env', () => {
       let realSkipComments
 
-      beforeEach(done => {
+      beforeEach((done) => {
         realSkipComments = process.env.SKIP_COMMENTS
         process.env.SKIP_COMMENTS = '1'
         config.computed.ci.isPr = true
-        config.isEnabled.mockImplementation(name => name === 'comments')
+        config.isEnabled.mockImplementation((name) => name === 'comments')
         utils
           .maybePostComment(config, vcs, 'fizz-bang')
-          .then(resp => {
+          .then((resp) => {
             result = resp
           })
-          .catch(err => {
+          .catch((err) => {
             error = err
           })
 
@@ -958,13 +1116,13 @@ You can disable automated security fix PRs for this repo from the [Security Aler
       let promise
 
       beforeEach(() => {
-        config.isEnabled.mockImplementation(name => name === 'comments')
+        config.isEnabled.mockImplementation((name) => name === 'comments')
         promise = utils
           .maybePostComment(config, vcs, 'fizz-bang')
-          .then(resp => {
+          .then((resp) => {
             result = resp
           })
-          .catch(err => {
+          .catch((err) => {
             error = err
             throw err
           })
@@ -998,7 +1156,7 @@ You can disable automated security fix PRs for this repo from the [Security Aler
       })
 
       describe('when postComment fails', () => {
-        beforeEach(done => {
+        beforeEach((done) => {
           resolver.reject(new Error('Aw snap!'))
           promise.catch(() => {
             done()
@@ -1020,13 +1178,13 @@ You can disable automated security fix PRs for this repo from the [Security Aler
       let promise
 
       beforeEach(() => {
-        config.isEnabled.mockImplementation(name => name === 'comments')
+        config.isEnabled.mockImplementation((name) => name === 'comments')
         promise = utils
           .maybePostComment(config, vcs, 'fizz-bang', true)
-          .then(resp => {
+          .then((resp) => {
             result = resp
           })
-          .catch(err => {
+          .catch((err) => {
             error = err
             throw err
           })
@@ -1060,7 +1218,7 @@ You can disable automated security fix PRs for this repo from the [Security Aler
       })
 
       describe('when postComment fails', () => {
-        beforeEach(done => {
+        beforeEach((done) => {
           resolver.reject(new Error('Aw snap!'))
           promise.catch(() => {
             done()
@@ -1092,10 +1250,10 @@ You can disable automated security fix PRs for this repo from the [Security Aler
         computed: {
           ci: {
             isPr: true,
-            prNumber: '123'
-          }
+            prNumber: '123',
+          },
         },
-        isEnabled: jest.fn()
+        isEnabled: jest.fn(),
       }
 
       resolver = {}
@@ -1105,7 +1263,7 @@ You can disable automated security fix PRs for this repo from the [Security Aler
       })
 
       vcs = {
-        postComment: jest.fn().mockReturnValue(resolver.promise)
+        postComment: jest.fn().mockReturnValue(resolver.promise),
       }
 
       func = jest.fn()
@@ -1118,10 +1276,10 @@ You can disable automated security fix PRs for this repo from the [Security Aler
         func.mockReturnValue('foo')
         return utils
           .maybePostCommentOnError(config, vcs, func)
-          .then(resp => {
+          .then((resp) => {
             result = resp
           })
-          .catch(err => {
+          .catch((err) => {
             error = err
             throw err
           })
@@ -1152,14 +1310,14 @@ You can disable automated security fix PRs for this repo from the [Security Aler
       })
 
       describe('and feature is not enabled', () => {
-        beforeEach(done => {
+        beforeEach((done) => {
           config.isEnabled.mockReturnValue(false)
           utils
             .maybePostCommentOnError(config, vcs, func)
-            .then(resp => {
+            .then((resp) => {
               result = resp
             })
-            .catch(err => {
+            .catch((err) => {
               error = err
               done()
             })
@@ -1183,15 +1341,15 @@ You can disable automated security fix PRs for this repo from the [Security Aler
       })
 
       describe('and feature is enabled but isPr is false', () => {
-        beforeEach(done => {
+        beforeEach((done) => {
           config.computed.ci.isPr = false
-          config.isEnabled.mockImplementation(name => name === 'comments')
+          config.isEnabled.mockImplementation((name) => name === 'comments')
           utils
             .maybePostCommentOnError(config, vcs, func)
-            .then(resp => {
+            .then((resp) => {
               result = resp
             })
-            .catch(err => {
+            .catch((err) => {
               error = err
               done()
             })
@@ -1219,13 +1377,13 @@ You can disable automated security fix PRs for this repo from the [Security Aler
 
         beforeEach(() => {
           config.computed.ci.isPr = true
-          config.isEnabled.mockImplementation(name => name === 'comments')
+          config.isEnabled.mockImplementation((name) => name === 'comments')
           promise = utils
             .maybePostCommentOnError(config, vcs, func)
-            .then(resp => {
+            .then((resp) => {
               result = resp
             })
-            .catch(err => {
+            .catch((err) => {
               error = err
               throw err
             })
@@ -1248,7 +1406,7 @@ You can disable automated security fix PRs for this repo from the [Security Aler
         })
 
         describe('when postComment succeeds', () => {
-          beforeEach(done => {
+          beforeEach((done) => {
             resolver.resolve()
             promise.catch(() => {
               done()
@@ -1265,7 +1423,7 @@ You can disable automated security fix PRs for this repo from the [Security Aler
         })
 
         describe('when postComment fails', () => {
-          beforeEach(done => {
+          beforeEach((done) => {
             resolver.reject(new Error('Aw snap!'))
             promise.catch(() => {
               done()
