@@ -132,7 +132,8 @@ function processEnv(config) {
   // If still no prNumber, check ref (some CIs don't have prNumber or prUrl)
   if (config.computed.ci.prNumber === 'false') {
     const parts = getEnv(config.ci.env.ref, '').split('/')
-    config.computed.ci.prNumber = parts[parts.length - 2] || 'false'
+    const prNumber = parseInt(parts[parts.length - 2], 10)
+    config.computed.ci.prNumber = prNumber ? String(prNumber) : 'false'
   }
 
   config.computed.ci.isPr = config.computed.ci.prNumber !== 'false'

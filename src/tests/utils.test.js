@@ -589,7 +589,7 @@ describe('utils', () => {
 
       describe('when doing a merge build', () => {
         beforeEach(() => {
-          env.GITHUB_REF = 'main'
+          env.GITHUB_REF = 'refs/heads/main'
 
           saveEnv(Object.keys(env), realEnv)
           setEnv(env)
