@@ -3,8 +3,9 @@ module.exports = {
     env: {
       branch: 'GITHUB_REF_NAME',
       buildNumber: 'GITHUB_RUN_NUMBER',
-      prNumber: 'PR_NUM',
-      prUrl: 'PR_URL',
+      prNumber: '',
+      prUrl: '',
+      ref: 'GITHUB_REF',
     },
     provider: 'github',
   },

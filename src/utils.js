@@ -126,9 +126,13 @@ function processEnv(config) {
   // If no prNumber, check prUrl (some CIs don't have prNumber on branch builds)
   if (config.computed.ci.prNumber === 'false') {
     const parts = getEnv(config.ci.env.prUrl, '').split('/')
-    if (parts.length > 1) {
-      config.computed.ci.prNumber = parts[parts.length - 1] || 'false'
-    }
+    config.computed.ci.prNumber = parts[parts.length - 1] || 'false'
+  }
+
+  // If still no prNumber, check ref (some CIs don't have prNumber or prUrl)
+  if (config.computed.ci.prNumber === 'false') {
+    const parts = getEnv(config.ci.env.ref, '').split('/')
+    config.computed.ci.prNumber = parts[parts.length - 2] || 'false'
   }
 
   config.computed.ci.isPr = config.computed.ci.prNumber !== 'false'
@@ -173,6 +177,7 @@ const utils = {
               buildNumber: 'TRAVIS_BUILD_NUMBER',
               prNumber: 'TRAVIS_PULL_REQUEST',
               prUrl: '',
+              ref: '',
             },
             gitUser: {
               email: 'bumpr@domain.com',

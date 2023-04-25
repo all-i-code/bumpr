@@ -497,6 +497,140 @@ describe('utils', () => {
         })
       })
     })
+
+    describe('GitHub/GitHub Actions', () => {
+      const ctx = {}
+      let ghConfig
+
+      beforeEach(() => {
+        env = {
+          GITHUB_REF_NAME: 'my-branch',
+          GITHUB_RUN_NUMBER: '123',
+          GITHUB_READ_ONLY_TOKEN: '12345',
+          GITHUB_TOKEN: '54321',
+          SLACK_URL: 'slack-webhook-url',
+        }
+
+        ghConfig = {
+          config: {
+            ci: {
+              env: {
+                branch: 'GITHUB_REF_NAME',
+                buildNumber: 'GITHUB_RUN_NUMBER',
+                prNumber: '',
+                prUrl: '',
+                ref: 'GITHUB_REF',
+              },
+              provider: 'github',
+            },
+          },
+        }
+      })
+
+      describe('when doing a pull request build', () => {
+        beforeEach(() => {
+          env.GITHUB_REF = 'refs/pull/13/merge'
+
+          saveEnv(Object.keys(env), realEnv)
+          setEnv(env)
+
+          resolver.resolve(ghConfig)
+
+          return utils.getConfig().then((config) => {
+            ctx.config = config
+          })
+        })
+
+        it('should configure cosmiconfig properly', () => {
+          expect(cosmiconfig).toHaveBeenCalledWith('bumpr')
+        })
+
+        verifyGitHubTravisDefaults(ctx, ['ci.provider'])
+        verifyFeatureDefaults(ctx)
+
+        it('should set isPr to true', () => {
+          expect(ctx.config.computed.ci.isPr).toBe(true)
+        })
+
+        it('should set prNumber to the PR number', () => {
+          expect(ctx.config.computed.ci.prNumber).toBe('13')
+        })
+      })
+
+      describe('when doing a pull request build (malformed REF)', () => {
+        beforeEach(() => {
+          env.GITHUB_REF = 'some-other-ref'
+
+          saveEnv(Object.keys(env), realEnv)
+          setEnv(env)
+
+          resolver.resolve(ghConfig)
+
+          return utils.getConfig().then((config) => {
+            ctx.config = config
+          })
+        })
+
+        it('should configure cosmiconfig properly', () => {
+          expect(cosmiconfig).toHaveBeenCalledWith('bumpr')
+        })
+
+        verifyGitHubTravisDefaults(ctx, ['ci.provider'])
+        verifyFeatureDefaults(ctx)
+
+        it('should set isPr to true', () => {
+          expect(ctx.config.computed.ci.isPr).toBe(false)
+        })
+
+        it('should set prNumber to the PR number', () => {
+          expect(ctx.config.computed.ci.prNumber).toBe('false')
+        })
+      })
+
+      describe('when doing a merge build', () => {
+        beforeEach(() => {
+          env.GITHUB_REF = 'main'
+
+          saveEnv(Object.keys(env), realEnv)
+          setEnv(env)
+
+          resolver.resolve(ghConfig)
+
+          return utils.getConfig().then((config) => {
+            ctx.config = config
+          })
+        })
+
+        verifyGitHubTravisDefaults(ctx, ['ci.provider'])
+        verifyFeatureDefaults(ctx)
+
+        it('should set isPr to false', () => {
+          expect(ctx.config.computed.ci.isPr).toBe(false)
+        })
+
+        it('should set prNumber to false', () => {
+          expect(ctx.config.computed.ci.prNumber).toBe('false')
+        })
+      })
+
+      describe('when pr env is missing', () => {
+        beforeEach(() => {
+          env.GITHUB_REF = undefined
+          saveEnv(Object.keys(env), realEnv)
+          setEnv(env)
+
+          resolver.resolve(ghConfig)
+
+          return utils.getConfig().then((config) => {
+            ctx.config = config
+          })
+        })
+
+        it('should not consider it a PR', () => {
+          expect(ctx.config.computed.ci.isPr).toBe(false)
+        })
+      })
+    })
   })
 
   describe('.getValidatedScope()', () => {
