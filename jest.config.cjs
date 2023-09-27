@@ -9,6 +9,6 @@ module.exports = {
   testEnvironment: 'node',
   testMatch: ['<rootDir>/**/tests/*.test.js'],
   transform: {
-    '^.+\\.[t|j]sx?$': 'babel-jest',
+    '^.+\\.[t|j]sx?$': ['babel-jest', {plugins: ['babel-plugin-transform-import-meta']}],
   },
 }

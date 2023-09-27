@@ -3,12 +3,9 @@
 /* eslint-disable no-console */
 
 import chalk from 'chalk'
-import {readFileSync} from 'fs'
 import program from 'commander'
-import path from 'path'
 import {createBumpr} from '../src/cli.js'
-
-const {name, version} = JSON.parse(readFileSync(path.join(__dirname, '..', 'package.json'), {encoding: 'utf-8'}))
+import {name, version} from '../src/package.js'
 
 function handleError(error) {
   const msg = error.message ? error.message : error

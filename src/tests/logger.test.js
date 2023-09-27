@@ -1,8 +1,5 @@
-import {readFileSync} from 'fs'
-import path from 'path'
 import {Logger} from '../logger.js'
-
-const {name} = JSON.parse(readFileSync(path.join(__dirname, '..', '..', 'package.json'), {encoding: 'utf-8'}))
+import {name} from '../package.js'
 
 /* eslint-disable no-console */
 

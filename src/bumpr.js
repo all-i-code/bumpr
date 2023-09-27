@@ -1,4 +1,4 @@
-import {existsSync as fsExistsSync, readFileSync as fsReadFileSync} from 'fs'
+import {existsSync as fsExistsSync} from 'fs'
 import {readFile as fsReadFile, writeFile as fsWriteFile} from 'fs/promises'
 import _ from 'lodash'
 import mime from 'mime-types'
@@ -13,10 +13,10 @@ import {createReadStream, exec, existsSync, readdir, statSync, writeFile} from '
 import MissingKeyError from './errors/missing-key.js'
 import NoLogFileError from './errors/no-log-file.js'
 import {Logger} from './logger.js'
+import {name as pkgName} from './package.js'
 import utils from './utils.js'
 
 const {cloneDeep, get} = _
-const {name: pkgName} = JSON.parse(fsReadFileSync(path.join(__dirname, '..', 'package.json'), {encoding: 'utf-8'}))
 
 /**
  * Get the array of package names in this workspace project (or an empty array if not using workspaces)

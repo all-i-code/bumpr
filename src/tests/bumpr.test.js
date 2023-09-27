@@ -1,5 +1,4 @@
 import cp from 'child_process'
-import {readFileSync} from 'fs'
 import _ from 'lodash'
 import fetch from 'node-fetch'
 import moment from 'moment-timezone'
@@ -10,9 +9,8 @@ import util from 'util'
 import Bumpr from '../bumpr.js'
 import {Logger} from '../logger.js'
 import {createReadStream, exec, existsSync, readdir, statSync, writeFile} from '../node-wrappers.js'
+import {name as pkgName} from '../package.js'
 import utils from '../utils.js'
-
-const pkgJson = JSON.parse(readFileSync(path.join(__dirname, '..', '..', 'package.json'), {encoding: 'utf-8'}))
 
 jest.mock('node-fetch')
 jest.mock('replace-in-file')
@@ -1725,7 +1723,7 @@ describe('Bumpr', () => {
       })
 
       it('should commit with version bump message', () => {
-        const msg = `[ci skip] [${pkgJson.name}] Version bump to 1.2.3`
+        const msg = `[ci skip] [${pkgName}] Version bump to 1.2.3`
         const descr = 'From CI build 12345'
         expect(bumpr.ci.commit).toHaveBeenCalledWith(msg, descr)
       })
