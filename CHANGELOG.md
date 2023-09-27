@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.16.1] - 2023-09-27 ([PR 74](https://github.com/all-i-code/bumpr/pull/74))
+### Removed
+- Experimental JSON import
+
+
+
+
 ## [2.16.0] - 2023-09-27 ([PR 73](https://github.com/all-i-code/bumpr/pull/73))
 ### Removed
 - Dependency on `versiony` , now using `semver` directly, to hopefully stop messing with trailing newline

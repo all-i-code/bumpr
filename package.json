@@ -1,6 +1,6 @@
 {
   "name": "bumpr",
-  "version": "2.16.0",
+  "version": "2.16.1",
   "description": "Bump the version of an package based on a Pull Request",
   "type": "module",
   "bin": {
