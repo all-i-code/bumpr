@@ -5,7 +5,9 @@ import fetch from 'node-fetch'
 import path from 'path'
 import Promise from 'promise'
 import replace from 'replace-in-file'
-import versiony from 'versiony'
+import semverInc from 'semver/functions/inc.js'
+import semverPrerelease from 'semver/functions/prerelease.js'
+import {readFileSync, writeFileSync} from 'fs'
 import pkgJson from '../package.json' assert {type: 'json'}
 import {createReadStream, exec, existsSync, readdir, statSync, writeFile} from './node-wrappers.js'
 import MissingKeyError from './errors/missing-key.js'
@@ -34,14 +36,11 @@ function getPackages() {
 
 /**
  * Perform the patch bump, either using .patch() or .preRelease() (the latter if there's a pre-release tag)
- * @param {*} v - the versiony instance
+ * @param {string} version - the source version
+ * @returns string
  */
-function performPatch(v) {
-  if (v.model.hasPreRelease()) {
-    v.preRelease()
-  } else {
-    v.patch()
-  }
+function performPatch(version) {
+  return semverInc(version, semverPrerelease(version) ? 'prerelease' : 'patch')
 }
 
 function postBody(url, body) {
@@ -406,26 +405,28 @@ class Bumpr {
       pkgs.forEach((pkg) => {
         files.forEach((filename) => {
           const fullPath = pkg === '.' ? filename : path.join('packages', pkg, filename)
-          const v = versiony.from(fullPath)
+          const src = JSON.parse(readFileSync(fullPath, {encoding: 'utf-8'}))
+          let newVersion = src.version
           switch (newInfo.scope) {
             case 'patch':
-              performPatch(v)
+              newVersion = performPatch(src.version)
               break
 
             case 'minor':
-              v.newMinor()
+              newVersion = semverInc(src.version, 'minor')
               break
 
             case 'major':
-              v.newMajor()
+              newVersion = semverInc(src.version, 'major')
               break
 
             default:
               throw new Error(`Invalid scope [${newInfo.scope}]`)
           }
 
-          const versionInfo = v.to(fullPath).end({quiet: true})
-          newInfo.version = versionInfo.version // eslint-disable-line no-param-reassign
+          src.version = newVersion
+          writeFileSync(fullPath, JSON.stringify(src, null, 2), {encoding: 'utf-8'})
+          newInfo.version = newVersion
           newInfo.modifiedFiles.push(fullPath)
         })
       })
