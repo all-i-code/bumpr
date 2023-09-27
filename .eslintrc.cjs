@@ -12,16 +12,6 @@ module.exports = {
   },
 
   parser: '@babel/eslint-parser',
-  parserOptions: {
-    babelOptions: {
-      plugins: [
-        '@babel/plugin-syntax-import-assertions'
-      ],
-    },
-    requireConfigFile: false,
-    sourceType: 'module',
-  },
-
   rules: {
     'arrow-parens': 'off', // conflicts with prettier
     'comma-dangle': ['error', 'only-multiline'], // conflicts with prettier
