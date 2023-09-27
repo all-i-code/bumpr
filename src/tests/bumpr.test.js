@@ -1,22 +1,22 @@
+import cp from 'child_process'
+import {set} from 'lodash'
+import fetch from 'node-fetch'
+import moment from 'moment-timezone'
+import path from 'path'
+import Promise from 'promise'
+import replace from 'replace-in-file'
+import util from 'util'
+import pkgJson from '../../package.json'
+import Bumpr from '../bumpr'
+import {Logger} from '../logger'
+import {createReadStream, exec, existsSync, readdir, statSync, writeFile} from '../node-wrappers'
+import utils from '../utils'
+
 jest.mock('node-fetch')
 jest.mock('replace-in-file')
 jest.mock('../node-wrappers')
 jest.mock('../logger')
 jest.mock('../utils')
-
-const cp = require('child_process')
-const {set} = require('lodash')
-const fetch = require('node-fetch')
-const moment = require('moment-timezone')
-const path = require('path')
-const Promise = require('promise')
-const replace = require('replace-in-file')
-const util = require('util')
-const pkgJson = require('../../package.json')
-const Bumpr = require('../bumpr')
-const {Logger} = require('../logger')
-const {createReadStream, exec, existsSync, readdir, statSync, writeFile} = require('../node-wrappers')
-const utils = require('../utils')
 
 const realExec = util.promisify(cp.exec)
 

@@ -1,5 +1,5 @@
-const {Logger} = require('../logger')
-const {name} = require('../../package.json')
+import {Logger} from '../logger'
+import {name} from '../../package.json'
 
 /* eslint-disable no-console */
 

@@ -1,13 +1,13 @@
+import {readFileSync} from 'fs'
+import {cosmiconfig} from 'cosmiconfig'
+import {forEach, forIn} from 'lodash'
+import path from 'path'
+
+import utils from '../utils'
+
 jest.mock('cosmiconfig')
 jest.mock('fs')
 jest.mock('../logger')
-
-const {readFileSync} = require('fs')
-const {cosmiconfig} = require('cosmiconfig')
-const {forEach, forIn} = require('lodash')
-const path = require('path')
-
-const utils = require('../utils')
 
 function mockJsonFileRead(data) {
   readFileSync.mockImplementationOnce(() => {

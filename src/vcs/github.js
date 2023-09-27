@@ -1,11 +1,9 @@
-require('../typedefs')
+import {readFileSync} from 'fs'
+import fetch from 'node-fetch'
+import path from 'path'
 
-const {readFileSync} = require('fs')
-const fetch = require('node-fetch')
-const path = require('path')
-
-const {Logger} = require('../logger')
-const {exec} = require('../node-wrappers')
+import {Logger} from '../logger'
+import {exec} from '../node-wrappers'
 
 /**
  * Get fetch options
@@ -47,7 +45,7 @@ function convertPr(ghPr) {
  * @class
  * @implements {Vcs}
  */
-class GitHub {
+export default class GitHub {
   /**
    * @param {Config} config - the configuration object
    */
@@ -250,5 +248,3 @@ class GitHub {
       })
   }
 }
-
-module.exports = GitHub

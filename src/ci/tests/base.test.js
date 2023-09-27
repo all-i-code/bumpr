@@ -1,9 +1,9 @@
+import {Logger} from '../../logger'
+import {exec} from '../../node-wrappers'
+import CiBase from '../base'
+
 jest.mock('../../node-wrappers')
 jest.mock('../../logger')
-
-const {Logger} = require('../../logger')
-const {exec} = require('../../node-wrappers')
-const CiBase = require('../base')
 
 describe('CI / Base', () => {
   let base

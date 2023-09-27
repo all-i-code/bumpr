@@ -1,13 +1,11 @@
 /* eslint no-useless-escape: 0 */
 
-require('./typedefs')
+import {cosmiconfig} from 'cosmiconfig'
+import fs from 'fs'
+import path from 'path'
+import {get, isArray, isObject, set} from 'lodash'
 
-const {cosmiconfig} = require('cosmiconfig')
-const fs = require('fs')
-const path = require('path')
-const {get, isArray, isObject, set} = require('lodash')
-
-const {Logger} = require('./logger')
+import {Logger} from './logger'
 
 const GFM_CHECKBOX_CHECKED_REGEX = /(-|\*)\s+\[x\].*?#(\w+)#/gi
 const GFM_CHECKBOX_UNCHECKED_REGEX = /(-|\*)\s+\[\s\].*?#(\w+)#/gi
@@ -154,6 +152,7 @@ function processEnv(config) {
   /* eslint-enable no-param-reassign */
 }
 
+// eslint-disable-next-line import/prefer-default-export
 const utils = {
   /**
    * Read in the config from a file and apply defaults
@@ -469,4 +468,4 @@ const utils = {
   },
 }
 
-module.exports = utils
+export default utils
