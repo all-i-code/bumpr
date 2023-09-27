@@ -9,7 +9,7 @@ import Promise from 'promise'
 import replace from 'replace-in-file'
 import semverInc from 'semver/functions/inc.js'
 import semverPrerelease from 'semver/functions/prerelease.js'
-import {createReadStream, exec, existsSync, readdir, statSync, writeFile} from './node-wrappers.js'
+import {createReadStream, exec, readdir, statSync, writeFile} from './node-wrappers.js'
 import MissingKeyError from './errors/missing-key.js'
 import NoLogFileError from './errors/no-log-file.js'
 import {Logger} from './logger.js'
@@ -23,15 +23,10 @@ const {cloneDeep, get} = _
  * @returns {Promise} a promise - resolved with an array of package names or rejected on error
  */
 function getPackages() {
-  if (existsSync('packages') && statSync('packages').isDirectory()) {
-    return readdir('packages', {withFileTypes: true}).then((entries) =>
-      // prettier formats it this way (@job13er 2022-06-02)
-      // eslint-disable-next-line implicit-arrow-linebreak
-      entries.filter((e) => e.isDirectory()).map((e) => e.name)
-    )
-  }
-
-  return Promise.resolve(['.'])
+  return exec('npm query .workspace', {cwd: '.', maxBuffer: 1024 * 1024}).then((output) => {
+    const packages = JSON.parse(output).map((entry) => entry.location)
+    return packages.length === 0 ? ['.'] : packages
+  })
 }
 
 /**
@@ -203,10 +198,7 @@ class Bumpr {
               packages.map((pkg) =>
                 // prettier formats it this way (@job13er 2022-06-02)
                 // eslint-disable-next-line implicit-arrow-linebreak
-                exec('npm publish .', {
-                  cwd: pkg === '.' ? pkg : path.join('packages', pkg),
-                  maxBuffer: 1024 * 1024,
-                })
+                exec('npm publish .', {cwd: pkg, maxBuffer: 1024 * 1024})
               )
             )
           )
@@ -432,7 +424,7 @@ class Bumpr {
       const allFiles = []
       pkgs.forEach((pkg) => {
         files.forEach((filename) => {
-          const fullPath = pkg === '.' ? filename : path.join('packages', pkg, filename)
+          const fullPath = path.join(pkg, filename)
           if (fsExistsSync(fullPath)) {
             allFiles.push(fullPath)
           }
