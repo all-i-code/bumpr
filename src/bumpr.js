@@ -1,3 +1,5 @@
+import {existsSync as fsExistsSync, readFileSync as fsReadFileSync} from 'fs'
+import {readFile as fsReadFile, writeFile as fsWriteFile} from 'fs/promises'
 import _ from 'lodash'
 import mime from 'mime-types'
 import moment from 'moment-timezone'
@@ -7,8 +9,6 @@ import Promise from 'promise'
 import replace from 'replace-in-file'
 import semverInc from 'semver/functions/inc.js'
 import semverPrerelease from 'semver/functions/prerelease.js'
-import {readFileSync, writeFileSync} from 'fs'
-import pkgJson from '../package.json' assert {type: 'json'}
 import {createReadStream, exec, existsSync, readdir, statSync, writeFile} from './node-wrappers.js'
 import MissingKeyError from './errors/missing-key.js'
 import NoLogFileError from './errors/no-log-file.js'
@@ -16,7 +16,7 @@ import {Logger} from './logger.js'
 import utils from './utils.js'
 
 const {cloneDeep, get} = _
-const {name: pkgName} = pkgJson
+const {name: pkgName} = JSON.parse(fsReadFileSync(path.join(__dirname, '..', 'package.json'), {encoding: 'utf-8'}))
 
 /**
  * Get the array of package names in this workspace project (or an empty array if not using workspaces)
@@ -48,6 +48,33 @@ function postBody(url, body) {
     headers: {'Content-Type': 'application/json'},
     method: 'POST',
     body: JSON.stringify(body),
+  })
+}
+
+function bumpVersion(fullPath, info) {
+  return fsReadFile(fullPath, {encoding: 'utf-8'}).then((contents) => {
+    const src = JSON.parse(contents)
+    let newVersion = src.version
+    switch (info.scope) {
+      case 'patch':
+        newVersion = performPatch(src.version)
+        break
+
+      case 'minor':
+        newVersion = semverInc(src.version, 'minor')
+        break
+
+      case 'major':
+        newVersion = semverInc(src.version, 'major')
+        break
+
+      default:
+        throw new Error(`Invalid scope [${info.scope}]`)
+    }
+    // eslint-disable-next-line no-param-reassign
+    info.version = newVersion
+    src.version = newVersion
+    return fsWriteFile(fullPath, JSON.stringify(src, null, 2), {encoding: 'utf-8'})
   })
 }
 
@@ -402,36 +429,20 @@ class Bumpr {
         pkgs.push('.')
       }
 
+      const allFiles = []
       pkgs.forEach((pkg) => {
         files.forEach((filename) => {
           const fullPath = pkg === '.' ? filename : path.join('packages', pkg, filename)
-          const src = JSON.parse(readFileSync(fullPath, {encoding: 'utf-8'}))
-          let newVersion = src.version
-          switch (newInfo.scope) {
-            case 'patch':
-              newVersion = performPatch(src.version)
-              break
-
-            case 'minor':
-              newVersion = semverInc(src.version, 'minor')
-              break
-
-            case 'major':
-              newVersion = semverInc(src.version, 'major')
-              break
-
-            default:
-              throw new Error(`Invalid scope [${newInfo.scope}]`)
+          if (fsExistsSync(fullPath)) {
+            allFiles.push(fullPath)
           }
-
-          src.version = newVersion
-          writeFileSync(fullPath, JSON.stringify(src, null, 2), {encoding: 'utf-8'})
-          newInfo.version = newVersion
-          newInfo.modifiedFiles.push(fullPath)
         })
       })
 
-      return newInfo
+      return Promise.all(allFiles.map((fullPath) => bumpVersion(fullPath, newInfo))).then(() => {
+        newInfo.modifiedFiles = newInfo.modifiedFiles.concat(allFiles)
+        return newInfo
+      })
     })
   }
 

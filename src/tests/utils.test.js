@@ -1,12 +1,12 @@
-import {readFileSync} from 'fs'
 import {cosmiconfig} from 'cosmiconfig'
 import _ from 'lodash'
 import path from 'path'
 
 import utils from '../utils.js'
+import {readFileSync} from '../node-wrappers.js'
 
 jest.mock('cosmiconfig')
-jest.mock('fs')
+jest.mock('../node-wrappers.js')
 jest.mock('../logger')
 
 const {forEach, forIn} = _

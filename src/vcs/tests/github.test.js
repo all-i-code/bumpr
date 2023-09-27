@@ -1,14 +1,12 @@
-import {readFileSync} from 'fs'
 import fetch from 'node-fetch'
 import path from 'path'
 
-import {exec} from '../../node-wrappers.js'
+import {exec, readFileSync} from '../../node-wrappers.js'
 import GitHub from '../github.js'
 
-jest.mock('fs')
 jest.mock('node-fetch')
-jest.mock('../../node-wrappers')
-jest.mock('../../logger')
+jest.mock('../../node-wrappers.js')
+jest.mock('../../logger.js')
 
 describe('VCS / GitHub /', () => {
   let config

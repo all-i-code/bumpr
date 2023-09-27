@@ -1,4 +1,5 @@
 import cp from 'child_process'
+import {readFileSync} from 'fs'
 import _ from 'lodash'
 import fetch from 'node-fetch'
 import moment from 'moment-timezone'
@@ -6,15 +7,17 @@ import path from 'path'
 import Promise from 'promise'
 import replace from 'replace-in-file'
 import util from 'util'
-import pkgJson from '../../package.json' assert {type: 'json'}
 import Bumpr from '../bumpr.js'
 import {Logger} from '../logger.js'
 import {createReadStream, exec, existsSync, readdir, statSync, writeFile} from '../node-wrappers.js'
 import utils from '../utils.js'
 
+const pkgJson = JSON.parse(readFileSync(path.join(__dirname, '..', '..', 'package.json'), {encoding: 'utf-8'}))
+
 jest.mock('node-fetch')
 jest.mock('replace-in-file')
 jest.mock('../node-wrappers.js')
+
 jest.mock('../logger.js')
 jest.mock('../utils.js')
 
@@ -64,7 +67,7 @@ function itShouldBumpVersion(bumprFn, filename, scope, expectedVersion, dirs) {
 
     beforeEach(() => {
       bumpr = bumprFn()
-      bumpr.config.files = [filename]
+      bumpr.config.files = [filename, 'missing-file.json']
 
       if (dirs) {
         setupPkgs({
@@ -75,6 +78,8 @@ function itShouldBumpVersion(bumprFn, filename, scope, expectedVersion, dirs) {
       } else {
         setupPkgs({exists: false})
       }
+
+      existsSync.mockReturnValue(true)
 
       return bumpr
         .maybeBumpVersion({scope, modifiedFiles: []})
