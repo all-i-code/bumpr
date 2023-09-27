@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.16.0] - 2023-09-27 ([PR 73](https://github.com/all-i-code/bumpr/pull/73))
+### Removed
+- Dependency on `versiony` , now using `semver` directly, to hopefully stop messing with trailing newline
+
+
 ## [2.15.3] - 2023-09-27 ([PR 72](https://github.com/all-i-code/bumpr/pull/72))
 ### Changed
 - Implementation to use ESM instead of CommonJS
