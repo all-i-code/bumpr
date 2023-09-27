@@ -5,7 +5,7 @@
 import {exec as cpExec} from 'child_process'
 import util from 'util'
 
-export {createReadStream, existsSync, statSync} from 'fs'
-export {readdir, writeFile} from 'fs/promises'
+export {createReadStream, existsSync, readFileSync, statSync} from 'fs'
+export {readFile, readdir, writeFile} from 'fs/promises'
 
 export const exec = util.promisify(cpExec)

@@ -1,10 +1,10 @@
 /* eslint no-useless-escape: 0 */
 
 import {cosmiconfig} from 'cosmiconfig'
-import fs from 'fs'
 import path from 'path'
 import _ from 'lodash'
 import {Logger} from './logger.js'
+import {readFileSync} from './node-wrappers.js'
 
 const {get, isArray, isObject, set} = _
 
@@ -465,7 +465,7 @@ const utils = {
    */
   readJsonFile(filename) {
     const fullPath = path.join(process.cwd(), filename)
-    return JSON.parse(fs.readFileSync(fullPath, {encoding: 'utf8'}))
+    return JSON.parse(readFileSync(fullPath, {encoding: 'utf8'}))
   },
 }
 

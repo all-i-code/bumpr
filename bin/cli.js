@@ -4,10 +4,8 @@
 
 import chalk from 'chalk'
 import program from 'commander'
-import pkgJson from '../package.json' assert {type: 'json'}
 import {createBumpr} from '../src/cli.js'
-
-const {name, version} = pkgJson
+import {name, version} from '../src/package.js'
 
 function handleError(error) {
   const msg = error.message ? error.message : error
