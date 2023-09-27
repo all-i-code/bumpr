@@ -1,4 +1,4 @@
-import {cloneDeep, get} from 'lodash'
+import _ from 'lodash'
 import mime from 'mime-types'
 import moment from 'moment-timezone'
 import fetch from 'node-fetch'
@@ -6,13 +6,15 @@ import path from 'path'
 import Promise from 'promise'
 import replace from 'replace-in-file'
 import versiony from 'versiony'
+import pkgJson from '../package.json' assert {type: 'json'}
+import {createReadStream, exec, existsSync, readdir, statSync, writeFile} from './node-wrappers.js'
+import MissingKeyError from './errors/missing-key.js'
+import NoLogFileError from './errors/no-log-file.js'
+import {Logger} from './logger.js'
+import utils from './utils.js'
 
-import {name as pkgName} from '../package.json'
-import {createReadStream, exec, existsSync, readdir, statSync, writeFile} from './node-wrappers'
-import MissingKeyError from './errors/missing-key'
-import NoLogFileError from './errors/no-log-file'
-import {Logger} from './logger'
-import utils from './utils'
+const {cloneDeep, get} = _
+const {name: pkgName} = pkgJson
 
 /**
  * Get the array of package names in this workspace project (or an empty array if not using workspaces)

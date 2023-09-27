@@ -1,6 +1,6 @@
-import {Logger} from '../logger'
-import {exec} from '../node-wrappers'
-import CiBase from './base'
+import {Logger} from '../logger.js'
+import {exec} from '../node-wrappers.js'
+import CiBase from './base.js'
 
 /**
  * CI interface for public Travis (travis-ci.org/travis-ci.com)

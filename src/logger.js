@@ -1,4 +1,6 @@
-import {name} from '../package.json'
+import pkgJson from '../package.json' assert {type: 'json'}
+
+const {name} = pkgJson
 
 /* eslint-disable no-console */
 

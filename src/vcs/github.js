@@ -2,8 +2,8 @@ import {readFileSync} from 'fs'
 import fetch from 'node-fetch'
 import path from 'path'
 
-import {Logger} from '../logger'
-import {exec} from '../node-wrappers'
+import {Logger} from '../logger.js'
+import {exec} from '../node-wrappers.js'
 
 /**
  * Get fetch options

@@ -1,4 +1,4 @@
-import CiBase from './base'
+import CiBase from './base.js'
 
 /**
  * CI interface for public Circle (circleci.com)

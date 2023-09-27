@@ -1,4 +1,4 @@
-import CiBase from './base'
+import CiBase from './base.js'
 
 // eslint-disable-next-line import/prefer-default-export
 export function ensureCiBaseMethodIsUsed(ctx, methodName) {

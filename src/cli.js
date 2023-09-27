@@ -1,15 +1,15 @@
 import chalk from 'chalk'
-import Bumpr from './bumpr'
-import {Logger} from './logger'
-import utils from './utils'
+import Bumpr from './bumpr.js'
+import {Logger} from './logger.js'
+import utils from './utils.js'
 
 // VCS implementations
-import GitHub from './vcs/github'
+import GitHub from './vcs/github.js'
 
 // CI implementations
-import Circle from './ci/circle'
-import GitHubActions from './ci/github'
-import Travis from './ci/travis'
+import Circle from './ci/circle.js'
+import GitHubActions from './ci/github.js'
+import Travis from './ci/travis.js'
 
 /**
  * Get the ci instance to use based on the config

@@ -2,8 +2,8 @@ import {readFileSync} from 'fs'
 import fetch from 'node-fetch'
 import path from 'path'
 
-import {exec} from '../../node-wrappers'
-import GitHub from '../github'
+import {exec} from '../../node-wrappers.js'
+import GitHub from '../github.js'
 
 jest.mock('fs')
 jest.mock('node-fetch')

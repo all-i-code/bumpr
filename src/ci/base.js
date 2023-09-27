@@ -1,6 +1,6 @@
 /* eslint-disable class-methods-use-this */
-import {Logger} from '../logger'
-import {exec} from '../node-wrappers'
+import {Logger} from '../logger.js'
+import {exec} from '../node-wrappers.js'
 
 /**
  * Base CI implementation to provide basic git functionality

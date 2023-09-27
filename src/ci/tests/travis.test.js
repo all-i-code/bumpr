@@ -1,11 +1,11 @@
-import {Logger} from '../../logger'
-import {exec} from '../../node-wrappers'
-import CiBase from '../base'
-import Travis from '../travis'
-import {ensureCiBaseMethodIsUsed} from '../test-utils'
+import {Logger} from '../../logger.js'
+import {exec} from '../../node-wrappers.js'
+import CiBase from '../base.js'
+import Travis from '../travis.js'
+import {ensureCiBaseMethodIsUsed} from '../test-utils.js'
 
-jest.mock('../../node-wrappers')
-jest.mock('../../logger')
+jest.mock('../../node-wrappers.js')
+jest.mock('../../logger.js')
 
 describe('CI / Travis', () => {
   const ctx = {}

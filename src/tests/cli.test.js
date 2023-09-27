@@ -1,19 +1,19 @@
 import chalk from 'chalk'
-import Bumpr from '../bumpr'
-import Circle from '../ci/circle'
-import GitHubActions from '../ci/github'
-import Travis from '../ci/travis'
-import {createBumpr} from '../cli'
-import utils from '../utils'
-import GitHub from '../vcs/github'
+import Bumpr from '../bumpr.js'
+import Circle from '../ci/circle.js'
+import GitHubActions from '../ci/github.js'
+import Travis from '../ci/travis.js'
+import {createBumpr} from '../cli.js'
+import utils from '../utils.js'
+import GitHub from '../vcs/github.js'
 
-jest.mock('../logger')
-jest.mock('../utils')
-jest.mock('../bumpr')
-jest.mock('../ci/circle')
-jest.mock('../ci/github')
-jest.mock('../ci/travis')
-jest.mock('../vcs/github')
+jest.mock('../logger.js')
+jest.mock('../utils.js')
+jest.mock('../bumpr.js')
+jest.mock('../ci/circle.js')
+jest.mock('../ci/github.js')
+jest.mock('../ci/travis.js')
+jest.mock('../vcs/github.js')
 
 function itShouldCreateBumprWith(cfg, CiBase, VcsBase) {
   describe('Bumpr instantiation', () => {

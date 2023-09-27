@@ -3,9 +3,10 @@
 import {cosmiconfig} from 'cosmiconfig'
 import fs from 'fs'
 import path from 'path'
-import {get, isArray, isObject, set} from 'lodash'
+import _ from 'lodash'
+import {Logger} from './logger.js'
 
-import {Logger} from './logger'
+const {get, isArray, isObject, set} = _
 
 const GFM_CHECKBOX_CHECKED_REGEX = /(-|\*)\s+\[x\].*?#(\w+)#/gi
 const GFM_CHECKBOX_UNCHECKED_REGEX = /(-|\*)\s+\[\s\].*?#(\w+)#/gi
