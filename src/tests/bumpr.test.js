@@ -34,18 +34,8 @@ class FileNotFoundError extends Error {
   }
 }
 
-function setupPkgs({exists, isDir, pkgs}) {
-  existsSync.mockReturnValueOnce(exists)
-  if (exists) {
-    const stat = {isDirectory: jest.fn().mockReturnValue(Boolean(isDir))}
-    statSync.mockReturnValueOnce(stat)
-  }
-
-  if (pkgs) {
-    readdir.mockReturnValueOnce(
-      Promise.resolve(pkgs.map(({dir, name}) => ({isDirectory: jest.fn().mockReturnValue(dir), name})))
-    )
-  }
+function setupPkgs(pkgs = []) {
+  exec.mockReturnValueOnce(Promise.resolve(JSON.stringify(pkgs)))
 }
 
 /**
@@ -68,13 +58,9 @@ function itShouldBumpVersion(bumprFn, filename, scope, expectedVersion, dirs) {
       bumpr.config.files = [filename, 'missing-file.json']
 
       if (dirs) {
-        setupPkgs({
-          exists: true,
-          isDir: true,
-          pkgs: dirs.map((name) => ({dir: true, name})),
-        })
+        setupPkgs(dirs.map((name) => ({location: `packages/${name}`})))
       } else {
-        setupPkgs({exists: false})
+        setupPkgs()
       }
 
       existsSync.mockReturnValue(true)
@@ -667,9 +653,9 @@ describe('Bumpr', () => {
       beforeEach(() => {
         const log = {scope: 'minor'}
         jest.spyOn(bumpr, 'getLog').mockReturnValue(Promise.resolve({log}))
-        setupPkgs({exists: false})
+        setupPkgs()
         writeFile.mockReturnValue(Promise.resolve())
-        exec.mockReturnValue(Promise.resolve())
+        exec.mockReturnValueOnce(Promise.resolve())
         return bumpr.publish().then((r) => {
           result = r
         })
@@ -677,14 +663,6 @@ describe('Bumpr', () => {
 
       afterEach(() => {
         bumpr.getLog.mockReset()
-      })
-
-      it('should check for packages', () => {
-        expect(existsSync).toHaveBeenCalledWith('packages')
-      })
-
-      it('should not get stats for packages', () => {
-        expect(statSync).not.toHaveBeenCalled()
       })
 
       it('should log publishing', () => {
@@ -709,14 +687,14 @@ describe('Bumpr', () => {
       })
     })
 
-    describe('when scope is not "none" (and packages exists but is not a directory)', () => {
+    describe('when scope is not "none"', () => {
       let result
       beforeEach(() => {
         const log = {scope: 'minor'}
         jest.spyOn(bumpr, 'getLog').mockReturnValue(Promise.resolve({log}))
-        setupPkgs({exists: true, isDir: false})
+        setupPkgs()
         writeFile.mockReturnValue(Promise.resolve())
-        exec.mockReturnValue(Promise.resolve())
+        exec.mockReturnValueOnce(Promise.resolve())
         return bumpr.publish().then((r) => {
           result = r
         })
@@ -724,14 +702,6 @@ describe('Bumpr', () => {
 
       afterEach(() => {
         bumpr.getLog.mockReset()
-      })
-
-      it('should check for packages', () => {
-        expect(existsSync).toHaveBeenCalledWith('packages')
-      })
-
-      it('should get stats for packages', () => {
-        expect(statSync).toHaveBeenCalledWith('packages')
       })
 
       it('should log publishing', () => {
@@ -756,39 +726,27 @@ describe('Bumpr', () => {
       })
     })
 
-    describe('when scope is not "none" (and packages exists as a directory)', () => {
+    describe('when scope is not "none"', () => {
       let result
       beforeEach(() => {
         const log = {scope: 'minor'}
         jest.spyOn(bumpr, 'getLog').mockReturnValue(Promise.resolve({log}))
-        setupPkgs({
-          exists: true,
-          isDir: true,
-          pkgs: [
-            {dir: true, name: 'pkg1'},
-            {dir: false, name: 'file1'},
-            {dir: false, name: 'file2'},
-            {dir: true, name: 'pkg2'},
-            {dir: false, name: 'file3'},
-          ],
-        })
+        setupPkgs([{location: 'packages/pkg1'}, {location: 'packages/pkg2'}])
         writeFile.mockReturnValue(Promise.resolve())
-        exec.mockReturnValue(Promise.resolve())
+        exec.mockReturnValueOnce(Promise.resolve()) // publish pkg1
+        exec.mockReturnValueOnce(Promise.resolve()) // publish pkg2
         return bumpr.publish().then((r) => {
           result = r
         })
       })
 
       afterEach(() => {
+        exec.mockReset()
         bumpr.getLog.mockReset()
       })
 
       it('should check for packages', () => {
-        expect(existsSync).toHaveBeenCalledWith('packages')
-      })
-
-      it('should get stats for packages', () => {
-        expect(statSync).toHaveBeenCalledWith('packages')
+        expect(exec).toHaveBeenCalledWith('npm query .workspace', {cwd: '.', maxBuffer: 1024 * 1024})
       })
 
       it('should log publishing', () => {
@@ -1618,6 +1576,7 @@ describe('Bumpr', () => {
       beforeEach(() => {
         bumpr.config.files = ['_package.json']
         info = {scope: 'foo'}
+        setupPkgs()
         return bumpr.maybeBumpVersion(info).catch((e) => {
           err = e
         })
