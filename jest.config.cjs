@@ -3,9 +3,12 @@ module.exports = {
   coverageThreshold: {
     global: {
       branches: 100,
-      statements: 100
-    }
+      statements: 100,
+    },
   },
   testEnvironment: 'node',
-  testMatch: ['<rootDir>/**/tests/*.test.js']
+  testMatch: ['<rootDir>/**/tests/*.test.js'],
+  transform: {
+    '^.+\\.[t|j]sx?$': 'babel-jest',
+  },
 }

@@ -1,6 +1,4 @@
-require('../typedefs')
-
-const CiBase = require('./base')
+import CiBase from './base.js'
 
 /**
  * CI interface for public Circle (circleci.com)
@@ -8,6 +6,4 @@ const CiBase = require('./base')
  * @class
  * @implements {Ci}
  */
-class Circle extends CiBase {}
-
-module.exports = Circle
+export default class Circle extends CiBase {}

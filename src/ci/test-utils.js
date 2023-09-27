@@ -1,6 +1,7 @@
-const CiBase = require('./base')
+import CiBase from './base.js'
 
-exports.ensureCiBaseMethodIsUsed = function ensureCiBaseMethodIsUsed(ctx, methodName) {
+// eslint-disable-next-line import/prefer-default-export
+export function ensureCiBaseMethodIsUsed(ctx, methodName) {
   describe(`.${methodName}()`, () => {
     let result
 
@@ -8,7 +9,7 @@ exports.ensureCiBaseMethodIsUsed = function ensureCiBaseMethodIsUsed(ctx, method
       const {ci} = ctx
       jest.spyOn(CiBase.prototype, methodName).mockReturnValue(Promise.resolve(`${methodName}-finished`))
 
-      return ci[methodName]('some-args').then(res => {
+      return ci[methodName]('some-args').then((res) => {
         result = res
       })
     })

@@ -2,6 +2,7 @@
   "name": "bumpr",
   "version": "2.15.2",
   "description": "Bump the version of an package based on a Pull Request",
+  "type": "module",
   "bin": {
     "bumpr": "./bin/cli.js"
   },
@@ -10,7 +11,7 @@
     "url": "git@github.com:all-i-code/bumpr.git"
   },
   "engines": {
-    "node": ">= 16.0.0"
+    "node": ">= 18.0.0"
   },
   "keywords": [
     "github",
@@ -31,9 +32,9 @@
   },
   "homepage": "https://github.com/all-i-code/bumpr#readme",
   "scripts": {
-    "lint": "eslint *.js bin src",
+    "lint": "eslint *.cjs bin src",
     "watch-test": "jest --coverage --watch",
-    "test": "yarn run lint && jest --coverage",
+    "test": "npm run lint && jest --coverage",
     "prepare": "husky install"
   },
   "dependencies": {
@@ -49,7 +50,11 @@
     "versiony": "^2.0.1"
   },
   "devDependencies": {
-    "eslint": "^8.13.0",
+    "@babel/eslint-parser": "^7.22.15",
+    "@babel/plugin-syntax-import-assertions": "^7.22.5",
+    "@babel/preset-env": "^7.22.20",
+    "babel-jest": "^29.7.0",
+    "eslint": "^8.50.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier-airbnb": "^0.5.0",
     "eslint-plugin-import": "^2.26.0",

@@ -1,17 +1,15 @@
-require('./typedefs')
-
-const chalk = require('chalk')
-const Bumpr = require('./bumpr')
-const {Logger} = require('./logger')
-const utils = require('./utils')
+import chalk from 'chalk'
+import Bumpr from './bumpr.js'
+import {Logger} from './logger.js'
+import utils from './utils.js'
 
 // VCS implementations
-const GitHub = require('./vcs/github')
+import GitHub from './vcs/github.js'
 
 // CI implementations
-const Circle = require('./ci/circle')
-const GitHubActions = require('./ci/github')
-const Travis = require('./ci/travis')
+import Circle from './ci/circle.js'
+import GitHubActions from './ci/github.js'
+import Travis from './ci/travis.js'
 
 /**
  * Get the ci instance to use based on the config
@@ -61,7 +59,8 @@ function getVcs(config) {
  * @param {String} cmd - the command to run
  * @returns {Promise} a promise resolved when command finishes, or rejected with failure
  */
-exports.createBumpr = function createBumpr() {
+// eslint-disable-next-line import/prefer-default-export
+export function createBumpr() {
   return utils.getConfig().then((config) => {
     const vcs = getVcs(config)
     const ci = getCi(config, vcs)

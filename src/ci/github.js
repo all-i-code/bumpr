@@ -1,6 +1,4 @@
-require('../typedefs')
-
-const CiBase = require('./base')
+import CiBase from './base.js'
 
 /**
  * CI interface for public GitHub Actions (github.com)
@@ -8,6 +6,4 @@ const CiBase = require('./base')
  * @class
  * @implements {Ci}
  */
-class GitHubActions extends CiBase {}
-
-module.exports = GitHubActions
+export default class GitHubActions extends CiBase {}

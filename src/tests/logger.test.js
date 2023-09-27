@@ -1,5 +1,7 @@
-const {Logger} = require('../logger')
-const {name} = require('../../package.json')
+import {Logger} from '../logger.js'
+import pkgJson from '../../package.json' assert {type: 'json'}
+
+const {name} = pkgJson
 
 /* eslint-disable no-console */
 

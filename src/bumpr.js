@@ -1,20 +1,20 @@
-require('./typedefs')
+import _ from 'lodash'
+import mime from 'mime-types'
+import moment from 'moment-timezone'
+import fetch from 'node-fetch'
+import path from 'path'
+import Promise from 'promise'
+import replace from 'replace-in-file'
+import versiony from 'versiony'
+import pkgJson from '../package.json' assert {type: 'json'}
+import {createReadStream, exec, existsSync, readdir, statSync, writeFile} from './node-wrappers.js'
+import MissingKeyError from './errors/missing-key.js'
+import NoLogFileError from './errors/no-log-file.js'
+import {Logger} from './logger.js'
+import utils from './utils.js'
 
-const {cloneDeep, get} = require('lodash')
-const mime = require('mime-types')
-const moment = require('moment-timezone')
-const fetch = require('node-fetch')
-const path = require('path')
-const Promise = require('promise')
-const replace = require('replace-in-file')
-const versiony = require('versiony')
-
-const {name: pkgName} = require('../package.json')
-const {createReadStream, exec, existsSync, readdir, statSync, writeFile} = require('./node-wrappers')
-const MissingKeyError = require('./errors/missing-key')
-const NoLogFileError = require('./errors/no-log-file')
-const {Logger} = require('./logger')
-const utils = require('./utils')
+const {cloneDeep, get} = _
+const {name: pkgName} = pkgJson
 
 /**
  * Get the array of package names in this workspace project (or an empty array if not using workspaces)
@@ -637,4 +637,4 @@ class Bumpr {
 Bumpr.MissingKeyError = MissingKeyError
 Bumpr.NoLogFileError = NoLogFileError
 
-module.exports = Bumpr
+export default Bumpr

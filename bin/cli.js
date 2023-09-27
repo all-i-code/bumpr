@@ -2,10 +2,12 @@
 
 /* eslint-disable no-console */
 
-const chalk = require('chalk')
-const program = require('commander')
-const {name, version} = require('../package.json')
-const {createBumpr} = require('../src/cli')
+import chalk from 'chalk'
+import program from 'commander'
+import pkgJson from '../package.json' assert {type: 'json'}
+import {createBumpr} from '../src/cli.js'
+
+const {name, version} = pkgJson
 
 function handleError(error) {
   const msg = error.message ? error.message : error
