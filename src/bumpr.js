@@ -24,7 +24,8 @@ const {cloneDeep, get, truncate} = _
  */
 function getPackages() {
   Logger.log('About to query npm for workspace info')
-  return exec('npm query .workspace', {cwd: '.', maxBuffer: 1024 * 1024}).then((output) => {
+  return exec('npm query .workspace', {cwd: '.', maxBuffer: 1024 * 1024}).then(({stdout}) => {
+    const output = stdout.trim()
     Logger.log(`Output from "npm query .workspace": ${truncate(output, {length: 50})}`)
     const packages = JSON.parse(output).map((entry) => entry.location)
     return packages.length === 0 ? ['.'] : packages
