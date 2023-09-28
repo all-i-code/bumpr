@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.16.3] - 2023-09-28 ([PR 79](https://github.com/all-i-code/bumpr/pull/79))
+### Added
+- Newline at the end of JSON files
+
+
+
 ## [2.16.2] - 2023-09-28 ([PR 77](https://github.com/all-i-code/bumpr/pull/77))
 ### Fixed
 - Processing of response from `npm query .workspace`
