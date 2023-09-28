@@ -35,7 +35,8 @@ class FileNotFoundError extends Error {
 }
 
 function setupPkgs(pkgs = []) {
-  exec.mockReturnValueOnce(Promise.resolve(JSON.stringify(pkgs)))
+  const response = {stdout: JSON.stringify(pkgs)}
+  exec.mockReturnValueOnce(Promise.resolve(response))
 }
 
 /**
