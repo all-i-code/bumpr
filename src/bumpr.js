@@ -16,14 +16,16 @@ import {Logger} from './logger.js'
 import {name as pkgName} from './package.js'
 import utils from './utils.js'
 
-const {cloneDeep, get} = _
+const {cloneDeep, get, truncate} = _
 
 /**
  * Get the array of package names in this workspace project (or an empty array if not using workspaces)
  * @returns {Promise} a promise - resolved with an array of package names or rejected on error
  */
 function getPackages() {
+  Logger.log('About to query npm for workspace info')
   return exec('npm query .workspace', {cwd: '.', maxBuffer: 1024 * 1024}).then((output) => {
+    Logger.log(`Output from "npm query .workspace": ${truncate(output, {length: 50})}`)
     const packages = JSON.parse(output).map((entry) => entry.location)
     return packages.length === 0 ? ['.'] : packages
   })
