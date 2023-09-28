@@ -2302,7 +2302,7 @@ describe('Bumpr', () => {
           scope: 'patch',
           version: '1.2.3',
         }
-        expect(writeFile).toHaveBeenCalledWith('the-log-file', JSON.stringify(logInfo, null, 2))
+        expect(writeFile).toHaveBeenCalledWith('the-log-file', `${JSON.stringify(logInfo, null, 2)}\n`)
       })
 
       it('should resolve with the info', () => {

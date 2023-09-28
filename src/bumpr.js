@@ -72,7 +72,7 @@ function bumpVersion(fullPath, info) {
     // eslint-disable-next-line no-param-reassign
     info.version = newVersion
     src.version = newVersion
-    return fsWriteFile(fullPath, JSON.stringify(src, null, 2), {encoding: 'utf-8'})
+    return fsWriteFile(fullPath, `${JSON.stringify(src, null, 2)}\n`, {encoding: 'utf-8'})
   })
 }
 
@@ -565,7 +565,7 @@ class Bumpr {
 
     const filename = this.config.features.logging.file
     Logger.log(`Writing ${JSON.stringify(logInfo)} to ${filename}`)
-    return writeFile(filename, JSON.stringify(logInfo, null, 2)).then(() => info)
+    return writeFile(filename, `${JSON.stringify(logInfo, null, 2)}\n`).then(() => info)
   }
 
   /**
