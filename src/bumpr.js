@@ -72,6 +72,11 @@ function bumpVersion(fullPath, info) {
     // eslint-disable-next-line no-param-reassign
     info.version = newVersion
     src.version = newVersion
+
+    if (path.basename(fullPath) === 'package-lock.json') {
+      src.packages[''].version = newVersion
+    }
+
     return fsWriteFile(fullPath, `${JSON.stringify(src, null, 2)}\n`, {encoding: 'utf-8'})
   })
 }
