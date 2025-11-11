@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <!-- bumpr -->
 
+## [2.17.0] - 2025-11-11 ([PR 82](https://github.com/all-i-code/bumpr/pull/82))
+### Added
+- More debugging when bumping fails
+
+
 ## [2.16.3] - 2023-09-28 ([PR 79](https://github.com/all-i-code/bumpr/pull/79))
 ### Added
 - Newline at the end of JSON files
