@@ -243,7 +243,7 @@ const utils = {
               zone: 'Etc/UTC',
             },
           },
-          files: ['package.json'],
+          files: ['package.json', 'package-lock.json'],
           vcs: {
             domain: 'github.com',
             env: {
