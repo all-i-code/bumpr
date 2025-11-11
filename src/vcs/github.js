@@ -165,8 +165,8 @@ export default class GitHub {
       })
       .then((prs) => prs.find((pr) => pr.merge_commit_sha === sha))
       .then(convertPr)
-      .catch(() => {
-        throw new Error(`Unable to find a merged PR for sha ${sha}`)
+      .catch((err) => {
+        throw new Error(`Unable to find a merged PR for sha ${sha}`, err)
       })
   }
 
